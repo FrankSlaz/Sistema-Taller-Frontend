@@ -1,0 +1,16 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Card from '../../components/astro/cards/Card.astro';
+import ClientesPanel from '../../components/react/modules/clientes/ClientesPanel';
+---
+
+<DashboardLayout title="Clientes">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">Clientes</h1>
+    <p class="text-sm text-graphite-400">Gestiona los clientes registrados en el taller.</p>
+  </div>
+
+  <Card>
+    <ClientesPanel client:load />
+  </Card>
+</DashboardLayout>

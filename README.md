@@ -88,4 +88,46 @@ src/
 -   [x] Entorno de trabajo (Astro + React + Tailwind + TS)
 -   [x] Cliente API + manejo de sesion (JWT)
 -   [x] Layout base (Navbar + Sidebar) y login
--   [ ] Modulos funcionales (clientes, equipos, reparaciones, inventario, ...)
+-   [x] Modulo Clientes (listado, busqueda, paginacion, alta, edicion, baja logica)
+-   [x] Modulo Equipos (listado global o filtrado por cliente, alta, edicion, baja logica)
+-   [ ] Modulos restantes (reparaciones, inventario, ...)
+
+## Modulo Clientes
+
+Implementado en `src/pages/clientes/index.astro` + isla
+`components/react/modules/clientes/ClientesPanel.tsx`.
+
+-   `lib/api/clientes.ts` — llamadas a `GET/POST/PATCH/DELETE /clientes`
+    (paginado con `page`, `limit`, `search`, tal como espera
+    `FindClientesQueryDto` en el backend).
+-   `lib/hooks/useClientes.ts` — `useClientes` (listado) y
+    `useClienteMutations` (crear/editar/eliminar) con invalidacion de
+    cache de TanStack Query.
+-   `ClienteFormModal` — formulario de alta/edicion (modal), valida
+    los mismos campos que `CreateClienteDto`/`UpdateClienteDto`.
+-   El backend hace **baja logica** (`deletedAt` + `estado: false`);
+    el boton de eliminar en la UI dice "Desactivar" para reflejar eso.
+-   Cada fila tiene un acceso directo a `/equipos?clienteId=...` para
+    ver los equipos de ese cliente.
+
+## Modulo Equipos
+
+Implementado en `src/pages/equipos/index.astro` + isla
+`components/react/modules/equipos/EquiposPanel.tsx`.
+
+-   `lib/api/equipos.ts` — `GET/POST/PATCH/DELETE /equipos`, soporta
+    filtro por `clienteId` ademas de `search`/paginacion
+    (`FindEquiposQueryDto`).
+-   `lib/hooks/useEquipos.ts` — mismo patron que `useClientes`.
+-   `EquipoFormModal` — incluye `ClienteSelect`, un combobox
+    reutilizable que busca clientes en vivo contra `/clientes`
+    (se reutilizara en el modulo de Reparaciones).
+-   La pagina acepta `?clienteId=&clienteNombre=` para mostrarse
+    filtrada y con el cliente preseleccionado al crear un equipo
+    nuevo (asi la usa el boton "ver equipos" desde Clientes).
+-   Baja logica igual que Clientes (`deletedAt`).
+
+Ambos modulos siguen el mismo patron de capas — `types/` → `lib/api/`
+→ `lib/hooks/` → isla en `components/react/modules/<modulo>/` → pagina
+en `src/pages/<modulo>/` — que se repetira para Reparaciones,
+Inventario, etc.

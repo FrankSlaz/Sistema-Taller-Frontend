@@ -1,0 +1,28 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Card from '../../components/astro/cards/Card.astro';
+import EquiposPanel from '../../components/react/modules/equipos/EquiposPanel';
+
+// Permite llegar filtrado desde la ficha de un cliente: /equipos?clienteId=12&clienteNombre=...
+const clienteIdParam = Astro.url.searchParams.get('clienteId');
+const clienteId = clienteIdParam ? Number(clienteIdParam) : undefined;
+const clienteNombre = Astro.url.searchParams.get('clienteNombre') ?? undefined;
+---
+
+<DashboardLayout title="Equipos">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">
+      Equipos
+      {clienteNombre && <span class="text-graphite-400"> · {clienteNombre}</span>}
+    </h1>
+    <p class="text-sm text-graphite-400">
+      {clienteId
+        ? 'Equipos registrados para este cliente.'
+        : 'Equipos de todos los clientes registrados en el taller.'}
+    </p>
+  </div>
+
+  <Card>
+    <EquiposPanel client:load clienteId={clienteId} clienteNombre={clienteNombre} />
+  </Card>
+</DashboardLayout>
