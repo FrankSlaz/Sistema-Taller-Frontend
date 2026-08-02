@@ -1,0 +1,22 @@
+---
+import UserMenu from '../../react/dashboards/UserMenu';
+---
+
+<header
+  class="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-graphite-200 bg-white px-4 lg:px-8"
+>
+  <button
+    id="sidebar-toggle"
+    type="button"
+    class="rounded-md p-2 text-graphite-600 hover:bg-graphite-50 lg:hidden"
+    aria-label="Abrir menú"
+  >
+    ☰
+  </button>
+
+  <div class="hidden text-sm text-graphite-400 lg:block">
+    <slot name="breadcrumb" />
+  </div>
+
+  <UserMenu client:load />
+</header>

@@ -1,0 +1,19 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import LoginForm from '../components/react/forms/LoginForm';
+---
+
+<BaseLayout title="Iniciar sesión">
+  <div class="flex min-h-screen items-center justify-center bg-graphite-950 px-4">
+    <div class="w-full max-w-sm rounded-xl border border-graphite-700 bg-white p-8 shadow-xl">
+      <div class="mb-6 flex items-center gap-2">
+        <span class="h-2.5 w-2.5 rounded-full bg-amber-500"></span>
+        <span class="font-display text-lg font-semibold text-graphite-900">Sistema Taller</span>
+      </div>
+
+      <p class="mb-6 text-sm text-graphite-400">Ingresa con tu cuenta para continuar.</p>
+
+      <LoginForm client:load />
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,34 @@
+@import 'tailwindcss';
+
+/*
+ * Tokens de diseño — Sistema Taller
+ * Paleta industrial: acero/grafito como base, ambar como acento
+ * (color de orden de trabajo / advertencia, propio del taller).
+ */
+@theme {
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --color-graphite-950: #0f1115;
+  --color-graphite-900: #16191f;
+  --color-graphite-800: #1f232b;
+  --color-graphite-700: #2b303a;
+  --color-graphite-600: #3c4250;
+  --color-graphite-400: #6b7280;
+  --color-graphite-200: #d1d5db;
+  --color-graphite-50: #f7f7f8;
+
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+
+  --color-status-pendiente: #f59e0b;
+  --color-status-proceso: #3b82f6;
+  --color-status-listo: #22c55e;
+  --color-status-entregado: #6b7280;
+  --color-status-cancelado: #ef4444;
+}
+
+html {
+  font-family: var(--font-sans);
+}

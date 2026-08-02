@@ -1,0 +1,38 @@
+---
+import DashboardLayout from '../layouts/DashboardLayout.astro';
+import Card from '../components/astro/cards/Card.astro';
+import StatusBadge from '../components/astro/ui/StatusBadge.astro';
+---
+
+<DashboardLayout title="Dashboard">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">Dashboard</h1>
+    <p class="text-sm text-graphite-400">Resumen general del taller.</p>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <Card title="Órdenes activas">
+      <p class="font-display text-3xl font-semibold text-graphite-900">—</p>
+      <p class="mt-1 text-xs text-graphite-400">Conectar a GET /api/reparaciones</p>
+    </Card>
+    <Card title="Pendientes de diagnóstico">
+      <p class="font-display text-3xl font-semibold text-graphite-900">—</p>
+    </Card>
+    <Card title="Listas para entrega">
+      <p class="font-display text-3xl font-semibold text-graphite-900">—</p>
+    </Card>
+    <Card title="Ingresos del mes">
+      <p class="font-display text-3xl font-semibold text-graphite-900">—</p>
+    </Card>
+  </div>
+
+  <Card title="Estados de orden de referencia" class="mt-6">
+    <div class="flex flex-wrap gap-2">
+      <StatusBadge estado="Pendiente" />
+      <StatusBadge estado="En proceso" />
+      <StatusBadge estado="Listo" />
+      <StatusBadge estado="Entregado" />
+      <StatusBadge estado="Cancelado" />
+    </div>
+  </Card>
+</DashboardLayout>

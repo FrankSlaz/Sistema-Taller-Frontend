@@ -1,0 +1,26 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Navbar from '../components/astro/navbar/Navbar.astro';
+import Sidebar from '../components/astro/sidebar/Sidebar.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="flex min-h-screen">
+    <Sidebar />
+
+    <div class="flex flex-1 flex-col lg:pl-64">
+      <Navbar />
+
+      <main class="flex-1 p-4 lg:p-8">
+        <slot />
+      </main>
+    </div>
+  </div>
+</BaseLayout>

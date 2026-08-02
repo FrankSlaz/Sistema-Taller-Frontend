@@ -1,0 +1,98 @@
+---
+import { PUBLIC_APP_NAME } from 'astro:env/client';
+
+interface NavItem {
+  label: string;
+  href: string;
+}
+
+interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
+
+const groups: NavGroup[] = [
+  {
+    title: 'General',
+    items: [{ label: 'Dashboard', href: '/dashboard' }],
+  },
+  {
+    title: 'Taller',
+    items: [
+      { label: 'Órdenes de reparación', href: '/reparaciones' },
+      { label: 'Diagnósticos', href: '/diagnosticos' },
+      { label: 'Presupuestos', href: '/presupuestos' },
+      { label: 'Garantías', href: '/garantias' },
+      { label: 'Entregas', href: '/entregas' },
+    ],
+  },
+  {
+    title: 'Clientes y equipos',
+    items: [
+      { label: 'Clientes', href: '/clientes' },
+      { label: 'Equipos', href: '/equipos' },
+    ],
+  },
+  {
+    title: 'Inventario',
+    items: [
+      { label: 'Productos', href: '/inventario' },
+      { label: 'Compras', href: '/compras' },
+      { label: 'Herramientas', href: '/herramientas' },
+    ],
+  },
+  {
+    title: 'Administración',
+    items: [
+      { label: 'Usuarios', href: '/usuarios' },
+      { label: 'Reportes', href: '/reportes' },
+      { label: 'Configuración', href: '/configuracion' },
+    ],
+  },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<aside
+  class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col overflow-y-auto border-r border-graphite-700 bg-graphite-900 text-graphite-200 lg:flex"
+>
+  <div class="flex h-16 items-center gap-2 border-b border-graphite-700 px-5">
+    <span class="h-2.5 w-2.5 rounded-full bg-amber-500"></span>
+    <span class="font-display text-lg font-semibold tracking-tight text-white">
+      {PUBLIC_APP_NAME}
+    </span>
+  </div>
+
+  <nav class="flex-1 space-y-6 px-3 py-6">
+    {
+      groups.map((group) => (
+        <div>
+          <p class="px-2 pb-2 text-xs font-semibold uppercase tracking-wider text-graphite-400">
+            {group.title}
+          </p>
+          <ul class="space-y-1">
+            {group.items.map((item) => {
+              const isActive = currentPath.startsWith(item.href);
+              return (
+                <li>
+                  <a
+                    href={item.href}
+                    class:list={[
+                      'block rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-graphite-800 text-white'
+                        : 'text-graphite-200 hover:bg-graphite-800 hover:text-white',
+                    ]}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))
+    }
+  </nav>
+</aside>
