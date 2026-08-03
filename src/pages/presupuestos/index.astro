@@ -1,0 +1,19 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Card from '../../components/astro/cards/Card.astro';
+import PresupuestosGlobalPanel from '../../components/react/modules/presupuestos/PresupuestosGlobalPanel';
+---
+
+<DashboardLayout title="Presupuestos">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">Presupuestos</h1>
+    <p class="text-sm text-graphite-400">
+      Aprueba o rechaza presupuestos de todas las órdenes. Al aprobar uno, sus costos se
+      sincronizan automáticamente con la orden.
+    </p>
+  </div>
+
+  <Card>
+    <PresupuestosGlobalPanel client:load />
+  </Card>
+</DashboardLayout>

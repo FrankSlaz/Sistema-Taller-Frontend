@@ -40,3 +40,23 @@ const PRIORIDAD_STYLES: Record<string, string> = {
 export function prioridadClasses(prioridad?: string | null): string {
   return PRIORIDAD_STYLES[prioridad ?? 'NORMAL'] ?? PRIORIDAD_STYLES.NORMAL;
 }
+
+const ESTADO_PRESUPUESTO_STYLES: Record<string, string> = {
+  PENDIENTE: 'bg-amber-50 text-amber-700 ring-amber-600/20',
+  APROBADO: 'bg-green-50 text-green-700 ring-green-600/20',
+  RECHAZADO: 'bg-red-50 text-red-700 ring-red-600/20',
+};
+
+const ESTADO_PRESUPUESTO_LABELS: Record<string, string> = {
+  PENDIENTE: 'Pendiente',
+  APROBADO: 'Aprobado',
+  RECHAZADO: 'Rechazado',
+};
+
+export function estadoPresupuestoClasses(estado: string): string {
+  return ESTADO_PRESUPUESTO_STYLES[estado] ?? 'bg-graphite-100 text-graphite-600 ring-graphite-500/20';
+}
+
+export function estadoPresupuestoLabel(estado: string): string {
+  return ESTADO_PRESUPUESTO_LABELS[estado] ?? estado;
+}

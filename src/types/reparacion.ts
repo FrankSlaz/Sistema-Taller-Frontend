@@ -1,4 +1,5 @@
 import type { EstadoOrden } from './estado-orden';
+import type { Presupuesto } from './presupuesto';
 
 /**
  * Espejo de backend-nest/src/modules/reparaciones
@@ -54,18 +55,6 @@ export interface Diagnostico {
   diagnostico?: string | null;
   solucionPropuesta?: string | null;
   observaciones?: string | null;
-  fecha: string;
-}
-
-export interface Presupuesto {
-  id: number;
-  ordenId: number;
-  tecnicoId?: number | null;
-  descripcion?: string | null;
-  costoRepuestos?: string | number | null;
-  costoManoObra?: string | number | null;
-  totalEstimado?: string | number | null;
-  estado?: string | null;
   fecha: string;
 }
 

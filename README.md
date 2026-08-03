@@ -90,7 +90,25 @@ src/
 -   [x] Layout base (Navbar + Sidebar) y login
 -   [x] Modulo Clientes (listado, busqueda, paginacion, alta, edicion, baja logica)
 -   [x] Modulo Equipos (listado global o filtrado por cliente, alta, edicion, baja logica)
--   [ ] Modulos restantes (reparaciones, inventario, ...)
+-   [x] Modulo Reparaciones (ordenes: listado, detalle, alta, edicion, cambio de estado, tecnicos, diagnosticos)
+-   [x] Modulo Presupuestos (CRUD completo, embebido en la orden + vista global con filtro por estado)
+-   [ ] Modulos restantes (inventario, entregas, garantias, ...)
+
+## Modo de renderizado
+
+El proyecto corre en **output: "server"** con el adaptador
+`@astrojs/node` (modo `standalone`), no en `static`. Esto se decidio
+al implementar `/reparaciones/[id]`: es una ruta dinamica cuyos IDs
+se generan en runtime (no se pueden enumerar con `getStaticPaths` en
+build time), asi que necesita SSR real.
+
+```bash
+npm run build
+npm run start   # sirve dist/server/entry.mjs (por defecto en :4321)
+```
+
+Durante el desarrollo (`npm run dev`) esto no cambia nada del flujo
+normal de Astro.
 
 ## Modulo Clientes
 
@@ -121,13 +139,103 @@ Implementado en `src/pages/equipos/index.astro` + isla
 -   `lib/hooks/useEquipos.ts` — mismo patron que `useClientes`.
 -   `EquipoFormModal` — incluye `ClienteSelect`, un combobox
     reutilizable que busca clientes en vivo contra `/clientes`
-    (se reutilizara en el modulo de Reparaciones).
+    (reutilizado tambien en Reparaciones).
 -   La pagina acepta `?clienteId=&clienteNombre=` para mostrarse
     filtrada y con el cliente preseleccionado al crear un equipo
     nuevo (asi la usa el boton "ver equipos" desde Clientes).
 -   Baja logica igual que Clientes (`deletedAt`).
 
-Ambos modulos siguen el mismo patron de capas — `types/` → `lib/api/`
-→ `lib/hooks/` → isla en `components/react/modules/<modulo>/` → pagina
-en `src/pages/<modulo>/` — que se repetira para Reparaciones,
-Inventario, etc.
+## Modulo Reparaciones
+
+El modulo central: conecta cliente + equipo + estado + tecnicos +
+diagnosticos + presupuestos + historial. Paginas:
+
+-   `src/pages/reparaciones/index.astro` — listado (isla `ReparacionesPanel`).
+    Acepta `?clienteId=&equipoId=` para filtrar.
+-   `src/pages/reparaciones/[id].astro` — detalle (isla `ReparacionDetail`).
+    Requiere SSR (ver "Modo de renderizado" arriba); redirige a
+    `/reparaciones` si el `id` no es numerico.
+
+Capa de datos:
+
+-   `types/estado-orden.ts` — catalogo `EstadoOrden`, consumido desde
+    el nuevo `GET /estados-orden` (solo lectura, catalogo fijo
+    sembrado por `sistema_taller.sql`: `RECIBIDO`, `DIAGNOSTICO`,
+    `ESPERANDO_APROBACION`, `EN_REPARACION`, `PRUEBAS`,
+    `LISTO_ENTREGA`, `ENTREGADO`, `CANCELADO`, `NO_REPARABLE`).
+-   `types/reparacion.ts` — `OrdenReparacion` y todos los payloads
+    (`CreateOrdenPayload`, `UpdateOrdenPayload`, `ChangeEstadoPayload`,
+    `AssignTecnicoPayload`).
+-   `lib/api/reparaciones.ts` — CRUD + `PATCH /reparaciones/:id/estado`
+    + `POST/DELETE /reparaciones/:id/tecnicos`.
+-   `lib/api/diagnosticos.ts`, `lib/api/usuarios.ts`, `lib/api/estadosOrden.ts`.
+-   `lib/hooks/useReparaciones.ts` — `useReparaciones` (listado),
+    `useReparacion` (detalle) y `useReparacionMutations` (create,
+    update, changeEstado, assignTecnico, removeTecnico, remove,
+    addDiagnostico), todo con invalidacion de cache coordinada entre
+    listado y detalle.
+-   `lib/utils/estado.ts` — mapeo de nombre de estado/prioridad a
+    color y etiqueta legible (usado por el `Badge` generico).
+
+Componentes de la isla de detalle (`components/react/modules/reparaciones/`):
+
+-   `EstadoChanger` — cambia el estado con comentario opcional.
+-   `TecnicosPanel` — asigna/quita tecnicos. **Nota:** `GET /usuarios`
+    esta restringido a rol `Administrador` en el backend
+    (`@Roles('Administrador')`); si el usuario logueado no tiene ese
+    rol, el combobox de tecnicos mostrara un error 403 en vez de la
+    lista. Esto se resolvera cuando implementemos permisos por rol en
+    el frontend.
+-   `DiagnosticosPanel` — lista los diagnosticos (vienen embebidos en
+    el detalle de la orden) y permite registrar uno nuevo inline.
+-   `PresupuestosPanel` — CRUD completo (alta, edicion, aprobar,
+    rechazar, eliminar), ver seccion "Modulo Presupuestos" abajo.
+-   `HistorialTimeline` — linea de tiempo de `historialOrden` (solo
+    lectura, se llena automaticamente en el backend con cada cambio
+    de estado).
+
+Nuevo componente reutilizable: `EquipoSelect` (combobox de equipo,
+filtrado por `clienteId`; se deshabilita hasta elegir un cliente).
+
+## Modulo Presupuestos
+
+Dos superficies distintas sobre el mismo recurso:
+
+-   **Embebido en la orden** (`components/react/modules/reparaciones/PresupuestosPanel.tsx`,
+    dentro de `/reparaciones/[id]`) — lista, crea, edita, aprueba,
+    rechaza y elimina presupuestos de esa orden especifica.
+-   **Vista global** (`src/pages/presupuestos/index.astro` + isla
+    `components/react/modules/presupuestos/PresupuestosGlobalPanel.tsx`) —
+    lista todos los presupuestos del taller, filtrable por estado,
+    con enlace directo a la orden de cada uno. Al crear desde aqui
+    (sin contexto de orden) se usa `OrdenSelect`, un combobox que
+    busca ordenes por codigo/cliente contra `/reparaciones`.
+
+Capa de datos: `types/presupuesto.ts`, `lib/api/presupuestos.ts`,
+`lib/hooks/usePresupuestos.ts` (`usePresupuestos` para el listado,
+`usePresupuestoMutations(ordenId?)` para create/update/changeEstado/
+remove — si se pasa `ordenId`, ademas de invalidar el listado de
+presupuestos invalida el detalle de esa orden).
+
+Detalles de negocio importantes (ver `PresupuestosService` en el
+backend):
+
+-   **Al aprobar un presupuesto** (`estado: 'APROBADO'`), el backend
+    sincroniza automaticamente `costoManoObra`, `totalRepuestos` y
+    `total` de la orden asociada con los montos del presupuesto. Por
+    eso las mutaciones invalidan tambien el detalle de la orden — el
+    encabezado de `/reparaciones/[id]` refleja el nuevo total al
+    instante.
+-   `tecnicoId` se asigna automaticamente al usuario autenticado si
+    se omite al crear; el formulario no lo expone (no tiene sentido
+    reasignar el presupuesto a otro tecnico desde la UI por ahora).
+-   `DELETE /presupuestos/:id` es un **borrado fisico** (no hay
+    `deletedAt` en el modelo `Presupuesto`), a diferencia de Clientes/
+    Equipos/Reparaciones que son baja logica — por eso el dialogo de
+    confirmacion dice "Eliminar" y no "Desactivar".
+
+Todos los modulos siguen el mismo patron de capas — `types/` →
+`lib/api/` → `lib/hooks/` → isla(s) en
+`components/react/modules/<modulo>/` → pagina(s) en
+`src/pages/<modulo>/` — que se repetira para Inventario, Entregas,
+Garantias, etc.
