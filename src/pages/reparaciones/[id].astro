@@ -1,0 +1,15 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import ReparacionDetail from '../../components/react/modules/reparaciones/ReparacionDetail';
+
+const idParam = Astro.params.id;
+const ordenId = Number(idParam);
+
+if (!idParam || Number.isNaN(ordenId)) {
+  return Astro.redirect('/reparaciones');
+}
+---
+
+<DashboardLayout title={`Orden #${ordenId}`}>
+  <ReparacionDetail client:load ordenId={ordenId} />
+</DashboardLayout>

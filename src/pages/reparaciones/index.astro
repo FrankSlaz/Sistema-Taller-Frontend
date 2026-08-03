@@ -1,0 +1,21 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Card from '../../components/astro/cards/Card.astro';
+import ReparacionesPanel from '../../components/react/modules/reparaciones/ReparacionesPanel';
+
+const clienteIdParam = Astro.url.searchParams.get('clienteId');
+const clienteId = clienteIdParam ? Number(clienteIdParam) : undefined;
+const equipoIdParam = Astro.url.searchParams.get('equipoId');
+const equipoId = equipoIdParam ? Number(equipoIdParam) : undefined;
+---
+
+<DashboardLayout title="Órdenes de reparación">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">Órdenes de reparación</h1>
+    <p class="text-sm text-graphite-400">Sigue el ciclo completo de cada equipo en el taller.</p>
+  </div>
+
+  <Card>
+    <ReparacionesPanel client:load clienteId={clienteId} equipoId={equipoId} />
+  </Card>
+</DashboardLayout>
