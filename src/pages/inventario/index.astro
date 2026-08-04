@@ -1,0 +1,18 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Card from '../../components/astro/cards/Card.astro';
+import ProductosPanel from '../../components/react/modules/inventario/ProductosPanel';
+---
+
+<DashboardLayout title="Inventario">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">Inventario</h1>
+    <p class="text-sm text-graphite-400">
+      Catálogo de productos y repuestos. El stock solo cambia mediante movimientos registrados.
+    </p>
+  </div>
+
+  <Card>
+    <ProductosPanel client:load />
+  </Card>
+</DashboardLayout>

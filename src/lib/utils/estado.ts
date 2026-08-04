@@ -60,3 +60,29 @@ export function estadoPresupuestoClasses(estado: string): string {
 export function estadoPresupuestoLabel(estado: string): string {
   return ESTADO_PRESUPUESTO_LABELS[estado] ?? estado;
 }
+
+export function stockClasses(stockActual: number, stockMinimo: number): string {
+  if (stockActual <= 0) return 'bg-red-50 text-red-700 ring-red-600/20';
+  if (stockActual <= stockMinimo) return 'bg-amber-50 text-amber-700 ring-amber-600/20';
+  return 'bg-green-50 text-green-700 ring-green-600/20';
+}
+
+const TIPO_MOVIMIENTO_STYLES: Record<string, string> = {
+  ENTRADA: 'bg-green-50 text-green-700 ring-green-600/20',
+  SALIDA: 'bg-red-50 text-red-700 ring-red-600/20',
+  AJUSTE: 'bg-blue-50 text-blue-700 ring-blue-600/20',
+};
+
+const TIPO_MOVIMIENTO_LABELS: Record<string, string> = {
+  ENTRADA: 'Entrada',
+  SALIDA: 'Salida',
+  AJUSTE: 'Ajuste',
+};
+
+export function tipoMovimientoClasses(tipo: string): string {
+  return TIPO_MOVIMIENTO_STYLES[tipo] ?? 'bg-graphite-100 text-graphite-600 ring-graphite-500/20';
+}
+
+export function tipoMovimientoLabel(tipo: string): string {
+  return TIPO_MOVIMIENTO_LABELS[tipo] ?? tipo;
+}

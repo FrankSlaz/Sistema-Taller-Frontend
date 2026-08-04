@@ -92,7 +92,8 @@ src/
 -   [x] Modulo Equipos (listado global o filtrado por cliente, alta, edicion, baja logica)
 -   [x] Modulo Reparaciones (ordenes: listado, detalle, alta, edicion, cambio de estado, tecnicos, diagnosticos)
 -   [x] Modulo Presupuestos (CRUD completo, embebido en la orden + vista global con filtro por estado)
--   [ ] Modulos restantes (inventario, entregas, garantias, ...)
+-   [x] Modulo Inventario (productos, categorias, movimientos de stock)
+-   [ ] Modulos restantes (compras, entregas, garantias, herramientas, ...)
 
 ## Modo de renderizado
 
@@ -239,3 +240,56 @@ Todos los modulos siguen el mismo patron de capas — `types/` →
 `components/react/modules/<modulo>/` → pagina(s) en
 `src/pages/<modulo>/` — que se repetira para Inventario, Entregas,
 Garantias, etc.
+
+## Modulo Inventario
+
+Tres recursos del backend (`/categorias-producto`, `/productos`,
+`/movimientos-inventario`) unidos en dos paginas:
+
+-   `src/pages/inventario/index.astro` — isla `ProductosPanel`:
+    catalogo de productos con busqueda, filtro por categoria y
+    checkbox "solo stock bajo" (`stockBajo=true`, comparacion
+    `stockActual <= stockMinimo` que el backend resuelve en memoria).
+-   `src/pages/inventario/movimientos.astro` — isla `MovimientosPanel`:
+    historial global de movimientos, filtrable por producto (via
+    `ProductoSelect`, reutilizado tambien en el formulario de
+    movimiento). Acepta `?productoId=&productoNombre=`.
+
+Regla de negocio clave, aplicada en toda la UI: **el stock nunca se
+edita directamente**. `UpdateProductoDto` excluye `stockActual` a
+proposito — el backend obliga a pasar por `/movimientos-inventario`
+(tipos `ENTRADA`, `SALIDA`, `AJUSTE`). Por eso:
+
+-   `ProductoFormModal` solo permite fijar `stockActual` (stock
+    inicial) al **crear** un producto; en edicion ese campo se
+    reemplaza por un texto informativo que remite a "Registrar
+    movimiento".
+-   Cada fila de la tabla de productos tiene una accion rapida
+    (icono ⇄) que abre `MovimientoFormModal` con el producto **fijo**
+    (`lockProducto`); desde la pagina de Movimientos, en cambio, el
+    producto viene precargado si hay filtro activo pero sigue siendo
+    editable.
+-   Al registrar un movimiento se invalida tambien el listado de
+    productos (`lib/hooks/useMovimientos.ts`), para que el stock
+    mostrado se actualice al instante.
+
+Categorias se gestionan con `CategoriasManagerModal` — un modal
+autocontenido (lista + alta/edicion inline) accesible desde el boton
+"Categorias" del listado de productos o desde el propio formulario de
+producto ("Gestionar categorias"). `DELETE /categorias-producto/:id`
+falla con 409 si la categoria tiene productos asociados (restriccion
+de llave foranea); el mensaje de error del backend se muestra tal
+cual en el modal.
+
+Capa de datos: `types/categoria.ts`, `types/producto.ts`,
+`types/movimiento.ts`; `lib/api/categorias.ts`, `lib/api/productos.ts`,
+`lib/api/movimientos.ts`; `lib/hooks/useCategorias.ts`,
+`lib/hooks/useProductos.ts`, `lib/hooks/useMovimientos.ts`. Nuevo
+componente reutilizable: `ProductoSelect` (combobox de producto por
+busqueda, muestra el stock actual en cada opcion).
+
+Todos los modulos siguen el mismo patron de capas — `types/` →
+`lib/api/` → `lib/hooks/` → isla(s) en
+`components/react/modules/<modulo>/` → pagina(s) en
+`src/pages/<modulo>/` — que se repetira para Compras, Entregas,
+Garantias, Herramientas, etc.
