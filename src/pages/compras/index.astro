@@ -1,0 +1,19 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Card from '../../components/astro/cards/Card.astro';
+import ComprasPanel from '../../components/react/modules/compras/ComprasPanel';
+---
+
+<DashboardLayout title="Compras">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">Compras</h1>
+    <p class="text-sm text-graphite-400">
+      Registra compras a proveedores. Cada línea genera automáticamente una entrada de stock.
+      Las compras son un registro inmutable: no se editan ni eliminan.
+    </p>
+  </div>
+
+  <Card>
+    <ComprasPanel client:load />
+  </Card>
+</DashboardLayout>

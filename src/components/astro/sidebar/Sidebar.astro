@@ -74,7 +74,7 @@ const currentPath = Astro.url.pathname;
           </p>
           <ul class="space-y-1">
             {group.items.map((item) => {
-              const isActive = currentPath.startsWith(item.href);
+              const isActive = currentPath === item.href;
               return (
                 <li>
                   <a

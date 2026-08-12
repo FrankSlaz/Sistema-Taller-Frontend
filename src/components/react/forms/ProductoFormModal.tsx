@@ -10,6 +10,17 @@ interface ProductoFormModalProps {
   onClose: () => void;
   producto?: Producto | null;
   onManageCategorias?: () => void;
+  /** Precarga el nombre (ej. el término que se buscó en un combobox). */
+  initialNombre?: string;
+  /**
+   * Oculta el campo de stock inicial y fuerza stockActual: 0. Se usa
+   * al crear un producto desde dentro de Compras: el stock real lo
+   * establece la propia compra vía su movimiento ENTRADA automático,
+   * así que arrancar en 0 evita una diferencia de stock falsa.
+   */
+  lockStockZero?: boolean;
+  /** Se llama con el producto recién creado (solo en modo alta). */
+  onCreated?: (producto: Producto) => void;
 }
 
 const emptyForm: CreateProductoPayload = {
@@ -26,7 +37,15 @@ const emptyForm: CreateProductoPayload = {
   estado: true,
 };
 
-export default function ProductoFormModal({ open, onClose, producto, onManageCategorias }: ProductoFormModalProps) {
+export default function ProductoFormModal({
+  open,
+  onClose,
+  producto,
+  onManageCategorias,
+  initialNombre,
+  lockStockZero = false,
+  onCreated,
+}: ProductoFormModalProps) {
   const isEdit = !!producto;
   const { data: categorias } = useCategorias();
   const { create, update } = useProductoMutations();
@@ -51,7 +70,7 @@ export default function ProductoFormModal({ open, onClose, producto, onManageCat
             stockMinimo: producto.stockMinimo ?? 0,
             estado: producto.estado ?? true,
           }
-        : emptyForm,
+        : { ...emptyForm, nombre: initialNombre ?? '' },
     );
     setTouched(false);
     mutation.reset();
@@ -84,7 +103,15 @@ export default function ProductoFormModal({ open, onClose, producto, onManageCat
     if (isEdit && producto) {
       update.mutate({ id: producto.id, payload: base }, { onSuccess: onClose });
     } else {
-      create.mutate({ ...base, stockActual: form.stockActual }, { onSuccess: onClose });
+      create.mutate(
+        { ...base, stockActual: lockStockZero ? 0 : form.stockActual },
+        {
+          onSuccess: (creado) => {
+            onCreated?.(creado);
+            onClose();
+          },
+        },
+      );
     }
   }
 
@@ -216,11 +243,17 @@ export default function ProductoFormModal({ open, onClose, producto, onManageCat
           <div>
             <label className="mb-1 block text-sm font-medium text-graphite-900">
               Stock inicial
-              {isEdit && <span className="ml-1 text-xs font-normal text-graphite-400">(no editable aquí)</span>}
+              {(isEdit || lockStockZero) && (
+                <span className="ml-1 text-xs font-normal text-graphite-400">(no editable aquí)</span>
+              )}
             </label>
             {isEdit ? (
               <p className="rounded-md border border-graphite-100 bg-graphite-50 px-3 py-2 text-sm text-graphite-600">
                 {producto?.stockActual} unidades — usa "Registrar movimiento" para cambiarlo
+              </p>
+            ) : lockStockZero ? (
+              <p className="rounded-md border border-graphite-100 bg-graphite-50 px-3 py-2 text-sm text-graphite-600">
+                0 unidades — esta compra registrará el stock real al confirmarse
               </p>
             ) : (
               <input

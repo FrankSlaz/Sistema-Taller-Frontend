@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Check, ChevronDown, Search } from 'lucide-react';
+import { Check, ChevronDown, Plus, Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { productosApi } from '../../../lib/api/productos';
 
@@ -8,9 +8,17 @@ interface ProductoSelectProps {
   onChange: (productoId: number, label: string) => void;
   initialLabel?: string | null;
   error?: string;
+  /** Si se provee, muestra "Crear producto nuevo" con el término buscado. */
+  onCreateNew?: (term: string) => void;
 }
 
-export default function ProductoSelect({ value, onChange, initialLabel, error }: ProductoSelectProps) {
+export default function ProductoSelect({
+  value,
+  onChange,
+  initialLabel,
+  error,
+  onCreateNew,
+}: ProductoSelectProps) {
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState('');
   const [selectedLabel, setSelectedLabel] = useState(initialLabel ?? '');
@@ -101,6 +109,20 @@ export default function ProductoSelect({ value, onChange, initialLabel, error }:
                 );
               })}
           </ul>
+
+          {onCreateNew && (
+            <button
+              type="button"
+              onClick={() => {
+                onCreateNew(term);
+                setOpen(false);
+              }}
+              className="flex w-full items-center gap-1.5 border-t border-graphite-100 px-3 py-2 text-left text-sm font-medium text-graphite-900 hover:bg-graphite-50"
+            >
+              <Plus size={14} />
+              {term ? `Crear producto "${term}"` : 'Crear producto nuevo'}
+            </button>
+          )}
         </div>
       )}
 

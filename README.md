@@ -93,7 +93,8 @@ src/
 -   [x] Modulo Reparaciones (ordenes: listado, detalle, alta, edicion, cambio de estado, tecnicos, diagnosticos)
 -   [x] Modulo Presupuestos (CRUD completo, embebido en la orden + vista global con filtro por estado)
 -   [x] Modulo Inventario (productos, categorias, movimientos de stock)
--   [ ] Modulos restantes (compras, entregas, garantias, herramientas, ...)
+-   [x] Modulo Compras (proveedores + registro de compras, inmutable)
+-   [ ] Modulos restantes (entregas, garantias, herramientas, ...)
 
 ## Modo de renderizado
 
@@ -293,3 +294,40 @@ Todos los modulos siguen el mismo patron de capas — `types/` →
 `components/react/modules/<modulo>/` → pagina(s) en
 `src/pages/<modulo>/` — que se repetira para Compras, Entregas,
 Garantias, Herramientas, etc.
+
+## Modulo Compras
+
+`src/pages/compras/index.astro` + isla
+`components/react/modules/compras/ComprasPanel.tsx`.
+
+Regla de negocio clave: **las compras son inmutables**. El backend
+solo expone `GET /compras` y `POST /compras` — no hay `PATCH` ni
+`DELETE` (para corregir un error se usa un movimiento de ajuste
+manual en Inventario). Por eso la UI no tiene edicion ni baja: hacer
+clic en el numero de una compra abre `CompraDetailModal`, un modal de
+**solo lectura** con el desglose completo (incluye el aviso explicito
+de por que no es editable).
+
+`CompraFormModal` registra una compra nueva con **lineas de detalle
+dinamicas** (agregar/quitar producto), cada una con su propio
+`ProductoSelect`, cantidad y precio unitario; calcula subtotal por
+linea y total general en vivo. Al confirmar, el backend crea la
+compra Y genera automaticamente un movimiento `ENTRADA` de inventario
+por cada linea — por eso `useCompraMutations` invalida tambien
+`productos` y `movimientos-inventario` ademas de `compras`.
+
+Proveedores (recurso CRUD simple, igual patron que Categorias) se
+gestionan con `ProveedoresManagerModal`, accesible desde el boton
+"Proveedores" del listado. `DELETE /proveedores/:id` falla con 409 si
+el proveedor tiene compras registradas (igual que categorias con
+productos).
+
+Capa de datos: `types/proveedor.ts`, `types/compra.ts`,
+`lib/api/proveedores.ts`, `lib/api/compras.ts`,
+`lib/hooks/useProveedores.ts`, `lib/hooks/useCompras.ts`.
+
+Todos los modulos siguen el mismo patron de capas — `types/` →
+`lib/api/` → `lib/hooks/` → isla(s) en
+`components/react/modules/<modulo>/` → pagina(s) en
+`src/pages/<modulo>/` — que se repetira para Entregas, Garantias,
+Herramientas, etc.
