@@ -1,0 +1,18 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Card from '../../components/astro/cards/Card.astro';
+import EntregasPanel from '../../components/react/modules/entregas/EntregasPanel';
+---
+
+<DashboardLayout title="Entregas">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">Entregas</h1>
+    <p class="text-sm text-graphite-400">
+      Registro de equipos entregados. Al registrar una entrega, la orden pasa a ENTREGADO automáticamente.
+    </p>
+  </div>
+
+  <Card>
+    <EntregasPanel client:load />
+  </Card>
+</DashboardLayout>

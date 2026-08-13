@@ -1,5 +1,6 @@
 import type { EstadoOrden } from './estado-orden';
 import type { Presupuesto } from './presupuesto';
+import type { Garantia } from './garantia';
 
 /**
  * Espejo de backend-nest/src/modules/reparaciones
@@ -86,6 +87,12 @@ export interface OrdenReparacion {
   diagnosticos?: Diagnostico[];
   presupuestos?: Presupuesto[];
   historialOrden?: HistorialOrdenItem[];
+  /**
+   * Viene embebida en GET /reparaciones/:id (include: { garantia: true }).
+   * No existe GET /garantias/orden/:id, así que esta es la única forma
+   * de saber si la orden ya tiene garantía sin listar todas.
+   */
+  garantia?: Garantia | null;
 }
 
 export interface CreateOrdenPayload {

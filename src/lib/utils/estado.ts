@@ -86,3 +86,23 @@ export function tipoMovimientoClasses(tipo: string): string {
 export function tipoMovimientoLabel(tipo: string): string {
   return TIPO_MOVIMIENTO_LABELS[tipo] ?? tipo;
 }
+
+const ESTADO_GARANTIA_STYLES: Record<string, string> = {
+  ACTIVA: 'bg-green-50 text-green-700 ring-green-600/20',
+  VENCIDA: 'bg-graphite-100 text-graphite-600 ring-graphite-500/20',
+  ANULADA: 'bg-red-50 text-red-700 ring-red-600/20',
+};
+
+const ESTADO_GARANTIA_LABELS: Record<string, string> = {
+  ACTIVA: 'Activa',
+  VENCIDA: 'Vencida',
+  ANULADA: 'Anulada',
+};
+
+export function estadoGarantiaClasses(estado: string): string {
+  return ESTADO_GARANTIA_STYLES[estado] ?? 'bg-graphite-100 text-graphite-600 ring-graphite-500/20';
+}
+
+export function estadoGarantiaLabel(estado: string): string {
+  return ESTADO_GARANTIA_LABELS[estado] ?? estado;
+}

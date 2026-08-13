@@ -94,7 +94,8 @@ src/
 -   [x] Modulo Presupuestos (CRUD completo, embebido en la orden + vista global con filtro por estado)
 -   [x] Modulo Inventario (productos, categorias, movimientos de stock)
 -   [x] Modulo Compras (proveedores + registro de compras, inmutable)
--   [ ] Modulos restantes (entregas, garantias, herramientas, ...)
+-   [x] Modulo Entregas y Garantias (embebidos en la orden + vistas globales)
+-   [ ] Modulos restantes (herramientas, ...)
 
 ## Modo de renderizado
 
@@ -316,6 +317,22 @@ compra Y genera automaticamente un movimiento `ENTRADA` de inventario
 por cada linea — por eso `useCompraMutations` invalida tambien
 `productos` y `movimientos-inventario` ademas de `compras`.
 
+**Crear un producto nuevo sin salir de la compra:** si el producto
+que se esta comprando todavia no existe en el catalogo, cada
+`ProductoSelect` de una linea tiene un boton "Crear producto
+'<termino buscado>'" al fondo del dropdown. Abre `ProductoFormModal`
+anidado (un modal sobre otro) en modo alta rapida:
+
+-   El nombre buscado se precarga en el formulario (`initialNombre`).
+-   El campo de stock inicial se oculta y se fuerza a **0**
+    (`lockStockZero`) — el stock real lo va a establecer la propia
+    compra al confirmarse via su movimiento `ENTRADA` automatico. Si
+    se dejara elegir un stock inicial aqui, se duplicaria: el
+    producto arrancaria con ese stock Y la compra sumaria encima,
+    dejando un numero mayor al que realmente ingreso al taller.
+-   Al crear, el producto queda automaticamente seleccionado en esa
+    linea (`onCreated`) sin cerrar el formulario de compra.
+
 Proveedores (recurso CRUD simple, igual patron que Categorias) se
 gestionan con `ProveedoresManagerModal`, accesible desde el boton
 "Proveedores" del listado. `DELETE /proveedores/:id` falla con 409 si
@@ -331,3 +348,53 @@ Todos los modulos siguen el mismo patron de capas — `types/` →
 `components/react/modules/<modulo>/` → pagina(s) en
 `src/pages/<modulo>/` — que se repetira para Entregas, Garantias,
 Herramientas, etc.
+
+## Modulo Entregas y Garantias
+
+Ambos recursos tienen **relacion 1-1 con una OrdenReparacion** y
+cierran el ciclo de vida de una orden, asi que viven en dos lugares:
+
+-   **Embebidos en el detalle de la orden** — nuevas secciones en
+    `ReparacionDetail.tsx`: `EntregaPanel` y `GarantiaPanel`. Cada una
+    muestra el registro si ya existe, o un formulario compacto para
+    crearlo si no.
+-   **Vistas globales** — `src/pages/entregas/index.astro` y
+    `src/pages/garantias/index.astro` (isla `EntregasPanel` /
+    `GarantiasPanel`), con boton "Registrar..." que usa `OrdenSelect`
+    para elegir la orden desde cero.
+
+Reglas de negocio del backend que la UI respeta:
+
+-   **Entrega → marca la orden ENTREGADO automaticamente.** Por eso
+    `EntregaPanel`/`EntregaFormModal` avisan esto antes de confirmar.
+    Solo puede existir una entrega por orden (`POST /entregas` falla
+    con 409 si ya existe); no hay `PATCH`/`DELETE`.
+-   **Garantia requiere que la orden ya tenga Entrega.** Si no la
+    tiene, `POST /garantias` responde 400. `GarantiaPanel` verifica
+    esto de antemano (via `useEntregaByOrden`) y muestra un mensaje
+    en vez de un formulario que fallaria al enviar.
+-   `fechaInicio`/`fechaFin` de la garantia los calcula el backend
+    (fecha de entrega + dias) — el formulario solo pide `dias`.
+-   Cambio de estado de garantia (`ACTIVA` → `VENCIDA`/`ANULADA`) via
+    `PATCH /garantias/:id/estado`, disponible tanto en el panel
+    embebido como en la vista global (botones inline por fila).
+
+Detalle tecnico de por que `GarantiaPanel` usa un campo distinto al
+de `EntregaPanel`: no existe `GET /garantias/orden/:id` en el
+backend (solo existe para entregas), asi que la garantia de una
+orden se lee del campo `garantia` ya embebido en
+`GET /reparaciones/:id` (`types/reparacion.ts`) en vez de una
+consulta aparte — mientras que `EntregaPanel` si usa su propio
+`GET /entregas/orden/:id` (mas rico, incluye `usuarioEntrega`).
+
+Capa de datos: `types/entrega.ts`, `types/garantia.ts`,
+`lib/api/entregas.ts`, `lib/api/garantias.ts`,
+`lib/hooks/useEntregas.ts` (incluye `useEntregaByOrden`, que trata un
+404 como "todavia no tiene entrega" en vez de un error real),
+`lib/hooks/useGarantias.ts`.
+
+Todos los modulos siguen el mismo patron de capas — `types/` →
+`lib/api/` → `lib/hooks/` → isla(s) en
+`components/react/modules/<modulo>/` → pagina(s) en
+`src/pages/<modulo>/` — que se repetira para Herramientas, el ultimo
+modulo pendiente.
