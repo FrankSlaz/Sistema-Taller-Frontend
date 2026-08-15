@@ -1,0 +1,19 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Card from '../../components/astro/cards/Card.astro';
+import HerramientasPanel from '../../components/react/modules/herramientas/HerramientasPanel';
+---
+
+<DashboardLayout title="Herramientas">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">Herramientas</h1>
+    <p class="text-sm text-graphite-400">
+      Inventario de herramientas del taller y su disponibilidad. No se eliminan: se retiran marcándolas
+      como "Baja".
+    </p>
+  </div>
+
+  <Card>
+    <HerramientasPanel client:load />
+  </Card>
+</DashboardLayout>

@@ -1,0 +1,16 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Card from '../../components/astro/cards/Card.astro';
+import AsignacionesPanel from '../../components/react/modules/herramientas/AsignacionesPanel';
+---
+
+<DashboardLayout title="Asignaciones de herramientas">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">Asignaciones de herramientas</h1>
+    <p class="text-sm text-graphite-400">Historial de préstamos de herramientas a técnicos.</p>
+  </div>
+
+  <Card>
+    <AsignacionesPanel client:load />
+  </Card>
+</DashboardLayout>

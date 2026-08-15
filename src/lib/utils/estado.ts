@@ -106,3 +106,25 @@ export function estadoGarantiaClasses(estado: string): string {
 export function estadoGarantiaLabel(estado: string): string {
   return ESTADO_GARANTIA_LABELS[estado] ?? estado;
 }
+
+const ESTADO_HERRAMIENTA_STYLES: Record<string, string> = {
+  DISPONIBLE: 'bg-green-50 text-green-700 ring-green-600/20',
+  ASIGNADA: 'bg-blue-50 text-blue-700 ring-blue-600/20',
+  MANTENIMIENTO: 'bg-amber-50 text-amber-700 ring-amber-600/20',
+  BAJA: 'bg-red-50 text-red-700 ring-red-600/20',
+};
+
+const ESTADO_HERRAMIENTA_LABELS: Record<string, string> = {
+  DISPONIBLE: 'Disponible',
+  ASIGNADA: 'Asignada',
+  MANTENIMIENTO: 'Mantenimiento',
+  BAJA: 'Baja',
+};
+
+export function estadoHerramientaClasses(estado: string): string {
+  return ESTADO_HERRAMIENTA_STYLES[estado] ?? 'bg-graphite-100 text-graphite-600 ring-graphite-500/20';
+}
+
+export function estadoHerramientaLabel(estado: string): string {
+  return ESTADO_HERRAMIENTA_LABELS[estado] ?? estado;
+}

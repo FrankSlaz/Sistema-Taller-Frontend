@@ -95,7 +95,8 @@ src/
 -   [x] Modulo Inventario (productos, categorias, movimientos de stock)
 -   [x] Modulo Compras (proveedores + registro de compras, inmutable)
 -   [x] Modulo Entregas y Garantias (embebidos en la orden + vistas globales)
--   [ ] Modulos restantes (herramientas, ...)
+-   [x] Modulo Herramientas (inventario + asignaciones a tecnicos)
+-   [ ] Modulos de Administracion (Usuarios, Reportes, Configuracion) y Comunicaciones/Auditoria — no estan en el alcance original de este recorrido por modulo
 
 ## Modo de renderizado
 
@@ -398,3 +399,53 @@ Todos los modulos siguen el mismo patron de capas — `types/` →
 `components/react/modules/<modulo>/` → pagina(s) en
 `src/pages/<modulo>/` — que se repetira para Herramientas, el ultimo
 modulo pendiente.
+
+## Modulo Herramientas
+
+Dos paginas: `src/pages/herramientas/index.astro` (isla
+`HerramientasPanel`) y `src/pages/herramientas/asignaciones.astro`
+(isla `AsignacionesPanel`, historial global de prestamos con
+checkbox "solo activos").
+
+Reglas de negocio que definieron la UI:
+
+-   **No hay `DELETE`.** Una herramienta se retira cambiando su
+    estado a `BAJA` via `PATCH /herramientas/:id/estado` — no existe
+    boton de "eliminar" en ningun lado.
+-   **`ASIGNADA` es un estado automatico**, no seteable a mano: lo
+    pone el backend al asignar (`POST /herramientas/:id/asignar`) y
+    lo quita al devolver (`PATCH /herramientas/asignaciones/:id/devolver`).
+    Los botones de cambio de estado manual
+    (`DISPONIBLE`/`MANTENIMIENTO`/`BAJA`) se ocultan mientras la
+    herramienta esta asignada — el backend los rechazaria con 409
+    de todas formas ("regístrala como devuelta antes").
+-   **Asignar exige `estado === DISPONIBLE`**; por eso el boton de
+    asignar (icono ⇄) solo aparece en filas con ese estado.
+-   `GET /herramientas` admite `search` (nombre, marca, modelo,
+    numero de serie) y `estado`, agregados al backend en
+    `FindHerramientasQueryDto` (antes solo tenia paginacion) — asi
+    que `HerramientasPanel` tiene el mismo patron de `SearchInput` +
+    `<select>` que Reparaciones/Inventario.
+
+Detalle de implementacion para evitar N+1 peticiones: la tabla
+principal necesita saber, por cada herramienta `ASIGNADA`, el `id`
+de su asignacion activa (para el boton "Devolver"), pero el listado
+de herramientas no lo incluye. En vez de pedirlo herramienta por
+herramienta, `HerramientasPanel` hace **una sola** llamada a
+`GET /herramientas/asignaciones?activas=true&limit=100` y arma un
+mapa `herramientaId → asignacionId` en memoria.
+
+`HerramientaDetailModal` (icono ojo) es donde vive el flujo completo:
+info, cambio de estado, historial de las ultimas 10 asignaciones
+(viene embebido en `GET /herramientas/:id`) y registrar devolucion
+si esta prestada.
+
+Nuevo componente reutilizable: `UsuarioSelect` — a diferencia de
+`ClienteSelect`/`ProductoSelect`/`OrdenSelect`, `GET /usuarios` no
+admite busqueda por query ni paginacion (y esta restringido a rol
+Administrador, la misma limitacion que ya se documento para el
+selector de tecnicos en Reparaciones), asi que trae la lista
+completa una vez y filtra en el cliente.
+
+Capa de datos: `types/herramienta.ts`, `lib/api/herramientas.ts`,
+`lib/hooks/useHerramientas.ts`, `lib/hooks/useAsignaciones.ts`.
