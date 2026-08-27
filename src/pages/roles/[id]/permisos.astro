@@ -1,0 +1,18 @@
+---
+import DashboardLayout from '../../../layouts/DashboardLayout.astro';
+import Card from '../../../components/astro/cards/Card.astro';
+import PermisosMatrix from '../../../components/react/modules/roles/PermisosMatrix';
+
+const idParam = Astro.params.id;
+const rolId = Number(idParam);
+
+if (!idParam || Number.isNaN(rolId)) {
+  return Astro.redirect('/roles');
+}
+---
+
+<DashboardLayout title="Permisos del rol">
+  <Card>
+    <PermisosMatrix client:load rolId={rolId} />
+  </Card>
+</DashboardLayout>

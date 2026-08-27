@@ -1,0 +1,18 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Card from '../../components/astro/cards/Card.astro';
+import RolesPanel from '../../components/react/modules/roles/RolesPanel';
+---
+
+<DashboardLayout title="Roles">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">Roles</h1>
+    <p class="text-sm text-graphite-400">
+      Roles del sistema. Usa el ícono de escudo para gestionar los permisos de cada uno.
+    </p>
+  </div>
+
+  <Card>
+    <RolesPanel client:load />
+  </Card>
+</DashboardLayout>

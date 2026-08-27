@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useEntregaByOrden, useEntregaMutations } from '../../../../lib/hooks/useEntregas';
+import { usePermiso } from '../../../../lib/hooks/useAuth';
 import { ApiError } from '../../../../lib/api/client';
 import type { OrdenReparacion } from '../../../../types/reparacion';
 
@@ -16,6 +17,7 @@ function formatFechaHora(value: string) {
 export default function EntregaPanel({ orden }: { orden: OrdenReparacion }) {
   const { data: entrega, isLoading, exists } = useEntregaByOrden(orden.id);
   const { create } = useEntregaMutations(orden.id);
+  const puedeCrear = usePermiso('entregas:crear');
   const [nombreRecibe, setNombreRecibe] = useState('');
   const [documentoRecibe, setDocumentoRecibe] = useState('');
   const [observaciones, setObservaciones] = useState('');
@@ -57,6 +59,10 @@ export default function EntregaPanel({ orden }: { orden: OrdenReparacion }) {
         {entrega.observaciones && <p className="text-graphite-600">{entrega.observaciones}</p>}
       </div>
     );
+  }
+
+  if (!puedeCrear) {
+    return <p className="text-sm text-graphite-400">Esta orden aún no fue entregada.</p>;
   }
 
   return (

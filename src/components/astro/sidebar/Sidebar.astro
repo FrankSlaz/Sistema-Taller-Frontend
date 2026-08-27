@@ -40,12 +40,14 @@ const groups: NavGroup[] = [
       { label: 'Movimientos', href: '/inventario/movimientos' },
       { label: 'Compras', href: '/compras' },
       { label: 'Herramientas', href: '/herramientas' },
+      { label: 'Asignaciones', href: '/herramientas/asignaciones' },
     ],
   },
   {
     title: 'Administración',
     items: [
       { label: 'Usuarios', href: '/usuarios' },
+      { label: 'Roles', href: '/roles' },
       { label: 'Reportes', href: '/reportes' },
       { label: 'Configuración', href: '/configuracion' },
     ],
@@ -74,7 +76,7 @@ const currentPath = Astro.url.pathname;
           </p>
           <ul class="space-y-1">
             {group.items.map((item) => {
-              const isActive = currentPath === item.href;
+              const isActive = currentPath.startsWith(item.href);
               return (
                 <li>
                   <a

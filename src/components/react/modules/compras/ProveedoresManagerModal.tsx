@@ -5,6 +5,7 @@ import ConfirmDialog from '../../ui/ConfirmDialog';
 import { useProveedorMutations, useProveedores } from '../../../../lib/hooks/useProveedores';
 import { ApiError } from '../../../../lib/api/client';
 import type { Proveedor, ProveedorPayload } from '../../../../types/proveedor';
+import { usePermiso } from '../../../../lib/hooks/useAuth';
 
 interface ProveedoresManagerModalProps {
   open: boolean;
@@ -20,6 +21,9 @@ export default function ProveedoresManagerModal({ open, onClose }: ProveedoresMa
   const [form, setForm] = useState<ProveedorPayload>(emptyForm);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Proveedor | null>(null);
+  const puedeCrear = usePermiso('compras:crear');
+  const puedeEditar = usePermiso('compras:editar');
+  const puedeEliminar = usePermiso('compras:eliminar');
 
   const mutation = editing ? update : create;
   const errorMessage =
@@ -80,28 +84,32 @@ export default function ProveedoresManagerModal({ open, onClose }: ProveedoresMa
                 </p>
               </div>
               <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => startEdit(p)}
-                  className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-                  aria-label={`Editar ${p.nombre}`}
-                >
-                  <Pencil size={14} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDeleteTarget(p)}
-                  className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-                  aria-label={`Eliminar ${p.nombre}`}
-                >
-                  <Trash2 size={14} />
-                </button>
+                {puedeEditar && (
+                  <button
+                    type="button"
+                    onClick={() => startEdit(p)}
+                    className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+                    aria-label={`Editar ${p.nombre}`}
+                  >
+                    <Pencil size={14} />
+                  </button>
+                )}
+                {puedeEliminar && (
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(p)}
+                    className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
+                    aria-label={`Eliminar ${p.nombre}`}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
             </li>
           ))}
         </ul>
 
-        {!formOpen && (
+        {!formOpen && puedeCrear && (
           <button
             type="button"
             onClick={startCreate}

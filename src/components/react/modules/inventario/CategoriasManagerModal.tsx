@@ -5,6 +5,7 @@ import ConfirmDialog from '../../ui/ConfirmDialog';
 import { useCategoriaMutations, useCategorias } from '../../../../lib/hooks/useCategorias';
 import { ApiError } from '../../../../lib/api/client';
 import type { Categoria, CategoriaPayload } from '../../../../types/categoria';
+import { usePermiso } from '../../../../lib/hooks/useAuth';
 
 interface CategoriasManagerModalProps {
   open: boolean;
@@ -20,6 +21,9 @@ export default function CategoriasManagerModal({ open, onClose }: CategoriasMana
   const [form, setForm] = useState<CategoriaPayload>(emptyForm);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Categoria | null>(null);
+  const puedeCrear = usePermiso('inventario:crear');
+  const puedeEditar = usePermiso('inventario:editar');
+  const puedeEliminar = usePermiso('inventario:eliminar');
 
   const mutation = editing ? update : create;
   const errorMessage =
@@ -72,28 +76,32 @@ export default function CategoriasManagerModal({ open, onClose }: CategoriasMana
                 </p>
               </div>
               <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => startEdit(cat)}
-                  className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-                  aria-label={`Editar ${cat.nombre}`}
-                >
-                  <Pencil size={14} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDeleteTarget(cat)}
-                  className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-                  aria-label={`Eliminar ${cat.nombre}`}
-                >
-                  <Trash2 size={14} />
-                </button>
+                {puedeEditar && (
+                  <button
+                    type="button"
+                    onClick={() => startEdit(cat)}
+                    className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+                    aria-label={`Editar ${cat.nombre}`}
+                  >
+                    <Pencil size={14} />
+                  </button>
+                )}
+                {puedeEliminar && (
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(cat)}
+                    className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
+                    aria-label={`Eliminar ${cat.nombre}`}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
             </li>
           ))}
         </ul>
 
-        {!formOpen && (
+        {!formOpen && puedeCrear && (
           <button
             type="button"
             onClick={startCreate}

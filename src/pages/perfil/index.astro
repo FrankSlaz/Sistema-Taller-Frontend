@@ -1,0 +1,16 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Card from '../../components/astro/cards/Card.astro';
+import PerfilPanel from '../../components/react/modules/perfil/PerfilPanel';
+---
+
+<DashboardLayout title="Mi perfil">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">Mi perfil</h1>
+    <p class="text-sm text-graphite-400">Tus datos de cuenta y seguridad.</p>
+  </div>
+
+  <Card class="max-w-xl">
+    <PerfilPanel client:load />
+  </Card>
+</DashboardLayout>

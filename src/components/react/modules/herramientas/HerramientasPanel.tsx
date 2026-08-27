@@ -12,6 +12,7 @@ import { useHerramientaMutations, useHerramientas } from '../../../../lib/hooks/
 import { useAsignaciones } from '../../../../lib/hooks/useAsignaciones';
 import { estadoHerramientaClasses, estadoHerramientaLabel } from '../../../../lib/utils/estado';
 import { ESTADOS_HERRAMIENTA, type Herramienta } from '../../../../types/herramienta';
+import { usePermiso } from '../../../../lib/hooks/useAuth';
 
 const LIMIT = 10;
 
@@ -34,6 +35,8 @@ function HerramientasPanelContent() {
 
   const { data, isLoading, isFetching } = useHerramientas({ page, limit: LIMIT, search, estado: estado || undefined });
   const { devolver } = useHerramientaMutations();
+  const puedeCrear = usePermiso('herramientas:crear');
+  const puedeEditar = usePermiso('herramientas:editar');
 
   function handleSearchChange(value: string) {
     setSearch(value);
@@ -84,7 +87,7 @@ function HerramientasPanelContent() {
         const asignacionId = asignacionPorHerramienta.get(row.id);
         return (
           <div className="flex justify-end gap-1">
-            {row.estado === 'DISPONIBLE' && (
+            {row.estado === 'DISPONIBLE' && puedeEditar && (
               <button
                 type="button"
                 onClick={() => setAsignarTarget(row)}
@@ -95,7 +98,7 @@ function HerramientasPanelContent() {
                 <ArrowLeftRight size={15} />
               </button>
             )}
-            {row.estado === 'ASIGNADA' && asignacionId && (
+            {row.estado === 'ASIGNADA' && asignacionId && puedeEditar && (
               <button
                 type="button"
                 onClick={() => devolver.mutate(asignacionId)}
@@ -116,14 +119,16 @@ function HerramientasPanelContent() {
             >
               <Eye size={15} />
             </button>
-            <button
-              type="button"
-              onClick={() => setFormState({ open: true, herramienta: row })}
-              className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-              aria-label={`Editar ${row.nombre}`}
-            >
-              <Pencil size={15} />
-            </button>
+            {puedeEditar && (
+              <button
+                type="button"
+                onClick={() => setFormState({ open: true, herramienta: row })}
+                className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+                aria-label={`Editar ${row.nombre}`}
+              >
+                <Pencil size={15} />
+              </button>
+            )}
           </div>
         );
       },
@@ -158,6 +163,7 @@ function HerramientasPanelContent() {
           type="button"
           onClick={() => setFormState({ open: true, herramienta: null })}
           className="inline-flex items-center justify-center gap-1.5 rounded-md bg-graphite-900 px-4 py-2 text-sm font-semibold text-white hover:bg-graphite-800"
+          hidden={!puedeCrear}
         >
           <Plus size={16} />
           Nueva herramienta

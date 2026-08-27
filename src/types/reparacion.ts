@@ -28,6 +28,12 @@ export interface OrdenEquipoRef {
   numeroSerie?: string | null;
 }
 
+export interface Tecnico {
+  id: number;
+  nombre: string;
+  apellido?: string | null;
+}
+
 export interface OrdenTecnico {
   id: number;
   ordenId: number;

@@ -7,6 +7,7 @@ import { usePresupuestos, usePresupuestoMutations } from '../../../../lib/hooks/
 import { estadoPresupuestoClasses, estadoPresupuestoLabel } from '../../../../lib/utils/estado';
 import type { OrdenReparacion } from '../../../../types/reparacion';
 import type { Presupuesto } from '../../../../types/presupuesto';
+import { usePermiso } from '../../../../lib/hooks/useAuth';
 
 function formatMonto(value?: string | number | null) {
   if (value === null || value === undefined) return '—';
@@ -22,6 +23,10 @@ export default function PresupuestosPanel({ orden }: { orden: OrdenReparacion })
     presupuesto: null,
   });
   const [deleteTarget, setDeleteTarget] = useState<Presupuesto | null>(null);
+
+  const puedeCrear = usePermiso('presupuestos:crear');
+  const puedeEditar = usePermiso('presupuestos:editar');
+  const puedeEliminar = usePermiso('presupuestos:eliminar');
 
   const presupuestos = data?.items ?? [];
 
@@ -39,7 +44,7 @@ export default function PresupuestosPanel({ orden }: { orden: OrdenReparacion })
               <div className="flex items-center gap-1">
                 <Badge label={estadoPresupuestoLabel(p.estado)} className={estadoPresupuestoClasses(p.estado)} />
 
-                {p.estado === 'PENDIENTE' && (
+                {p.estado === 'PENDIENTE' && puedeEditar && (
                   <>
                     <button
                       type="button"
@@ -62,22 +67,26 @@ export default function PresupuestosPanel({ orden }: { orden: OrdenReparacion })
                   </>
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => setFormState({ open: true, presupuesto: p })}
-                  className="rounded-md p-1 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-                  aria-label="Editar presupuesto"
-                >
-                  <Pencil size={14} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDeleteTarget(p)}
-                  className="rounded-md p-1 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-                  aria-label="Eliminar presupuesto"
-                >
-                  <Trash2 size={14} />
-                </button>
+                {puedeEditar && (
+                  <button
+                    type="button"
+                    onClick={() => setFormState({ open: true, presupuesto: p })}
+                    className="rounded-md p-1 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+                    aria-label="Editar presupuesto"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                )}
+                {puedeEliminar && (
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(p)}
+                    className="rounded-md p-1 text-graphite-400 hover:bg-red-50 hover:text-red-600"
+                    aria-label="Eliminar presupuesto"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -95,14 +104,16 @@ export default function PresupuestosPanel({ orden }: { orden: OrdenReparacion })
         ))}
       </ul>
 
-      <button
-        type="button"
-        onClick={() => setFormState({ open: true, presupuesto: null })}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-graphite-900 hover:underline"
-      >
-        <Plus size={15} />
-        Nuevo presupuesto
-      </button>
+      {puedeCrear && (
+        <button
+          type="button"
+          onClick={() => setFormState({ open: true, presupuesto: null })}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-graphite-900 hover:underline"
+        >
+          <Plus size={15} />
+          Nuevo presupuesto
+        </button>
+      )}
 
       <PresupuestoFormModal
         open={formState.open}

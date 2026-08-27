@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { authApi } from '../../../lib/api/auth';
-import { setTokens } from '../../../lib/api/client';
+import { setTokens, setUsuario } from '../../../lib/api/client';
 import { ApiError } from '../../../lib/api/client';
 import QueryProvider from '../providers/QueryProvider';
 
@@ -13,6 +13,7 @@ function LoginFormContent() {
     mutationFn: authApi.login,
     onSuccess: (data) => {
       setTokens(data.accessToken, data.refreshToken);
+      setUsuario(data.usuario);
       window.location.href = '/dashboard';
     },
   });

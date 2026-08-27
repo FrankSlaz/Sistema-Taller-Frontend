@@ -4,6 +4,7 @@ import { useHerramienta, useHerramientaMutations } from '../../../../lib/hooks/u
 import { ApiError } from '../../../../lib/api/client';
 import { estadoHerramientaClasses, estadoHerramientaLabel } from '../../../../lib/utils/estado';
 import { ESTADOS_HERRAMIENTA_MANUALES, type EstadoHerramientaManual } from '../../../../types/herramienta';
+import { usePermiso } from '../../../../lib/hooks/useAuth';
 
 interface HerramientaDetailModalProps {
   herramientaId: number | null;
@@ -29,6 +30,7 @@ export default function HerramientaDetailModal({
 }: HerramientaDetailModalProps) {
   const { data: herramienta, isLoading } = useHerramienta(herramientaId ?? 0);
   const { changeEstado, devolver } = useHerramientaMutations(herramientaId ?? undefined);
+  const puedeEditar = usePermiso('herramientas:editar');
 
   const errorMessage =
     changeEstado.error instanceof ApiError
@@ -52,7 +54,7 @@ export default function HerramientaDetailModal({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <Badge label={estadoHerramientaLabel(herramienta.estado)} className={estadoHerramientaClasses(herramienta.estado)} />
-            {herramienta.estado === 'DISPONIBLE' && (
+            {herramienta.estado === 'DISPONIBLE' && puedeEditar && (
               <button
                 type="button"
                 onClick={() => onAsignar(herramienta.id)}
@@ -92,6 +94,7 @@ export default function HerramientaDetailModal({
           )}
 
           {herramienta.estado === 'ASIGNADA' && asignacionActiva ? (
+            puedeEditar ? (
             <div className="rounded-md border border-blue-100 bg-blue-50 p-3 text-sm">
               <p className="text-blue-900">
                 Prestada a{' '}
@@ -109,7 +112,10 @@ export default function HerramientaDetailModal({
                 {devolver.isPending ? 'Registrando…' : 'Registrar devolución'}
               </button>
             </div>
-          ) : (
+            ) : (
+              <p className="text-sm text-graphite-500">Prestada a {asignacionActiva.usuario.nombre}.</p>
+            )
+          ) : puedeEditar ? (
             <div>
               <p className="mb-1 text-xs font-medium uppercase tracking-wide text-graphite-400">Cambiar estado</p>
               <div className="flex flex-wrap gap-2">
@@ -127,7 +133,7 @@ export default function HerramientaDetailModal({
               </div>
               {errorMessage && <p className="mt-2 text-sm text-red-700">{errorMessage}</p>}
             </div>
-          )}
+          ) : null}
 
           <div>
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-graphite-400">

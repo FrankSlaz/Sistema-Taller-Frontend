@@ -11,6 +11,7 @@ import PresupuestosPanel from './PresupuestosPanel';
 import HistorialTimeline from './HistorialTimeline';
 import QueryProvider from '../../providers/QueryProvider';
 import { useReparacion } from '../../../../lib/hooks/useReparaciones';
+import { usePermiso } from '../../../../lib/hooks/useAuth';
 import { estadoOrdenClasses, estadoOrdenLabel, prioridadClasses } from '../../../../lib/utils/estado';
 
 function formatFecha(value?: string | null) {
@@ -31,6 +32,7 @@ interface ReparacionDetailProps {
 function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
   const { data: orden, isLoading, error } = useReparacion(ordenId);
   const [editOpen, setEditOpen] = useState(false);
+  const puedeEditar = usePermiso('reparaciones:editar');
 
   if (isLoading) {
     return <div className="h-64 animate-pulse rounded-lg bg-graphite-100" />;
@@ -71,14 +73,16 @@ function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setEditOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-md border border-graphite-200 px-3 py-1.5 text-sm font-medium text-graphite-700 hover:bg-graphite-50"
-          >
-            <Pencil size={14} />
-            Editar
-          </button>
+          {puedeEditar && (
+            <button
+              type="button"
+              onClick={() => setEditOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-graphite-200 px-3 py-1.5 text-sm font-medium text-graphite-700 hover:bg-graphite-50"
+            >
+              <Pencil size={14} />
+              Editar
+            </button>
+          )}
         </div>
 
         <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-graphite-100 pt-5 sm:grid-cols-4">

@@ -8,6 +8,9 @@ import ProveedoresManagerModal from './ProveedoresManagerModal';
 import QueryProvider from '../../providers/QueryProvider';
 import { useCompras } from '../../../../lib/hooks/useCompras';
 import { useProveedores } from '../../../../lib/hooks/useProveedores';
+import AccessDenied from '../../ui/AccessDenied';
+import { usePermiso } from '../../../../lib/hooks/useAuth';
+import { ApiError } from '../../../../lib/api/client';
 import type { Compra } from '../../../../types/compra';
 
 const LIMIT = 10;
@@ -29,7 +32,12 @@ function ComprasPanelContent() {
   const [detailTarget, setDetailTarget] = useState<Compra | null>(null);
 
   const { data: proveedores } = useProveedores();
-  const { data, isLoading, isFetching } = useCompras({ page, limit: LIMIT, proveedorId });
+  const { data, isLoading, isFetching, error } = useCompras({ page, limit: LIMIT, proveedorId });
+  const puedeCrear = usePermiso('compras:crear');
+
+  if (error instanceof ApiError && error.statusCode === 403) {
+    return <AccessDenied />;
+  }
 
   const columns: Column<Compra>[] = [
     {
@@ -88,6 +96,7 @@ function ComprasPanelContent() {
             type="button"
             onClick={() => setFormOpen(true)}
             className="inline-flex items-center justify-center gap-1.5 rounded-md bg-graphite-900 px-4 py-2 text-sm font-semibold text-white hover:bg-graphite-800"
+            hidden={!puedeCrear}
           >
             <Plus size={16} />
             Registrar compra

@@ -4,6 +4,7 @@ import { useEntregaByOrden } from '../../../../lib/hooks/useEntregas';
 import { useGarantiaMutations } from '../../../../lib/hooks/useGarantias';
 import { ApiError } from '../../../../lib/api/client';
 import { estadoGarantiaClasses, estadoGarantiaLabel } from '../../../../lib/utils/estado';
+import { usePermiso } from '../../../../lib/hooks/useAuth';
 import { ESTADOS_GARANTIA, type EstadoGarantia } from '../../../../types/garantia';
 import type { OrdenReparacion } from '../../../../types/reparacion';
 
@@ -14,6 +15,8 @@ function formatFecha(value: string) {
 export default function GarantiaPanel({ orden }: { orden: OrdenReparacion }) {
   const { exists: tieneEntrega } = useEntregaByOrden(orden.id);
   const { create, changeEstado } = useGarantiaMutations(orden.id);
+  const puedeCrear = usePermiso('garantias:crear');
+  const puedeEditar = usePermiso('garantias:editar');
   const [dias, setDias] = useState(30);
   const [descripcion, setDescripcion] = useState('');
   const [condiciones, setCondiciones] = useState('');
@@ -47,6 +50,7 @@ export default function GarantiaPanel({ orden }: { orden: OrdenReparacion }) {
         {garantia.descripcion && <p className="text-graphite-600">{garantia.descripcion}</p>}
         {garantia.condiciones && <p className="text-xs text-graphite-400">{garantia.condiciones}</p>}
 
+        {puedeEditar && (
         <div className="flex flex-wrap gap-2 pt-1">
           {transiciones.map((estado) => (
             <button
@@ -60,8 +64,13 @@ export default function GarantiaPanel({ orden }: { orden: OrdenReparacion }) {
             </button>
           ))}
         </div>
+        )}
       </div>
     );
+  }
+
+  if (!puedeCrear) {
+    return <p className="text-sm text-graphite-400">Sin garantía registrada para esta orden.</p>;
   }
 
   if (!tieneEntrega) {

@@ -7,6 +7,7 @@ import type {
   OrdenReparacion,
   OrdenTecnico,
   OrdenesQuery,
+  Tecnico,
   UpdateOrdenPayload,
 } from '../../types/reparacion';
 
@@ -44,4 +45,13 @@ export const reparacionesApi = {
     api.delete<{ message: string }>(`/reparaciones/${id}/tecnicos/${usuarioId}`),
 
   remove: (id: number) => api.delete<{ message: string }>(`/reparaciones/${id}`),
+
+  /**
+   * GET /reparaciones/tecnicos — endpoint acotado que reemplaza la
+   * dependencia anterior de GET /usuarios (restringido a rol
+   * Administrador). Requiere solo 'reparaciones:editar', y devuelve
+   * únicamente usuarios activos con rol Tecnico (sin el objeto `rol`,
+   * ya viene pre-filtrado por el backend).
+   */
+  findTecnicos: () => api.get<Tecnico[]>('/reparaciones/tecnicos'),
 };

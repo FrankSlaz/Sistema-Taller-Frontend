@@ -3,7 +3,7 @@ import QueryProvider from '../providers/QueryProvider';
 import { useAuth } from '../../../lib/hooks/useAuth';
 
 function UserMenuContent() {
-  const { usuario, isLoading, logout } = useAuth();
+  const { usuario, rolNombre, isLoading, logout } = useAuth();
 
   if (isLoading) {
     return <div className="h-9 w-32 animate-pulse rounded-md bg-graphite-100" />;
@@ -11,7 +11,10 @@ function UserMenuContent() {
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center gap-2 rounded-md px-2 py-1.5">
+      <a
+        href="/perfil"
+        className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-graphite-50"
+      >
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-graphite-800 text-white">
           <User size={16} />
         </span>
@@ -19,9 +22,9 @@ function UserMenuContent() {
           <p className="text-sm font-medium leading-none text-graphite-900">
             {usuario ? `${usuario.nombre} ${usuario.apellido ?? ''}`.trim() : 'Invitado'}
           </p>
-          <p className="text-xs text-graphite-400">{usuario?.rol?.nombre ?? 'Sin sesión'}</p>
+          <p className="text-xs text-graphite-400">{rolNombre ?? 'Sin sesión'}</p>
         </div>
-      </div>
+      </a>
 
       <button
         type="button"

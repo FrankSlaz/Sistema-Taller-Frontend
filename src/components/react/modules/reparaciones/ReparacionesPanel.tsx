@@ -5,8 +5,11 @@ import SearchInput from '../../filters/SearchInput';
 import Pagination from '../../ui/Pagination';
 import Badge from '../../ui/Badge';
 import ReparacionFormModal from '../../forms/ReparacionFormModal';
+import AccessDenied from '../../ui/AccessDenied';
 import QueryProvider from '../../providers/QueryProvider';
 import { useReparaciones } from '../../../../lib/hooks/useReparaciones';
+import { usePermiso } from '../../../../lib/hooks/useAuth';
+import { ApiError } from '../../../../lib/api/client';
 import { useEstadosOrden } from '../../../../lib/hooks/useEstadosOrden';
 import { estadoOrdenClasses, estadoOrdenLabel, prioridadClasses } from '../../../../lib/utils/estado';
 import type { OrdenReparacion } from '../../../../types/reparacion';
@@ -30,7 +33,7 @@ function ReparacionesPanelContent({ clienteId, equipoId }: ReparacionesPanelProp
   const [formOpen, setFormOpen] = useState(false);
 
   const { data: estados } = useEstadosOrden();
-  const { data, isLoading, isFetching } = useReparaciones({
+  const { data, isLoading, isFetching, error } = useReparaciones({
     page,
     limit: LIMIT,
     search,
@@ -38,6 +41,12 @@ function ReparacionesPanelContent({ clienteId, equipoId }: ReparacionesPanelProp
     equipoId,
     estadoId,
   });
+
+  const puedeCrear = usePermiso('reparaciones:crear');
+
+  if (error instanceof ApiError && error.statusCode === 403) {
+    return <AccessDenied />;
+  }
 
   function handleSearchChange(value: string) {
     setSearch(value);
@@ -113,6 +122,7 @@ function ReparacionesPanelContent({ clienteId, equipoId }: ReparacionesPanelProp
           type="button"
           onClick={() => setFormOpen(true)}
           className="inline-flex items-center justify-center gap-1.5 rounded-md bg-graphite-900 px-4 py-2 text-sm font-semibold text-white hover:bg-graphite-800"
+          hidden={!puedeCrear}
         >
           <Plus size={16} />
           Nueva orden

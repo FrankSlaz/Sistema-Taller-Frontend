@@ -19,6 +19,7 @@ export interface Usuario {
   telefono?: string | null;
   estado: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface AuthTokens {
@@ -33,6 +34,30 @@ export interface LoginPayload {
 
 export interface LoginResponse extends AuthTokens {
   usuario: Usuario;
+}
+
+/**
+ * Shape real de GET /auth/me: es el payload del JWT + la lista de
+ * permisos del rol ("recurso:accion"), NO el perfil completo del
+ * usuario (no trae nombre/apellido/telefono). Por eso el nombre para
+ * mostrar en la UI se guarda aparte, como snapshot del login — ver
+ * lib/api/client.ts (setUsuario/getStoredUsuario).
+ */
+export interface AuthMe {
+  sub: number;
+  email: string;
+  rolId: number;
+  rolNombre: string;
+  permisos: string[];
+}
+
+export interface ChangePasswordPayload {
+  passwordActual: string;
+  passwordNueva: string;
+}
+
+export interface ResetPasswordPayload {
+  passwordNueva: string;
 }
 
 /**

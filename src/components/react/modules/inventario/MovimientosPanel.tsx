@@ -7,6 +7,7 @@ import MovimientoFormModal from '../../forms/MovimientoFormModal';
 import ProductoSelect from '../../forms/ProductoSelect';
 import QueryProvider from '../../providers/QueryProvider';
 import { useMovimientos } from '../../../../lib/hooks/useMovimientos';
+import { usePermiso } from '../../../../lib/hooks/useAuth';
 import { tipoMovimientoClasses, tipoMovimientoLabel } from '../../../../lib/utils/estado';
 import type { MovimientoInventario } from '../../../../types/movimiento';
 
@@ -34,6 +35,7 @@ function MovimientosPanelContent({ productoId: initialProductoId, productoNombre
   const [formOpen, setFormOpen] = useState(false);
 
   const { data, isLoading, isFetching } = useMovimientos({ page, limit: LIMIT, productoId });
+  const puedeCrear = usePermiso('inventario:crear');
 
   const columns: Column<MovimientoInventario>[] = [
     { key: 'fecha', header: 'Fecha', render: (row) => formatFechaHora(row.fecha) },
@@ -102,6 +104,7 @@ function MovimientosPanelContent({ productoId: initialProductoId, productoNombre
             type="button"
             onClick={() => setFormOpen(true)}
             className="inline-flex items-center justify-center gap-1.5 rounded-md bg-graphite-900 px-4 py-2 text-sm font-semibold text-white hover:bg-graphite-800"
+            hidden={!puedeCrear}
           >
             <Plus size={16} />
             Registrar movimiento

@@ -12,6 +12,9 @@ import QueryProvider from '../../providers/QueryProvider';
 import { useProductoMutations, useProductos } from '../../../../lib/hooks/useProductos';
 import { useCategorias } from '../../../../lib/hooks/useCategorias';
 import { stockClasses } from '../../../../lib/utils/estado';
+import AccessDenied from '../../ui/AccessDenied';
+import { usePermiso } from '../../../../lib/hooks/useAuth';
+import { ApiError } from '../../../../lib/api/client';
 import type { Producto } from '../../../../types/producto';
 
 const LIMIT = 10;
@@ -36,8 +39,16 @@ function ProductosPanelContent() {
   const [deleteTarget, setDeleteTarget] = useState<Producto | null>(null);
 
   const { data: categorias } = useCategorias();
-  const { data, isLoading, isFetching } = useProductos({ page, limit: LIMIT, search, categoriaId, stockBajo });
+  const { data, isLoading, isFetching, error } = useProductos({ page, limit: LIMIT, search, categoriaId, stockBajo });
   const { remove } = useProductoMutations();
+
+  const puedeCrear = usePermiso('inventario:crear');
+  const puedeEditar = usePermiso('inventario:editar');
+  const puedeEliminar = usePermiso('inventario:eliminar');
+
+  if (error instanceof ApiError && error.statusCode === 403) {
+    return <AccessDenied />;
+  }
 
   function handleSearchChange(value: string) {
     setSearch(value);
@@ -74,31 +85,37 @@ function ProductosPanelContent() {
       className: 'text-right',
       render: (row) => (
         <div className="flex justify-end gap-1">
-          <button
-            type="button"
-            onClick={() => setMovimientoTarget(row)}
-            className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-            aria-label={`Registrar movimiento de ${row.nombre}`}
-            title="Registrar movimiento"
-          >
-            <ArrowLeftRight size={15} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setFormState({ open: true, producto: row })}
-            className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-            aria-label={`Editar ${row.nombre}`}
-          >
-            <Pencil size={15} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setDeleteTarget(row)}
-            className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-            aria-label={`Eliminar ${row.nombre}`}
-          >
-            <Trash2 size={15} />
-          </button>
+          {puedeEditar && (
+            <button
+              type="button"
+              onClick={() => setMovimientoTarget(row)}
+              className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+              aria-label={`Registrar movimiento de ${row.nombre}`}
+              title="Registrar movimiento"
+            >
+              <ArrowLeftRight size={15} />
+            </button>
+          )}
+          {puedeEditar && (
+            <button
+              type="button"
+              onClick={() => setFormState({ open: true, producto: row })}
+              className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+              aria-label={`Editar ${row.nombre}`}
+            >
+              <Pencil size={15} />
+            </button>
+          )}
+          {puedeEliminar && (
+            <button
+              type="button"
+              onClick={() => setDeleteTarget(row)}
+              className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
+              aria-label={`Eliminar ${row.nombre}`}
+            >
+              <Trash2 size={15} />
+            </button>
+          )}
         </div>
       ),
     },
@@ -153,6 +170,7 @@ function ProductosPanelContent() {
             type="button"
             onClick={() => setFormState({ open: true, producto: null })}
             className="inline-flex items-center justify-center gap-1.5 rounded-md bg-graphite-900 px-4 py-2 text-sm font-semibold text-white hover:bg-graphite-800"
+            hidden={!puedeCrear}
           >
             <Plus size={16} />
             Nuevo producto

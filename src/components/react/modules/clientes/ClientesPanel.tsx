@@ -4,9 +4,12 @@ import DataTable, { type Column } from '../../tables/DataTable';
 import SearchInput from '../../filters/SearchInput';
 import Pagination from '../../ui/Pagination';
 import ConfirmDialog from '../../ui/ConfirmDialog';
+import AccessDenied from '../../ui/AccessDenied';
 import ClienteFormModal from '../../forms/ClienteFormModal';
 import QueryProvider from '../../providers/QueryProvider';
 import { useClienteMutations, useClientes } from '../../../../lib/hooks/useClientes';
+import { usePermiso } from '../../../../lib/hooks/useAuth';
+import { ApiError } from '../../../../lib/api/client';
 import type { Cliente } from '../../../../types/cliente';
 
 const LIMIT = 10;
@@ -20,8 +23,16 @@ function ClientesPanelContent() {
   });
   const [deleteTarget, setDeleteTarget] = useState<Cliente | null>(null);
 
-  const { data, isLoading, isFetching } = useClientes({ page, limit: LIMIT, search });
+  const { data, isLoading, isFetching, error } = useClientes({ page, limit: LIMIT, search });
   const { remove } = useClienteMutations();
+
+  const puedeCrear = usePermiso('clientes:crear');
+  const puedeEditar = usePermiso('clientes:editar');
+  const puedeEliminar = usePermiso('clientes:eliminar');
+
+  if (error instanceof ApiError && error.statusCode === 403) {
+    return <AccessDenied />;
+  }
 
   function handleSearchChange(value: string) {
     setSearch(value);
@@ -76,6 +87,8 @@ function ClientesPanelContent() {
             onClick={() => setFormState({ open: true, cliente: row })}
             className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
             aria-label={`Editar ${row.nombre}`}
+            disabled={!puedeEditar}
+            hidden={!puedeEditar}
           >
             <Pencil size={15} />
           </button>
@@ -84,6 +97,7 @@ function ClientesPanelContent() {
             onClick={() => setDeleteTarget(row)}
             className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
             aria-label={`Eliminar ${row.nombre}`}
+            hidden={!puedeEliminar}
           >
             <Trash2 size={15} />
           </button>
@@ -105,6 +119,7 @@ function ClientesPanelContent() {
           type="button"
           onClick={() => setFormState({ open: true, cliente: null })}
           className="inline-flex items-center justify-center gap-1.5 rounded-md bg-graphite-900 px-4 py-2 text-sm font-semibold text-white hover:bg-graphite-800"
+          hidden={!puedeCrear}
         >
           <Plus size={16} />
           Nuevo cliente

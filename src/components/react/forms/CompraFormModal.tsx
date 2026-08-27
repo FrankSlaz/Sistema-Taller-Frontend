@@ -7,6 +7,7 @@ import { useProveedores } from '../../../lib/hooks/useProveedores';
 import { useCompraMutations } from '../../../lib/hooks/useCompras';
 import { ApiError } from '../../../lib/api/client';
 import type { Producto } from '../../../types/producto';
+import { usePermiso } from '../../../lib/hooks/useAuth';
 
 interface CompraFormModalProps {
   open: boolean;
@@ -39,6 +40,7 @@ export default function CompraFormModal({ open, onClose }: CompraFormModalProps)
   const [detalles, setDetalles] = useState<DetalleRow[]>([nuevaFila()]);
   const [touched, setTouched] = useState(false);
   const [creatingFor, setCreatingFor] = useState<{ rowKey: string; nombre: string } | null>(null);
+  const puedeCrearProducto = usePermiso('inventario:crear');
 
   useEffect(() => {
     if (!open) return;
@@ -144,7 +146,11 @@ export default function CompraFormModal({ open, onClose }: CompraFormModalProps)
                       value={row.productoId || null}
                       initialLabel={row.productoLabel}
                       onChange={(id, label) => updateRow(row.key, { productoId: id, productoLabel: label })}
-                      onCreateNew={(term) => setCreatingFor({ rowKey: row.key, nombre: term })}
+                      onCreateNew={
+                        puedeCrearProducto
+                          ? (term) => setCreatingFor({ rowKey: row.key, nombre: term })
+                          : undefined
+                      }
                       error={rowError && !row.productoId ? 'Selecciona un producto' : undefined}
                     />
                   </div>

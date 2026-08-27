@@ -25,6 +25,20 @@ export function useReparacion(id: number) {
   });
 }
 
+/**
+ * Lista de técnicos para el selector de "asignar técnico". Usa
+ * GET /reparaciones/tecnicos (requiere 'reparaciones:editar'), no
+ * GET /usuarios (restringido a Administrador) — así un Técnico o
+ * Recepción con permiso sobre Reparaciones puede asignar sin 403.
+ */
+export function useTecnicos() {
+  return useQuery({
+    queryKey: ['reparaciones', 'tecnicos'],
+    queryFn: reparacionesApi.findTecnicos,
+    retry: false,
+  });
+}
+
 export function useReparacionMutations(id?: number) {
   const queryClient = useQueryClient();
 

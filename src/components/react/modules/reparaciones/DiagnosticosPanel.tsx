@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Plus } from 'lucide-react';
 import { useReparacionMutations } from '../../../../lib/hooks/useReparaciones';
 import { ApiError } from '../../../../lib/api/client';
+import { usePermiso } from '../../../../lib/hooks/useAuth';
 import type { OrdenReparacion } from '../../../../types/reparacion';
 
 function formatFechaHora(value: string) {
@@ -17,6 +18,7 @@ function formatFechaHora(value: string) {
 export default function DiagnosticosPanel({ orden }: { orden: OrdenReparacion }) {
   const { addDiagnostico } = useReparacionMutations(orden.id);
   const [open, setOpen] = useState(false);
+  const puedeCrear = usePermiso('diagnosticos:crear');
   const [form, setForm] = useState({
     fallaDetectada: '',
     diagnostico: '',
@@ -83,7 +85,7 @@ export default function DiagnosticosPanel({ orden }: { orden: OrdenReparacion })
         ))}
       </ul>
 
-      {!open && (
+      {!open && puedeCrear && (
         <button
           type="button"
           onClick={() => setOpen(true)}
