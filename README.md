@@ -96,7 +96,10 @@ src/
 -   [x] Modulo Compras (proveedores + registro de compras, inmutable)
 -   [x] Modulo Entregas y Garantias (embebidos en la orden + vistas globales)
 -   [x] Modulo Herramientas (inventario + asignaciones a tecnicos)
--   [ ] Modulos de Administracion (Usuarios, Reportes, Configuracion) y Comunicaciones/Auditoria — no estan en el alcance original de este recorrido por modulo
+-   [x] Modulo Usuarios completo (CRUD, Roles con matriz de permisos,
+    Mi Perfil, reseteo de contraseña por Admin, RBAC aplicado en toda
+    la app via usePermiso)
+-   [ ] Modulos pendientes: Configuracion, Reportes
 
 ## Modo de renderizado
 
@@ -449,3 +452,246 @@ completa una vez y filtra en el cliente.
 
 Capa de datos: `types/herramienta.ts`, `lib/api/herramientas.ts`,
 `lib/hooks/useHerramientas.ts`, `lib/hooks/useAsignaciones.ts`.
+
+## Modulo Usuarios
+
+`src/pages/usuarios/index.astro` + isla
+`components/react/modules/usuarios/UsuariosPanel.tsx`. Alcance
+acotado a proposito: **CRUD de usuarios unicamente**, sin pantalla de
+gestion de Roles (el `<select>` de rol en el formulario lee
+`GET /roles`, que es de lectura libre, pero crear/editar/eliminar
+roles queda pendiente).
+
+Dos acciones de "baja" bien diferenciadas, porque el backend en
+realidad expone dos mecanismos distintos y no son lo mismo:
+
+-   **Boton ⏻ (encendido/apagado)** — hace `PATCH /usuarios/:id` con
+    `{ estado: false }`. **Reversible**: el usuario sigue apareciendo
+    en la lista (marcado "Inactivo") y se puede reactivar con el
+    mismo boton. Pensado para bloquear el acceso temporalmente (ej.
+    alguien de vacaciones o baja médica).
+-   **Boton de basurero** — hace `DELETE /usuarios/:id`. El backend
+    ahi si setea `deletedAt` ademas de `estado: false`, y tanto
+    `GET /usuarios` como `GET /usuarios/:id` filtran
+    `deletedAt: null`. Resultado: el usuario **desaparece por
+    completo de la API**, sin ningun endpoint para recuperarlo. Por
+    eso el dialogo de confirmacion lo dice explicitamente y sugiere
+    usar el boton ⏻ en su lugar si la intencion era solo bloquearlo.
+
+Otras notas:
+
+-   `GET /usuarios` no pagina (devuelve un array plano) ni admite
+    `search` — `UsuariosPanel` trae la lista completa una vez y
+    filtra en el cliente (mismo enfoque que `UsuarioSelect`, que ya
+    usaban Reparaciones y Herramientas).
+-   La contraseña de otro usuario **no se puede cambiar desde este
+    formulario** — `UpdateUsuarioDto` la excluye a proposito; el
+    backend solo expone `PATCH /usuarios/me/password`
+    (autoservicio, requiere la contraseña actual). Eso implica una
+    pantalla de "mi perfil" aparte, fuera del alcance de este pase.
+-   Todo el modulo esta protegido por `@Roles('Administrador')` en
+    el backend; si el usuario logueado no es admin, `UsuariosPanel`
+    muestra el mensaje de error del 403 en vez de un listado vacio
+    confuso.
+
+Capa de datos: `types/usuario.ts` (payloads; `Usuario`/`Rol` ya
+vivian en `types/auth.ts`), `lib/api/roles.ts` (solo `findAll`,
+usado unicamente para el `<select>`), `lib/api/usuarios.ts` (ahora
+con `findOne/create/update/remove` ademas del `findAll` que ya
+usaban Reparaciones/Herramientas), `lib/hooks/useUsuarios.ts` (ahora
+tambien exporta `useUsuarioMutations`), `lib/hooks/useRoles.ts`.
+
+Pendiente dentro de Administracion: **Configuracion** (ajustes del
+taller, un solo formulario) y **Reportes** (7 reportes con descarga
+de PDF) — quedaron fuera de este pase a proposito, ver conversacion.
+
+## Sistema de permisos (RBAC dinamico)
+
+Este es el corazon de seguridad de toda la app, construido sobre el
+backend nuevo (`Permiso`, `RolPermiso`, `PermissionsGuard`). Reemplaza
+el enfoque anterior de "roles hardcodeados" por una matriz
+recurso×accion editable en runtime desde la UI.
+
+### Flujo de datos
+
+-   `GET /auth/me` devuelve **el payload del JWT + `permisos: string[]`**
+    (formato `"recurso:accion"`), NO el perfil completo (sin
+    nombre/apellido/telefono). Es intencional: separa "quien sos y que
+    podes hacer" (siempre fresco) de "como te mostramos" (mas pesado).
+-   Por eso `lib/api/client.ts` ahora tambien persiste un **snapshot
+    del usuario** (`setUsuario`/`getStoredUsuario`) tomado de la
+    respuesta de `POST /auth/login`, usado solo para mostrar
+    nombre/apellido/email/telefono en la UI (Navbar, Mi Perfil). Puede
+    quedar desactualizado si el perfil se edita desde otra sesion —
+    se refresca en el proximo login. Si esto molesta, la solucion de
+    fondo es que el backend agregue un endpoint self-service de
+    perfil completo (`GET /usuarios/me`), que hoy no existe.
+-   `lib/hooks/useAuth.ts` combina ambas fuentes y expone
+    `hasPermiso(permiso)` y el hook standalone `usePermiso(permiso)`.
+
+### Roles y matriz de permisos
+
+-   `src/pages/roles/index.astro` (`RolesPanel`) — CRUD de roles
+    (nombre, descripcion), con conteo de usuarios y boton de escudo
+    por fila que lleva a la matriz.
+-   `src/pages/roles/[id]/permisos.astro` (`PermisosMatrix`) — tabla
+    recurso×accion con checkboxes (14 recursos × 4 acciones = 56
+    celdas, algunas vacias si ese recurso no tiene esa accion en el
+    catalogo — ver abajo). Click en el nombre de un recurso
+    marca/desmarca toda la fila. "Guardar" llama a
+    `PUT /roles/:id/permisos` con el set completo (reemplaza, no hace
+    toggle individual — mas simple de razonar con checkboxes).
+-   Ambas paginas requieren `@Roles('Administrador')` **hardcodeado**
+    en el backend (no `PermissionsGuard`) a proposito: si se pudiera
+    quitarle a Administrador el permiso `roles:editar` desde la propia
+    UI de permisos, nadie podria volver a entrar a arreglarlo. Por
+    eso, si el usuario logueado no es Administrador, `RolesPanel` y
+    `PermisosMatrix` muestran el 403 con `AccessDenied` en vez de
+    intentar renderizar una matriz vacia.
+
+### Recursos reales usados por el backend (confirmados, no supuestos)
+
+Se verificaron los `@RequirePermission('recurso:accion')` exactos en
+cada controller antes de aplicar nada en el frontend:
+
+| Recurso | Acciones disponibles |
+|---|---|
+| `clientes` | ver, crear, editar, eliminar |
+| `equipos` | ver, crear, editar, eliminar |
+| `reparaciones` | ver, crear, editar, eliminar (editar cubre tambien cambiar estado y asignar/quitar tecnico) |
+| `diagnosticos` | ver, crear, editar, eliminar |
+| `presupuestos` | ver, crear, editar, eliminar |
+| `inventario` | ver, crear, editar, eliminar (cubre productos + categorias + movimientos) |
+| `compras` | ver, crear, editar, eliminar (cubre compras + proveedores) |
+| `entregas` | ver, crear (sin editar/eliminar — una entrega no se modifica) |
+| `garantias` | ver, crear, editar (sin eliminar; editar = cambiar estado) |
+| `herramientas` | ver, crear, editar (sin eliminar — no hay DELETE en el backend; editar cubre asignar/devolver/cambiar estado) |
+| `usuarios`, `roles`, `configuracion`, `reportes` | protegidos con `@Roles('Administrador')` clasico, no con permisos dinamicos |
+
+### Donde se aplico `usePermiso()` en el frontend
+
+En **todos** los modulos de negocio ya construidos, siguiendo el mismo
+patron: ocultar (no solo deshabilitar) los botones de crear/editar/
+eliminar segun corresponda, y mostrar `AccessDenied` si la peticion de
+listado devuelve 403:
+
+-   **Clientes/Equipos** — botones Nuevo/Editar/Eliminar.
+-   **Reparaciones** — boton Nueva orden en el listado; boton Editar,
+    `EstadoChanger` (select+boton deshabilitados) y `TecnicosPanel`
+    (asignar/quitar oculto) en el detalle, todos gateados por
+    `reparaciones:editar`.
+-   **Diagnosticos** (embebido en la orden) — boton "Registrar
+    diagnostico" gateado por `diagnosticos:crear`.
+-   **Presupuestos** (embebido en la orden) — crear/editar/eliminar/
+    aprobar/rechazar gateados por `presupuestos:crear/editar/eliminar`.
+-   **Entregas/Garantias** (embebidos en la orden) — formulario de
+    alta gateado por `entregas:crear`/`garantias:crear`; los botones
+    "Marcar vencida/anulada" de garantia por `garantias:editar`.
+-   **Inventario** — Productos (`ProductosPanel`), Movimientos
+    (`MovimientosPanel`) y el mini-CRUD de Categorias
+    (`CategoriasManagerModal`), todos con `inventario:crear/editar/eliminar`.
+-   **Compras** — boton "Registrar compra" (`compras:crear`);
+    `ProveedoresManagerModal` con `compras:crear/editar/eliminar`; la
+    creacion rapida de un producto nuevo *dentro* del formulario de
+    compra usa `inventario:crear` (es un permiso distinto al de la
+    compra en si, y se verifica por separado).
+-   **Herramientas** — boton "Nueva herramienta" (`herramientas:crear`);
+    editar/asignar/devolver/cambiar-estado en la tabla y en
+    `HerramientaDetailModal` (`herramientas:editar`).
+
+Nuevo componente reutilizable: `components/react/ui/AccessDenied.tsx`.
+
+### Importante: esto es UX, no seguridad
+
+`usePermiso()` decide que se **muestra**, nunca que se **permite**. La
+seguridad real la impone el backend con `PermissionsGuard` en cada
+endpoint — si alguien igual dispara la peticion (herramientas de dev,
+`curl`, editar el DOM), el backend la rechaza con 403 sin importar lo
+que el frontend haya ocultado. El frontend simplemente evita que un
+usuario sin permiso vea u opere botones que de todas formas fallarian,
+para que la experiencia sea coherente en vez de confusa.
+
+### Mi Perfil y contraseñas
+
+-   `src/pages/perfil/index.astro` (`PerfilPanel`) — muestra el
+    snapshot del usuario + rol actual, y un boton "Cambiar mi
+    contraseña" que abre `ChangePasswordModal`
+    (`PATCH /usuarios/me/password`, exige la contraseña actual).
+-   `ResetPasswordModal` — accesible solo desde `UsuariosPanel` (icono
+    de llave por fila), usa `PATCH /usuarios/:id/password` para que un
+    Administrador fije una contraseña nueva a **otro** usuario sin
+    conocer la actual. Endpoint distinto al de arriba, coexisten.
+-   `UserMenu` (navbar) ahora linkea a `/perfil` al hacer click en el
+    nombre, ademas de mostrar el rol actual (antes solo mostraba
+    nombre y boton de logout).
+
+### Que quedo pendiente (fuera de este pase)
+
+-   **Perfil desactualizado entre sesiones**, como se explico arriba
+    (requeriria un endpoint `GET /usuarios/me` en el backend).
+
+### Sidebar filtrado por rol (`SidebarNav`)
+
+`Sidebar.astro` dejo de renderizar el `<nav>` directamente: ahora monta
+la isla `components/react/layout/SidebarNav.tsx` (`client:load`), que
+lee `rolNombre` de `useAuth()` y oculta los items marcados
+`adminOnly: true` en la definicion de `groups` si el usuario logueado
+no es `'Administrador'`. Si un grupo entero queda sin items visibles
+(como "Administración" para un no-admin), el grupo completo desaparece
+— no queda un titulo huerfano sin links debajo.
+
+Esto reemplaza la limitacion documentada antes ("el Sidebar no filtra
+por permiso"): ya no era sostenible mostrar siempre los links de
+Usuarios/Roles/Compras/Herramientas cuando la mayoria de usuarios no
+deberia ni saber que existen esas pantallas.
+
+**Items marcados `adminOnly` (visibles solo para rol Administrador,
+sin importar los permisos dinamicos que tenga asignado el rol):**
+
+-   Grupo Administración completo: Usuarios, Roles, Reportes, Configuración.
+-   Dentro de Inventario: Compras, Herramientas, Asignaciones.
+-   Productos y Movimientos (los otros dos items de Inventario) siguen
+    visibles para todos — se filtran por permiso (`inventario:*`)
+    dentro de la propia pagina, no a nivel de sidebar.
+
+**Nota de diseño:** esta es una regla mas simple y estricta que el
+sistema de permisos dinamicos ("solo Administrador ve el link", en vez
+de "se ve si el rol tiene el permiso `compras:ver`"). Fue una decision
+explicita para estos modulos puntuales, no una limitacion tecnica —
+si mas adelante se quiere que, por ejemplo, un rol `Almacen` vea
+Compras/Herramientas sin ser Administrador, hay que cambiar la
+condicion en `SidebarNav.tsx` de `rolNombre === 'Administrador'` a
+`hasPermiso('compras:ver')` (el backend ya lo soportaria sin cambios,
+la matriz de permisos de esos recursos ya existe).
+
+**Trade-off de UX:** como los permisos se resuelven client-side (no
+hay cookies, no hay SSR de auth), mientras `/auth/me` esta cargando
+los items `adminOnly` se ocultan por defecto — incluso para un
+Administrador real va a haber un instante brevisimo donde esos links
+no estan, hasta que la consulta resuelve. Se prefirio eso a mostrarlos
+primero y ocultarlos despues (evita el flash de "Usuarios/Compras" a
+alguien que no deberia verlos ni un instante).
+
+### Fix: selector de técnicos en Reparaciones ya no depende de `GET /usuarios`
+
+El backend agrego `GET /reparaciones/tecnicos` (protegido con
+`reparaciones:editar`, no con `@Roles('Administrador')`), que devuelve
+solo usuarios activos con rol Tecnico (`{ id, nombre, apellido }`, sin
+el objeto `rol` — ya viene pre-filtrado). Esto reemplaza la dependencia
+anterior de `GET /usuarios` en `TecnicosPanel`, que le devolvia 403 a
+cualquier Tecnico o Recepcion que intentara asignar un compañero a una
+orden, aun teniendo permiso sobre Reparaciones.
+
+Cambios: `types/reparacion.ts` (tipo `Tecnico`), `lib/api/reparaciones.ts`
+(`findTecnicos`), `lib/hooks/useReparaciones.ts` (`useTecnicos`),
+`TecnicosPanel.tsx` (usa `useTecnicos` en vez de `useUsuarios`).
+
+**Pendiente — mismo problema en otro lado:** `AsignarHerramientaFormModal`
+(via `UsuarioSelect`) todavia depende de `GET /usuarios` para elegir a
+quien asignarle una herramienta, y ese endpoint sigue siendo
+`@Roles('Administrador')` exclusivamente. Un usuario con
+`herramientas:editar` pero sin ser Administrador va a seguir
+recibiendo 403 ahi. No se toco en este pase porque el backend no trajo
+un endpoint equivalente para Herramientas — necesitaria algo como
+`GET /herramientas/usuarios-disponibles` (o abrir `GET /usuarios` a
+`usuarios:ver`/`herramientas:editar` en vez de al rol hardcodeado).

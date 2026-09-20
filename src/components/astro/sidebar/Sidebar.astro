@@ -1,9 +1,12 @@
 ---
 import { PUBLIC_APP_NAME } from 'astro:env/client';
+import SidebarNav from '../../react/layout/SidebarNav';
 
 interface NavItem {
   label: string;
   href: string;
+  /** Solo visible para rol Administrador — ver SidebarNav.tsx. */
+  adminOnly?: boolean;
 }
 
 interface NavGroup {
@@ -38,18 +41,18 @@ const groups: NavGroup[] = [
     items: [
       { label: 'Productos', href: '/inventario' },
       { label: 'Movimientos', href: '/inventario/movimientos' },
-      { label: 'Compras', href: '/compras' },
-      { label: 'Herramientas', href: '/herramientas' },
-      { label: 'Asignaciones', href: '/herramientas/asignaciones' },
+      { label: 'Compras', href: '/compras', adminOnly: true },
+      { label: 'Herramientas', href: '/herramientas', adminOnly: true },
+      { label: 'Asignaciones', href: '/herramientas/asignaciones', adminOnly: true },
     ],
   },
   {
     title: 'Administración',
     items: [
-      { label: 'Usuarios', href: '/usuarios' },
-      { label: 'Roles', href: '/roles' },
-      { label: 'Reportes', href: '/reportes' },
-      { label: 'Configuración', href: '/configuracion' },
+      { label: 'Usuarios', href: '/usuarios', adminOnly: true },
+      { label: 'Roles', href: '/roles', adminOnly: true },
+      { label: 'Reportes', href: '/reportes', adminOnly: true },
+      { label: 'Configuración', href: '/configuracion', adminOnly: true },
     ],
   },
 ];
@@ -67,35 +70,5 @@ const currentPath = Astro.url.pathname;
     </span>
   </div>
 
-  <nav class="flex-1 space-y-6 px-3 py-6">
-    {
-      groups.map((group) => (
-        <div>
-          <p class="px-2 pb-2 text-xs font-semibold uppercase tracking-wider text-graphite-400">
-            {group.title}
-          </p>
-          <ul class="space-y-1">
-            {group.items.map((item) => {
-              const isActive = currentPath.startsWith(item.href);
-              return (
-                <li>
-                  <a
-                    href={item.href}
-                    class:list={[
-                      'block rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-graphite-800 text-white'
-                        : 'text-graphite-200 hover:bg-graphite-800 hover:text-white',
-                    ]}
-                  >
-                    {item.label}
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))
-    }
-  </nav>
+  <SidebarNav client:load groups={groups} currentPath={currentPath} />
 </aside>
