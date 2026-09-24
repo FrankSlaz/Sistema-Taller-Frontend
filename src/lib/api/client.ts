@@ -129,3 +129,37 @@ export const api = {
   delete: <T>(path: string, options?: RequestOptions) =>
     apiFetch<T>(path, { ...options, method: 'DELETE' }),
 };
+
+/**
+ * Descarga un archivo binario (los endpoints /pdf de Reportes) con el
+ * mismo Bearer token que el resto de la API. Un <a href="/reportes/...">
+ * plano no funcionaría: el navegador navegaría sin el header
+ * Authorization y el backend respondería 401. En vez de eso, se hace
+ * fetch manual, se arma un Blob, y se dispara la descarga con un <a>
+ * temporal apuntando a un object URL.
+ */
+export async function downloadFile(path: string, filename: string): Promise<void> {
+  const token = getToken();
+  const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+
+  const response = await fetch(`${PUBLIC_API_URL}${path}`, { headers });
+
+  if (!response.ok) {
+    // El error de un endpoint /pdf sigue viniendo como JSON del HttpExceptionFilter.
+    const errorBody = (await response.json().catch(() => null)) as ApiErrorResponse | null;
+    const message = Array.isArray(errorBody?.message)
+      ? errorBody!.message.join(', ')
+      : (errorBody?.message ?? 'No se pudo generar el archivo');
+    throw new ApiError(message, response.status, errorBody?.message);
+  }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}

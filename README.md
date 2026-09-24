@@ -99,7 +99,8 @@ src/
 -   [x] Modulo Usuarios completo (CRUD, Roles con matriz de permisos,
     Mi Perfil, reseteo de contraseña por Admin, RBAC aplicado en toda
     la app via usePermiso)
--   [ ] Modulos pendientes: Configuracion, Reportes
+-   [x] Modulo Configuracion (datos generales del taller, singleton)
+-   [x] Modulo Reportes (7 reportes con filtros + descarga de PDF)
 
 ## Modo de renderizado
 
@@ -695,3 +696,106 @@ recibiendo 403 ahi. No se toco en este pase porque el backend no trajo
 un endpoint equivalente para Herramientas — necesitaria algo como
 `GET /herramientas/usuarios-disponibles` (o abrir `GET /usuarios` a
 `usuarios:ver`/`herramientas:editar` en vez de al rol hardcodeado).
+
+## Modulo Configuracion
+
+`src/pages/configuracion/index.astro` + isla
+`components/react/modules/configuracion/ConfiguracionPanel.tsx`.
+Es una fila unica (singleton, `id=1`) con los datos generales del
+taller: nombre, contacto, moneda/simbolo, y un mensaje libre que se
+imprime al pie de documentos.
+
+Particularidad de permisos, distinta al resto de la app: `GET
+/configuracion` es libre para **cualquier usuario autenticado** (el
+propio backend lo comenta explicitamente: "la usa el frontend para
+mostrar nombre del taller, moneda, etc."), pero `PATCH` exige rol
+Administrador con el guard clasico (`@Roles`, no el sistema de
+permisos dinamicos — mismo patron que Usuarios/Roles/Reportes).
+
+Como el link ya esta marcado `adminOnly` en el Sidebar, en la practica
+un no-admin no deberia llegar aca por navegacion normal. Aun asi, el
+panel respeta lo que el backend permite en vez de bloquear la pagina
+entera: si alguien no-admin entra igual (URL directa), ve el
+formulario **con los valores actuales, pero deshabilitado**
+(`<fieldset disabled>`) y una nota explicando por que no puede
+guardar — refleja fielmente que el GET es publico y el PATCH no,
+en vez de tratar todo el modulo como todo-o-nada.
+
+Capa de datos: `types/configuracion.ts`, `lib/api/configuracion.ts`,
+`lib/hooks/useConfiguracion.ts`.
+
+**Nota para una futura mejora (no incluida en este pase):** ahora que
+existe un `simbolo` de moneda configurable (por defecto `"Bs"`), vale
+la pena revisar que varios modulos (Inventario, Compras, Presupuestos,
+Reparaciones, Herramientas) tienen el simbolo `"Bs"` **hardcodeado**
+en sus funciones `formatMonto`/`formatFecha` locales en vez de leerlo
+de `useConfiguracion()`. Funciona hoy porque el valor por defecto
+coincide, pero si el taller cambia de moneda no se actualizaria en
+ningun otro lado. Es un refactor transversal (toca ~8 archivos), no
+se hizo aca porque no fue parte de lo pedido.
+
+## Modulo Reportes
+
+`src/pages/reportes/index.astro` + isla `ReportesPanel.tsx`. Los 7
+reportes viven como pestañas dentro de una sola pagina (no 7 rutas
+separadas), cada uno con su propio componente en
+`components/react/modules/reportes/`:
+
+| Pestaña | Componente | Filtros | Endpoint JSON |
+|---|---|---|---|
+| Reparaciones por estado | `ReparacionesPorEstadoReport` | mes, año (default: actual) | `/reportes/reparaciones-por-estado` |
+| Ingresos | `IngresosReport` | fechaInicio/fechaFin (**obligatorias**) | `/reportes/ingresos` |
+| Stock bajo | `StockBajoReport` | ninguno | `/reportes/stock-bajo` |
+| Técnicos | `TecnicosMasOrdenesReport` | fechas opcionales, top N | `/reportes/tecnicos-mas-ordenes` |
+| Por tipo de equipo | `OrdenesPorTipoServicioReport` | fechas opcionales | `/reportes/ordenes-por-tipo-servicio` |
+| Clientes frecuentes | `ClientesFrecuentesReport` | minOrdenes, limit | `/reportes/clientes-frecuentes` |
+| Órdenes con retraso | `OrdenesConRetrasoReport` | ninguno | `/reportes/ordenes-retraso` |
+
+Cada uno tiene su endpoint `/pdf` hermano con los mismos filtros,
+para descargar el mismo contenido como PDF.
+
+### Como funciona la descarga de PDF
+
+Los endpoints `/pdf` estan protegidos igual que el resto de la API
+(Bearer token) y devuelven un `StreamableFile`, no JSON. Un
+`<a href="/reportes/.../pdf">` plano no funcionaria: el navegador
+navegaria sin el header `Authorization` y el backend respondaria 401.
+Por eso se agrego `downloadFile(path, filename)` en
+`lib/api/client.ts`: hace `fetch` manual con el token, arma un `Blob`
+con la respuesta, y dispara la descarga con un `<a>` temporal apuntando
+a un object URL (`URL.createObjectURL` + click programatico +
+`revokeObjectURL`). Cada reporte envuelve su llamada `*Pdf` de
+`reportesApi` en `useDownloadPdf` (un wrapper fino sobre
+`useMutation`) para tener `isPending`/`error` resueltos sin manejar
+loading a mano.
+
+### Componentes reutilizables nuevos
+
+-   `ReporteShell.tsx` — layout comun a los 7: descripcion, fila de
+    filtros + boton "Descargar PDF", chips de resumen (ej. "Total de
+    ordenes: 42"), y el area de contenido (la tabla) con skeleton de
+    carga.
+-   `ReporteTable.tsx` — tabla de solo lectura generica
+    (`columns: {key, header, align, render?}[]`, `rows: T[]`), sin
+    necesidad de `getRowId` como `DataTable` porque estas filas no se
+    editan ni seleccionan — se indexan por posicion.
+
+### Permisos
+
+Los 7 reportes estan protegidos con `@Roles('Administrador')` clasico
+en el backend (no el sistema de permisos dinamicos), igual que
+Usuarios/Roles/Configuracion. El link del sidebar ya esta marcado
+`adminOnly`, asi que un no-admin no deberia llegar aca por navegacion
+normal; si de todas formas entra por URL directa, cada peticion
+JSON/PDF simplemente devuelve 403 (no se agrego una pantalla
+`AccessDenied` especial para Reportes porque, a diferencia de
+Clientes/Compras/etc., aca no hay nada que editar — el 403 en la
+descarga de PDF ya es un mensaje de error suficientemente claro via
+`ReporteShell`).
+
+Capa de datos: `types/reporte.ts` (una interfaz de respuesta y una de
+query por cada reporte, mas la union `ReporteKey`), `lib/api/reportes.ts`,
+`lib/hooks/useReportes.ts` (un hook de query por reporte + el
+`useDownloadPdf` compartido).
+
+Con este modulo se completaron **todos** los items del sidebar.

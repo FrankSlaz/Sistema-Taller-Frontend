@@ -1,0 +1,16 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Card from '../../components/astro/cards/Card.astro';
+import ConfiguracionPanel from '../../components/react/modules/configuracion/ConfiguracionPanel';
+---
+
+<DashboardLayout title="Configuración">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">Configuración</h1>
+    <p class="text-sm text-graphite-400">Datos generales del taller, usados en documentos y reportes.</p>
+  </div>
+
+  <Card class="max-w-2xl">
+    <ConfiguracionPanel client:load />
+  </Card>
+</DashboardLayout>

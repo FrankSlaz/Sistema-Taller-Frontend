@@ -1,0 +1,18 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Card from '../../components/astro/cards/Card.astro';
+import ReportesPanel from '../../components/react/modules/reportes/ReportesPanel';
+---
+
+<DashboardLayout title="Reportes">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">Reportes</h1>
+    <p class="text-sm text-graphite-400">
+      Indicadores del taller. Cada reporte se puede descargar como PDF con los mismos filtros aplicados.
+    </p>
+  </div>
+
+  <Card>
+    <ReportesPanel client:load />
+  </Card>
+</DashboardLayout>
