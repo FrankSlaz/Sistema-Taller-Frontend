@@ -1,6 +1,7 @@
 import type { EstadoOrden } from './estado-orden';
 import type { Presupuesto } from './presupuesto';
 import type { Garantia } from './garantia';
+import type { Diagnostico } from './diagnostico';
 
 /**
  * Espejo de backend-nest/src/modules/reparaciones
@@ -52,17 +53,6 @@ export interface HistorialOrdenItem {
   comentario?: string | null;
   fecha: string;
   usuario?: { id: number; nombre: string; apellido?: string | null } | null;
-}
-
-export interface Diagnostico {
-  id: number;
-  ordenId: number;
-  tecnicoId?: number | null;
-  fallaDetectada?: string | null;
-  diagnostico?: string | null;
-  solucionPropuesta?: string | null;
-  observaciones?: string | null;
-  fecha: string;
 }
 
 export interface OrdenReparacion {

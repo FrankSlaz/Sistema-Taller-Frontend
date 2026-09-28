@@ -1,0 +1,18 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Card from '../../components/astro/cards/Card.astro';
+import DiagnosticosGlobalPanel from '../../components/react/modules/diagnosticos/DiagnosticosGlobalPanel';
+---
+
+<DashboardLayout title="Diagnósticos">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">Diagnósticos</h1>
+    <p class="text-sm text-graphite-400">
+      Diagnósticos técnicos de todas las órdenes. También se pueden registrar desde el detalle de cada orden.
+    </p>
+  </div>
+
+  <Card>
+    <DiagnosticosGlobalPanel client:load />
+  </Card>
+</DashboardLayout>

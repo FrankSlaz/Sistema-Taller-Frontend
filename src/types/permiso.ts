@@ -32,6 +32,12 @@ export const RECURSOS_PERMISO = [
   'roles',
   'configuracion',
   'reportes',
+  // Agregados al catálogo real del backend después del primer pase de
+  // permisos (ver prisma/seed.ts): antes quedaban fuera y no se podían
+  // otorgar desde la matriz aunque el backend ya los usara.
+  'pagos',
+  'orden-repuestos',
+  'comunicaciones',
 ] as const;
 
 export const ACCIONES_PERMISO = ['ver', 'crear', 'editar', 'eliminar'] as const;
@@ -51,6 +57,9 @@ const RECURSO_LABELS: Record<string, string> = {
   roles: 'Roles',
   configuracion: 'Configuración',
   reportes: 'Reportes',
+  pagos: 'Pagos',
+  'orden-repuestos': 'Repuestos usados en orden',
+  comunicaciones: 'Comunicaciones',
 };
 
 export function recursoLabel(recurso: string): string {

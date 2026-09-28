@@ -799,3 +799,94 @@ query por cada reporte, mas la union `ReporteKey`), `lib/api/reportes.ts`,
 `useDownloadPdf` compartido).
 
 Con este modulo se completaron **todos** los items del sidebar.
+
+## Afinando detalles: Diagnosticos, Pagos y Dashboard reales
+
+Tres huecos que quedaron del recorrido inicial por modulo: el link de
+Diagnosticos en el sidebar nunca tuvo pagina propia (solo existia el
+alta embebida en la orden), Pagos no tenia ningun frontend, y el
+Dashboard seguia siendo el placeholder estatico del primer paso
+("Conectar a GET /api/reparaciones").
+
+### Diagnosticos completo
+
+El backend siempre tuvo CRUD completo (`GET/POST/PATCH/DELETE
+/diagnosticos`), pero el frontend solo usaba `create`, embebido en la
+orden. Se agrego:
+
+-   `src/pages/diagnosticos/index.astro` (`DiagnosticosGlobalPanel`) —
+    listado global, filtrable por orden (`OrdenSelect`), con
+    editar/eliminar.
+-   `DiagnosticosPanel` (embebido en `ReparacionDetail`) — ahora tiene
+    editar/eliminar ademas de crear, y usa su propio
+    `useDiagnosticos({ordenId})` (trae `tecnico` con nombre) en vez del
+    campo `orden.diagnosticos` embebido en el detalle de la orden (que
+    no incluye esa relacion).
+-   `types/diagnostico.ts` reemplaza la interfaz minima que antes vivia
+    duplicada dentro de `types/reparacion.ts` (mismo patron ya usado
+    con Presupuesto/Garantia).
+-   Permisos: `diagnosticos:ver/crear/editar/eliminar`, aplicados en
+    ambas superficies.
+
+### Modulo Pagos (nuevo)
+
+No tenia ningun frontend. El backend es simple (`GET/POST/DELETE`, sin
+`PATCH` — un pago no se corrige, se elimina y se vuelve a registrar):
+
+-   `src/pages/pagos/index.astro` (`PagosGlobalPanel`) — listado
+    global filtrable por orden; al filtrar, el backend agrega un
+    `resumen` (`totalOrden`/`totalPagado`/`saldoPendiente`) que se
+    muestra como 3 chips.
+-   `PagosPanel` (nuevo, embebido en `ReparacionDetail`) — mismo
+    resumen de saldo pendiente directamente en el detalle de la orden,
+    con alta/eliminacion. Es una pieza clave para saber si una orden
+    esta lista para cerrarse.
+-   Se agrego el link "Pagos" al sidebar (grupo Taller), que no
+    existia.
+-   Permisos: `pagos:crear/eliminar` (no hay `pagos:editar` porque no
+    hay endpoint de edicion).
+
+**De paso:** se detecto que el catalogo de permisos del backend
+(`prisma/seed.ts`) crecio a 17 recursos (agrego `pagos`,
+`orden-repuestos`, `comunicaciones`) pero `types/permiso.ts` en el
+frontend seguia con los 14 originales — la matriz de permisos
+(`PermisosMatrix`) no mostraba filas para esos 3 recursos nuevos,
+aunque ya existieran en la base y el backend ya los usara. Se
+actualizo `RECURSOS_PERMISO` para reflejar el catalogo real. No se
+construyo frontend para `orden-repuestos` ni `comunicaciones` (fuera
+de alcance de este pase) — solo se corrigio que la matriz de permisos
+los liste correctamente para que un Administrador pueda otorgarlos.
+
+### Dashboard real
+
+Reemplaza el placeholder estatico (cards con "—" y comentarios tipo
+"Conectar a GET /api/reparaciones") por indicadores reales en
+`components/react/modules/dashboard/DashboardPanel.tsx`.
+
+Cada indicador se pide **solo si el usuario tiene el permiso de
+lectura correspondiente** (`lib/hooks/useDashboard.ts`), para no
+disparar peticiones que de antemano sabemos que van a volver 403:
+
+-   **Ordenes** (`reparaciones:ver`): activas (total menos las 3
+    terminales: ENTREGADO/CANCELADO/NO_REPARABLE), pendientes de
+    diagnostico (estado RECIBIDO), listas para entrega (LISTO_ENTREGA),
+    urgentes (prioridad URGENTE). Los ids de estado se resuelven por
+    **nombre** contra `/estados-orden` en vez de asumirlos fijos
+    (1..9) — evita romperse si el seed cambia el orden de insercion.
+-   **Stock bajo** (`inventario:ver`), con un aviso destacado si hay
+    mas de 0.
+-   **Herramientas prestadas** (`herramientas:ver`) — cuenta estado
+    `ASIGNADA`.
+-   **Garantias activas** (`garantias:ver`) — como `GarantiasQuery` no
+    admite filtrar por estado en el backend, trae hasta 100 y cuenta
+    `ACTIVA` en el cliente; marcado como aproximado si hay mas de 100
+    en total. No es un reporte contable, es un indicador de un
+    vistazo.
+-   **Ingresos del mes** — gateado por `rolNombre === 'Administrador'`
+    (no por `hasPermiso`), porque reutiliza `GET /reportes/ingresos`,
+    que esta protegido con el guard clasico igual que el resto de
+    Reportes/Configuracion.
+
+Ningun indicador rompe el layout si el usuario no tiene el permiso
+correspondiente: simplemente esa card no se renderiza, en vez de
+mostrar un error o un hueco vacio.

@@ -1,0 +1,18 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Card from '../../components/astro/cards/Card.astro';
+import PagosGlobalPanel from '../../components/react/modules/pagos/PagosGlobalPanel';
+---
+
+<DashboardLayout title="Pagos">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">Pagos</h1>
+    <p class="text-sm text-graphite-400">
+      Pagos registrados de todas las órdenes. Filtrá por orden para ver su saldo pendiente.
+    </p>
+  </div>
+
+  <Card>
+    <PagosGlobalPanel client:load />
+  </Card>
+</DashboardLayout>

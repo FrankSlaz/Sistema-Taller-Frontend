@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { reparacionesApi } from '../api/reparaciones';
-import { diagnosticosApi, type CreateDiagnosticoPayload } from '../api/diagnosticos';
 import type {
   AssignTecnicoPayload,
   ChangeEstadoPayload,
@@ -81,10 +80,5 @@ export function useReparacionMutations(id?: number) {
     onSuccess: invalidateList,
   });
 
-  const addDiagnostico = useMutation({
-    mutationFn: (payload: CreateDiagnosticoPayload) => diagnosticosApi.create(payload),
-    onSuccess: invalidateDetail,
-  });
-
-  return { create, update, changeEstado, assignTecnico, removeTecnico, remove, addDiagnostico };
+  return { create, update, changeEstado, assignTecnico, removeTecnico, remove };
 }

@@ -1,9 +1,11 @@
-import { useState, type FormEvent } from 'react';
-import { Plus } from 'lucide-react';
-import { useReparacionMutations } from '../../../../lib/hooks/useReparaciones';
-import { ApiError } from '../../../../lib/api/client';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import ConfirmDialog from '../../ui/ConfirmDialog';
+import DiagnosticoFormModal from '../../forms/DiagnosticoFormModal';
+import { useDiagnosticoMutations, useDiagnosticos } from '../../../../lib/hooks/useDiagnosticos';
 import { usePermiso } from '../../../../lib/hooks/useAuth';
 import type { OrdenReparacion } from '../../../../types/reparacion';
+import type { Diagnostico } from '../../../../types/diagnostico';
 
 function formatFechaHora(value: string) {
   return new Date(value).toLocaleString('es-BO', {
@@ -16,47 +18,62 @@ function formatFechaHora(value: string) {
 }
 
 export default function DiagnosticosPanel({ orden }: { orden: OrdenReparacion }) {
-  const { addDiagnostico } = useReparacionMutations(orden.id);
-  const [open, setOpen] = useState(false);
+  // Fuente propia (no orden.diagnosticos embebido): trae tecnico con nombre.
+  const { data } = useDiagnosticos({ ordenId: orden.id, limit: 50 });
+  const { remove } = useDiagnosticoMutations(orden.id);
   const puedeCrear = usePermiso('diagnosticos:crear');
-  const [form, setForm] = useState({
-    fallaDetectada: '',
-    diagnostico: '',
-    solucionPropuesta: '',
-    observaciones: '',
+  const puedeEditar = usePermiso('diagnosticos:editar');
+  const puedeEliminar = usePermiso('diagnosticos:eliminar');
+
+  const [formState, setFormState] = useState<{ open: boolean; diagnostico: Diagnostico | null }>({
+    open: false,
+    diagnostico: null,
   });
+  const [deleteTarget, setDeleteTarget] = useState<Diagnostico | null>(null);
 
-  const errorMessage =
-    addDiagnostico.error instanceof ApiError
-      ? addDiagnostico.error.message
-      : addDiagnostico.error
-        ? 'Error inesperado'
-        : null;
-
-  function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    addDiagnostico.mutate(
-      { ordenId: orden.id, ...form },
-      {
-        onSuccess: () => {
-          setForm({ fallaDetectada: '', diagnostico: '', solucionPropuesta: '', observaciones: '' });
-          setOpen(false);
-        },
-      },
-    );
-  }
-
-  const diagnosticos = orden.diagnosticos ?? [];
+  const diagnosticos = data?.items ?? [];
 
   return (
     <div className="space-y-3">
       <ul className="space-y-3">
-        {diagnosticos.length === 0 && !open && (
+        {diagnosticos.length === 0 && (
           <li className="text-sm text-graphite-400">Aún no se registró ningún diagnóstico.</li>
         )}
         {diagnosticos.map((d) => (
           <li key={d.id} className="rounded-md border border-graphite-100 p-3 text-sm">
-            <p className="mb-1 text-xs text-graphite-400">{formatFechaHora(d.fecha)}</p>
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <p className="text-xs text-graphite-400">
+                {formatFechaHora(d.fecha)}
+                {d.tecnico && (
+                  <>
+                    {' · '}
+                    {d.tecnico.nombre} {d.tecnico.apellido ?? ''}
+                  </>
+                )}
+              </p>
+              <div className="flex items-center gap-1">
+                {puedeEditar && (
+                  <button
+                    type="button"
+                    onClick={() => setFormState({ open: true, diagnostico: d })}
+                    className="rounded-md p-1 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+                    aria-label="Editar diagnóstico"
+                  >
+                    <Pencil size={13} />
+                  </button>
+                )}
+                {puedeEliminar && (
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(d)}
+                    className="rounded-md p-1 text-graphite-400 hover:bg-red-50 hover:text-red-600"
+                    aria-label="Eliminar diagnóstico"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
+            </div>
             {d.fallaDetectada && (
               <p>
                 <span className="font-medium text-graphite-900">Falla detectada: </span>
@@ -85,10 +102,10 @@ export default function DiagnosticosPanel({ orden }: { orden: OrdenReparacion })
         ))}
       </ul>
 
-      {!open && puedeCrear && (
+      {puedeCrear && (
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={() => setFormState({ open: true, diagnostico: null })}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-graphite-900 hover:underline"
         >
           <Plus size={15} />
@@ -96,67 +113,27 @@ export default function DiagnosticosPanel({ orden }: { orden: OrdenReparacion })
         </button>
       )}
 
-      {open && (
-        <form onSubmit={handleSubmit} className="space-y-3 rounded-md border border-graphite-100 p-3">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-graphite-900">Falla detectada</label>
-            <textarea
-              rows={2}
-              value={form.fallaDetectada}
-              onChange={(e) => setForm((p) => ({ ...p, fallaDetectada: e.target.value }))}
-              className="w-full resize-none rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-graphite-900">Diagnóstico</label>
-            <textarea
-              rows={2}
-              value={form.diagnostico}
-              onChange={(e) => setForm((p) => ({ ...p, diagnostico: e.target.value }))}
-              className="w-full resize-none rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-graphite-900">Solución propuesta</label>
-            <textarea
-              rows={2}
-              value={form.solucionPropuesta}
-              onChange={(e) => setForm((p) => ({ ...p, solucionPropuesta: e.target.value }))}
-              className="w-full resize-none rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-graphite-900">Observaciones</label>
-            <textarea
-              rows={2}
-              value={form.observaciones}
-              onChange={(e) => setForm((p) => ({ ...p, observaciones: e.target.value }))}
-              className="w-full resize-none rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
-            />
-          </div>
+      <DiagnosticoFormModal
+        open={formState.open}
+        diagnostico={formState.diagnostico}
+        defaultOrdenId={orden.id}
+        defaultOrdenLabel={orden.codigoOrden}
+        onClose={() => setFormState({ open: false, diagnostico: null })}
+      />
 
-          {errorMessage && (
-            <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errorMessage}</p>
-          )}
-
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="rounded-md px-3 py-1.5 text-sm font-medium text-graphite-600 hover:bg-graphite-50"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={addDiagnostico.isPending}
-              className="rounded-md bg-graphite-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-graphite-800 disabled:opacity-50"
-            >
-              {addDiagnostico.isPending ? 'Guardando…' : 'Guardar diagnóstico'}
-            </button>
-          </div>
-        </form>
-      )}
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Eliminar diagnóstico"
+        description="¿Seguro que deseas eliminar este diagnóstico? Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        isLoading={remove.isPending}
+        onConfirm={() => {
+          if (deleteTarget) {
+            remove.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
+          }
+        }}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import Badge from '../../ui/Badge';
 import EditOrdenModal from '../../forms/EditOrdenModal';
 import EstadoChanger from './EstadoChanger';
 import TecnicosPanel from './TecnicosPanel';
+import PagosPanel from './PagosPanel';
 import EntregaPanel from './EntregaPanel';
 import GarantiaPanel from './GarantiaPanel';
 import DiagnosticosPanel from './DiagnosticosPanel';
@@ -127,6 +128,11 @@ function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
           <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
             <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Presupuestos</h2>
             <PresupuestosPanel orden={orden} />
+          </section>
+
+          <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
+            <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Pagos</h2>
+            <PagosPanel orden={orden} />
           </section>
 
           <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
