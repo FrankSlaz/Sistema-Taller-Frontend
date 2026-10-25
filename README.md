@@ -890,3 +890,112 @@ disparar peticiones que de antemano sabemos que van a volver 403:
 Ningun indicador rompe el layout si el usuario no tiene el permiso
 correspondiente: simplemente esa card no se renderiza, en vez de
 mostrar un error o un hueco vacio.
+
+## Fix: total de la cabecera vs. presupuestos pendientes
+
+El total que aparece en la cabecera de `/reparaciones/[id]` sale de
+`OrdenReparacion.costoManoObra + OrdenReparacion.totalRepuestos`, y el
+backend **solo actualiza esos campos cuando un presupuesto pasa a
+`APROBADO`** (`PresupuestosService.changeEstado`) — al **crear** un
+presupuesto nuevo (`create`) no los toca. Es intencional: el total
+"oficial" de la orden representa lo que el cliente aceptó pagar, no
+cualquier presupuesto en borrador; si sumara automaticamente
+presupuestos pendientes, un tecnico podria cargar varios presupuestos
+especulativos e inflar el total sin que el cliente los haya visto.
+
+Se mantuvo ese comportamiento (opcion elegida: "Total = solo lo
+aprobado"), pero ahora `ReparacionDetail.tsx` tambien muestra, aparte,
+cuanto suma en presupuestos **sin aprobar todavia** — asi no
+desaparece la informacion, solo queda claramente separada de lo
+aprobado:
+
+-   La etiqueta pasó de "Total" a **"Total aprobado"**, para que quede
+    explícito qué representa ese número.
+-   Si hay uno o más presupuestos en estado `PENDIENTE`, aparece un
+    aviso ambar debajo con la cantidad y la suma de sus
+    `totalEstimado` ("2 presupuestos sin aprobar todavía — Estimado:
+    Bs 450.00").
+-   La fuente de este calculo es `usePresupuestos({ ordenId, limit: 50
+    })`, la misma consulta que ya usa `PresupuestosPanel` — no se
+    agregó ninguna llamada nueva al backend, solo se reutilizó en el
+    componente padre para poder mostrarlo junto al total.
+
+## Sidebar: Diagnosticos y Presupuestos ya no tienen link propio
+
+Ambos módulos ya se gestionan completos desde dentro del detalle de
+cada orden (`DiagnosticosPanel`/`PresupuestosPanel` en
+`ReparacionDetail`), así que sus entradas en el grupo "Taller" del
+sidebar se quitaron para no duplicar el punto de entrada.
+
+**Importante:** las páginas globales (`/diagnosticos`, `/presupuestos`)
+**no se borraron** — siguen existiendo y siguen siendo utiles para ver/
+filtrar diagnosticos o presupuestos de *todas* las ordenes a la vez
+(por ejemplo, un Administrador que quiera revisar todos los
+presupuestos `PENDIENTE` del taller sin entrar orden por orden). Solo
+se quito el link de navegacion; quien conozca la URL puede seguir
+entrando directo.
+
+## Modulo Seguimiento (nuevo)
+
+`src/pages/seguimiento/index.astro` + isla `SeguimientoPanel.tsx`.
+Vista de supervision sobre el mismo recurso de Reparaciones (no es un
+permiso nuevo: usa `reparaciones:ver`), pensada para que un Tecnico
+vea su propio avance y un Administrador vea cuanto se intervino por
+periodo.
+
+Requirio cambios de backend (ver `spec-seguimiento-backend.md`):
+`FindOrdenesQueryDto` gano `tecnicoId`/`fechaInicio`/`fechaFin`, y se
+agrego `GET /reparaciones/conteo-por-estado` (un `groupBy` con los
+mismos filtros, sin paginar, devuelve los 9 estados con su cantidad).
+
+### Lo mas importante: el self-scoping de Tecnico lo impone el backend
+
+"El Tecnico ve solo sus ordenes" **no es una regla de UI** — si lo
+fuera, cualquier Tecnico podria escribir `?tecnicoId=5` en la URL y
+ver el trabajo de otro. La regla vive en
+`ReparacionesService.resolverTecnicoId`: si el usuario autenticado no
+es Administrador, el `tecnicoId` que mande en la query se **ignora
+por completo** y el backend fuerza su propio id (`user.sub` del JWT).
+El frontend refleja esto nada mas por claridad visual: el `<select>`
+de tecnico (`esAdmin && (...)`) ni siquiera se renderiza para un
+no-admin, porque mostrarlo seria enganoso — elijan lo que elijan ahi,
+el backend lo iba a ignorar igual.
+
+### Tarjetas de estado
+
+Las 6 pedidas (`RECIBIDO`, `DIAGNOSTICO`, `ESPERANDO_APROBACION`,
+`EN_REPARACION`, `LISTO_ENTREGA`, `ENTREGADO`) salen de
+`useConteoPorEstado`, que ya trae los 9 estados reales con su
+cantidad — el componente simplemente no renderiza tarjeta para
+`CANCELADO`/`NO_REPARABLE`. Click en una tarjeta activa filtra la
+tabla por ese `estadoId`; click de nuevo en la misma tarjeta activa lo
+quita (toggle), para volver a "todos los estados" sin un boton aparte.
+
+### Columna "Tecnico" y "Fecha de asignacion"
+
+No requirieron ningun cambio de backend: `ordenTecnicos` (con
+`fechaAsignacion` y `usuario.nombre`) ya venia incluido en
+`GET /reparaciones` desde antes (se confirmo revisando
+`ORDEN_INCLUDE`). La columna Tecnico lista todos los asignados a esa
+orden, separados por coma. La fecha de asignacion es mas sutil
+(`fechaAsignacionRelevante` en `SeguimientoPanel.tsx`): si hay un
+filtro de tecnico activo, muestra la fecha en que **ese** tecnico fue
+asignado (no la de otro); sin filtro, prioriza al tecnico marcado
+`PRINCIPAL`; si no hay ninguno marcado asi, usa la asignacion mas
+antigua registrada.
+
+### Filtros
+
+Buscador (reutiliza el `search` que ya soportaba `/reparaciones`:
+codigo de orden o falla reportada), rango de fechas (`fechaInicio`/
+`fechaFin`, sobre `fechaIngreso` de la orden), y el selector de
+tecnico (solo Administrador). "Limpiar filtros" solo aparece cuando
+hay algo activo que limpiar.
+
+Capa de datos: `types/reparacion.ts` (`ConteoPorEstado`, y
+`tecnicoId`/`fechaInicio`/`fechaFin` agregados a `OrdenesQuery`),
+`lib/api/reparaciones.ts` (`conteoPorEstado`),
+`lib/hooks/useReparaciones.ts` (`useConteoPorEstado`). No se creo
+ningun archivo de tipos/api/hooks nuevo — todo se agrego a los
+archivos de Reparaciones ya existentes, porque Seguimiento es una
+vista distinta sobre el mismo recurso, no un recurso nuevo.

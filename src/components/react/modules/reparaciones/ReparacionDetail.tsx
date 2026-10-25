@@ -12,6 +12,7 @@ import PresupuestosPanel from './PresupuestosPanel';
 import HistorialTimeline from './HistorialTimeline';
 import QueryProvider from '../../providers/QueryProvider';
 import { useReparacion } from '../../../../lib/hooks/useReparaciones';
+import { usePresupuestos } from '../../../../lib/hooks/usePresupuestos';
 import { usePermiso } from '../../../../lib/hooks/useAuth';
 import { estadoOrdenClasses, estadoOrdenLabel, prioridadClasses } from '../../../../lib/utils/estado';
 
@@ -32,6 +33,7 @@ interface ReparacionDetailProps {
 
 function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
   const { data: orden, isLoading, error } = useReparacion(ordenId);
+  const { data: presupuestosData } = usePresupuestos({ ordenId, limit: 50 });
   const [editOpen, setEditOpen] = useState(false);
   const puedeEditar = usePermiso('reparaciones:editar');
 
@@ -50,6 +52,9 @@ function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
   const total =
     (orden.costoManoObra ? Number(orden.costoManoObra) : 0) +
     (orden.totalRepuestos ? Number(orden.totalRepuestos) : 0);
+
+  const presupuestosPendientes = (presupuestosData?.items ?? []).filter((p) => p.estado === 'PENDIENTE');
+  const estimadoPendiente = presupuestosPendientes.reduce((acc, p) => acc + Number(p.totalEstimado), 0);
 
   return (
     <div className="space-y-6">
@@ -100,10 +105,20 @@ function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
             <dd className="text-sm text-graphite-900">{formatFecha(orden.fechaEstimadaEntrega)}</dd>
           </div>
           <div>
-            <dt className="text-xs text-graphite-400">Total</dt>
+            <dt className="text-xs text-graphite-400">Total aprobado</dt>
             <dd className="text-sm font-semibold text-graphite-900">{formatMonto(total)}</dd>
           </div>
         </dl>
+
+        {estimadoPendiente > 0 && (
+          <div className="mt-4 flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <span>
+              {presupuestosPendientes.length} presupuesto{presupuestosPendientes.length === 1 ? '' : 's'} sin
+              aprobar todavía
+            </span>
+            <span className="font-semibold">Estimado: {formatMonto(estimadoPendiente)}</span>
+          </div>
+        )}
 
         <div className="mt-5 border-t border-graphite-100 pt-5">
           <p className="text-xs font-medium uppercase tracking-wide text-graphite-400">Falla reportada</p>

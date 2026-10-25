@@ -38,6 +38,15 @@ export function useTecnicos() {
   });
 }
 
+/** Tarjetas de conteo del módulo Seguimiento. */
+export function useConteoPorEstado(query: OrdenesQuery) {
+  return useQuery({
+    queryKey: ['reparaciones', 'conteo-por-estado', query],
+    queryFn: () => reparacionesApi.conteoPorEstado(query),
+    placeholderData: (prev) => prev,
+  });
+}
+
 export function useReparacionMutations(id?: number) {
   const queryClient = useQueryClient();
 

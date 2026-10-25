@@ -129,4 +129,20 @@ export interface OrdenesQuery {
   equipoId?: number;
   estadoId?: number;
   prioridad?: string;
+  /**
+   * Usado por el módulo Seguimiento. Si el usuario autenticado no es
+   * Administrador, el backend IGNORA este valor y fuerza su propio id
+   * (ver ReparacionesService.resolverTecnicoId) — no es un filtro de
+   * confianza en manos del cliente, es solo lo que un Administrador
+   * puede elegir libremente.
+   */
+  tecnicoId?: number;
+  fechaInicio?: string;
+  fechaFin?: string;
+}
+
+export interface ConteoPorEstado {
+  estadoId: number;
+  nombre: string;
+  cantidad: number;
 }

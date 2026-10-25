@@ -3,6 +3,7 @@ import type { PaginatedResult } from '../../types/api';
 import type {
   AssignTecnicoPayload,
   ChangeEstadoPayload,
+  ConteoPorEstado,
   CreateOrdenPayload,
   OrdenReparacion,
   OrdenTecnico,
@@ -20,6 +21,9 @@ function toQueryString(query: OrdenesQuery): string {
   if (query.equipoId) params.set('equipoId', String(query.equipoId));
   if (query.estadoId) params.set('estadoId', String(query.estadoId));
   if (query.prioridad) params.set('prioridad', query.prioridad);
+  if (query.tecnicoId) params.set('tecnicoId', String(query.tecnicoId));
+  if (query.fechaInicio) params.set('fechaInicio', query.fechaInicio);
+  if (query.fechaFin) params.set('fechaFin', query.fechaFin);
   const qs = params.toString();
   return qs ? `?${qs}` : '';
 }
@@ -54,4 +58,13 @@ export const reparacionesApi = {
    * ya viene pre-filtrado por el backend).
    */
   findTecnicos: () => api.get<Tecnico[]>('/reparaciones/tecnicos'),
+
+  /**
+   * GET /reparaciones/conteo-por-estado — mismos filtros que findAll
+   * (tecnicoId/fechaInicio/fechaFin), sin paginar. Devuelve los 9
+   * estados siempre, aunque tengan cantidad 0; el módulo Seguimiento
+   * elige cuáles de esos 9 mostrar como tarjetas.
+   */
+  conteoPorEstado: (query: OrdenesQuery = {}) =>
+    api.get<ConteoPorEstado[]>(`/reparaciones/conteo-por-estado${toQueryString(query)}`),
 };
