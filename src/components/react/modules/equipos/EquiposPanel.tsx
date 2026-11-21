@@ -1,4 +1,4 @@
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Camera, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import DataTable, { type Column } from '../../tables/DataTable';
 import SearchInput from '../../filters/SearchInput';
@@ -6,6 +6,8 @@ import Pagination from '../../ui/Pagination';
 import ConfirmDialog from '../../ui/ConfirmDialog';
 import EquipoFormModal from '../../forms/EquipoFormModal';
 import AccessDenied from '../../ui/AccessDenied';
+import AuthImage from '../archivos/AuthImage';
+import FotosEquipoModal from '../archivos/FotosEquipoModal';
 import QueryProvider from '../../providers/QueryProvider';
 import { useEquipoMutations, useEquipos } from '../../../../lib/hooks/useEquipos';
 import { usePermiso } from '../../../../lib/hooks/useAuth';
@@ -35,6 +37,8 @@ function EquiposPanelContent({ clienteId, clienteNombre }: EquiposPanelProps) {
   const puedeCrear = usePermiso('equipos:crear');
   const puedeEditar = usePermiso('equipos:editar');
   const puedeEliminar = usePermiso('equipos:eliminar');
+  const puedeVerFotos = usePermiso('archivos:ver');
+  const [fotosTarget, setFotosTarget] = useState<Equipo | null>(null);
 
   if (error instanceof ApiError && error.statusCode === 403) {
     return <AccessDenied />;
@@ -46,6 +50,34 @@ function EquiposPanelContent({ clienteId, clienteNombre }: EquiposPanelProps) {
   }
 
   const columns: Column<Equipo>[] = [
+    // Miniatura: la primera foto subida identifica el equipo de un vistazo.
+    // Se oculta (no solo la imagen) si el usuario no tiene archivos:ver.
+    ...(puedeVerFotos
+      ? [
+          {
+            key: 'foto',
+            header: '',
+            render: (row: Equipo) => (
+              <button
+                type="button"
+                onClick={() => setFotosTarget(row)}
+                className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-md bg-graphite-100 text-graphite-400 hover:ring-2 hover:ring-graphite-300"
+                aria-label={`Ver fotos del equipo ${row.id}`}
+              >
+                {row.fotoPrincipalId ? (
+                  <AuthImage
+                    archivoId={row.fotoPrincipalId}
+                    alt={`Foto de ${row.tipoEquipo}`}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <Camera size={16} />
+                )}
+              </button>
+            ),
+          } as Column<Equipo>,
+        ]
+      : []),
     ...(clienteId
       ? []
       : [
@@ -77,6 +109,18 @@ function EquiposPanelContent({ clienteId, clienteNombre }: EquiposPanelProps) {
       className: 'text-right',
       render: (row) => (
         <div className="flex justify-end gap-1">
+          {puedeVerFotos && (
+            <button
+              type="button"
+              onClick={() => setFotosTarget(row)}
+              className="inline-flex items-center gap-1 rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+              aria-label={`Fotos del equipo ${row.id}`}
+              title="Fotos"
+            >
+              <Camera size={15} />
+              {!!row._count?.archivos && <span className="text-xs">{row._count.archivos}</span>}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setFormState({ open: true, equipo: row })}
@@ -146,6 +190,8 @@ function EquiposPanelContent({ clienteId, clienteNombre }: EquiposPanelProps) {
         defaultClienteNombre={clienteNombre}
         onClose={() => setFormState({ open: false, equipo: null })}
       />
+
+      <FotosEquipoModal equipo={fotosTarget} onClose={() => setFotosTarget(null)} />
 
       <ConfirmDialog
         open={!!deleteTarget}

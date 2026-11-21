@@ -24,8 +24,11 @@ export interface Equipo {
   observaciones?: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Id de la primera foto subida al equipo (la usa el listado como miniatura). */
+  fotoPrincipalId?: number | null;
   _count?: {
-    ordenesReparacion: number;
+    ordenesReparacion?: number;
+    archivos?: number;
   };
 }
 

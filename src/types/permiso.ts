@@ -38,6 +38,7 @@ export const RECURSOS_PERMISO = [
   'pagos',
   'orden-repuestos',
   'comunicaciones',
+  'archivos',
 ] as const;
 
 export const ACCIONES_PERMISO = ['ver', 'crear', 'editar', 'eliminar'] as const;
@@ -60,6 +61,7 @@ const RECURSO_LABELS: Record<string, string> = {
   pagos: 'Pagos',
   'orden-repuestos': 'Repuestos usados en orden',
   comunicaciones: 'Comunicaciones',
+  archivos: 'Fotos de equipos',
 };
 
 export function recursoLabel(recurso: string): string {

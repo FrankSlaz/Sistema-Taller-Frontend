@@ -81,8 +81,12 @@ interface RequestOptions extends Omit<RequestInit, 'body'> {
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, auth = true, headers, ...rest } = options;
 
+  // Con FormData NO se setea Content-Type: el navegador lo arma solo,
+  // con el boundary del multipart. Forzar application/json lo rompería.
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+
   const finalHeaders: HeadersInit = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...headers,
   };
 
@@ -96,7 +100,7 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   const response = await fetch(`${PUBLIC_API_URL}${path}`, {
     ...rest,
     headers: finalHeaders,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body === undefined ? undefined : isFormData ? (body as FormData) : JSON.stringify(body),
   });
 
   const json = await response.json().catch(() => null);
@@ -131,29 +135,32 @@ export const api = {
 };
 
 /**
- * Descarga un archivo binario (los endpoints /pdf de Reportes) con el
- * mismo Bearer token que el resto de la API. Un <a href="/reportes/...">
- * plano no funcionaría: el navegador navegaría sin el header
- * Authorization y el backend respondería 401. En vez de eso, se hace
- * fetch manual, se arma un Blob, y se dispara la descarga con un <a>
- * temporal apuntando a un object URL.
+ * Trae un recurso binario autenticado (imágenes de equipos, PDFs). Un
+ * <img src> o <a href> planos no pueden mandar el header Authorization,
+ * así que se hace fetch manual con el Bearer token y se devuelve el Blob
+ * para que el llamador cree un object URL.
  */
-export async function downloadFile(path: string, filename: string): Promise<void> {
+export async function fetchBlob(path: string): Promise<Blob> {
   const token = getToken();
   const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
   const response = await fetch(`${PUBLIC_API_URL}${path}`, { headers });
 
   if (!response.ok) {
-    // El error de un endpoint /pdf sigue viniendo como JSON del HttpExceptionFilter.
+    // El error de estos endpoints sigue viniendo como JSON del HttpExceptionFilter.
     const errorBody = (await response.json().catch(() => null)) as ApiErrorResponse | null;
     const message = Array.isArray(errorBody?.message)
       ? errorBody!.message.join(', ')
-      : (errorBody?.message ?? 'No se pudo generar el archivo');
+      : (errorBody?.message ?? 'No se pudo obtener el archivo');
     throw new ApiError(message, response.status, errorBody?.message);
   }
 
-  const blob = await response.blob();
+  return response.blob();
+}
+
+/** Descarga un archivo binario autenticado (los /pdf de Reportes) disparando "Guardar como". */
+export async function downloadFile(path: string, filename: string): Promise<void> {
+  const blob = await fetchBlob(path);
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;

@@ -5,20 +5,22 @@ interface ModalProps {
   open: boolean;
   onClose: () => void;
   title: string;
+  /** 'xl' para contenido ancho (galerías de fotos). */
+  size?: 'md' | 'xl';
 }
 
 /**
  * Modal genérico. Se usa como base para todos los formularios
  * de creación/edición del sistema (Clientes, Equipos, Reparaciones, ...).
  */
-export default function Modal({ open, onClose, title, children }: PropsWithChildren<ModalProps>) {
+export default function Modal({ open, onClose, title, size = 'md', children }: PropsWithChildren<ModalProps>) {
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-graphite-950/60" onClick={onClose} aria-hidden="true" />
 
-      <div className="relative w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl">
+      <div className={`relative w-full ${size === 'xl' ? 'max-w-3xl' : 'max-w-lg'} rounded-xl bg-white p-6 shadow-2xl`}>
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-graphite-900">{title}</h2>
           <button

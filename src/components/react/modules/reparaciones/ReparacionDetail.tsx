@@ -5,6 +5,7 @@ import EditOrdenModal from '../../forms/EditOrdenModal';
 import EstadoChanger from './EstadoChanger';
 import TecnicosPanel from './TecnicosPanel';
 import PagosPanel from './PagosPanel';
+import FotosGaleria from '../archivos/FotosGaleria';
 import EntregaPanel from './EntregaPanel';
 import GarantiaPanel from './GarantiaPanel';
 import DiagnosticosPanel from './DiagnosticosPanel';
@@ -138,6 +139,11 @@ function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
           <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
             <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Diagnósticos</h2>
             <DiagnosticosPanel orden={orden} />
+          </section>
+
+          <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
+            <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Registro fotográfico</h2>
+            <FotosGaleria equipoId={orden.equipoId} ordenId={orden.id} ordenCodigo={orden.codigoOrden} />
           </section>
 
           <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">

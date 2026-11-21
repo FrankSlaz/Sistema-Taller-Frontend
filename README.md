@@ -999,3 +999,106 @@ Capa de datos: `types/reparacion.ts` (`ConteoPorEstado`, y
 ningun archivo de tipos/api/hooks nuevo — todo se agrego a los
 archivos de Reparaciones ya existentes, porque Seguimiento es una
 vista distinta sobre el mismo recurso, no un recurso nuevo.
+
+### Fix: destello de "No tenés permiso" al abrir Seguimiento
+
+`SeguimientoPanel` mostraba `<AccessDenied />` por una fracción de
+segundo al cargar, antes de renderizar el módulo real. La causa: la
+pantalla estaba gateada por un flag local (`!puedeVer`, derivado de
+`usePermiso('reparaciones:ver')`), y ese flag depende de `GET
+/auth/me`. Mientras esa consulta está resolviendo, `useAuth().permisos`
+arranca como `[]`, así que cualquier `hasPermiso(...)` devuelve `false`
+— "todavía no sé" se confundía con "no tenés permiso".
+
+Se quitó el flag local del gate de pantalla completa: ahora
+`AccessDenied` aparece **únicamente** cuando la petición real
+(`useReparaciones`) falla con un 403 verdadero del backend — misma
+convención que ya usaban `ClientesPanel`, `EquiposPanel`,
+`ComprasPanel`, `ProductosPanel`, `ReparacionesPanel`,
+`DiagnosticosGlobalPanel` y `PagosGlobalPanel` (verificado: ninguno
+usaba un flag local para esto, por eso solo Seguimiento tenía el bug).
+
+Regla a respetar al agregar módulos nuevos: `usePermiso()`/`hasPermiso()`
+sirven para **ocultar botones o secciones** (donde un destello de un
+instante es inocuo), pero **no** para decidir si mostrar una pantalla
+de "acceso denegado" completa — para eso, usar el resultado real de
+la consulta de datos.
+
+## Fotos de equipos y registro fotografico
+
+Permite cargar fotos de un equipo para identificarlo de un vistazo, y
+dejar registro fotografico de lo que se hizo en cada reparacion. Requirio
+un modulo nuevo en el backend (`archivos-equipo`, ver
+`spec-archivos-backend.md`); no hubo migracion de Prisma porque la tabla
+`archivos_equipo` ya existia.
+
+### Donde aparece
+
+-   **Equipos** (`EquiposPanel`): primera columna con la **miniatura** del
+    equipo (la primera foto subida, via `fotoPrincipalId` del listado) y un
+    boton de camara por fila con el contador de fotos. Abre
+    `FotosEquipoModal` con la galeria completa del equipo.
+-   **Reparaciones** (`ReparacionDetail`): seccion **"Registro
+    fotografico"** debajo de Diagnosticos. Por defecto muestra las fotos de
+    *esa orden*; el selector "Todas las del equipo" agrega las de otras
+    ordenes y las generales. Todo lo que se sube desde ahi queda
+    **vinculado a la orden** (`ordenId`), y el backend valida que esa orden
+    pertenezca al equipo.
+
+### Componentes (`components/react/modules/archivos/`)
+
+-   `FotosGaleria` — grilla de miniaturas, subida (con descripcion opcional
+    para todo el lote), visor a pantalla completa con flechas/teclado,
+    descripcion editable y borrado. Es la misma pieza en ambos contextos;
+    cambia solo si recibe `ordenId`.
+-   `AuthImage` — ver abajo.
+-   `FotosEquipoModal` — envoltorio de la galeria para Equipos (usa la
+    nueva prop `size="xl"` de `Modal`).
+
+### Imagenes autenticadas: por que `AuthImage`
+
+Las imagenes se sirven por un endpoint **autenticado**
+(`GET /archivos-equipo/:id/contenido`), no desde una carpeta publica: son
+fotos de equipos de clientes. Un `<img src>` no puede mandar el header
+`Authorization`, asi que `AuthImage` pide la imagen con `fetch` + token
+(`fetchBlob` en `lib/api/client.ts`, el mismo mecanismo de la descarga de
+PDFs de Reportes), cachea el `Blob` en TanStack Query (el contenido de un
+id nunca cambia → `staleTime: Infinity`, `gcTime` 10 min) y lo muestra con
+un object URL que se libera al desmontar.
+
+### Reduccion de fotos antes de subir (`lib/utils/imagen.ts`)
+
+Una foto de celular pesa 3–8 MB; para identificar un equipo sobra con
+~1600 px. `reducirImagen` redimensiona a 1600 px por lado y recodifica a
+JPEG (calidad 0.85) con un canvas. Detalles:
+-   Se procesan **de a una**, no en paralelo: una foto de 12 MP
+    decodificada ocupa ~48 MB; diez a la vez cuelgan un celular.
+-   No recomprime lo que ya es chico y liviano (cada recompresion pierde
+    calidad), y nunca empeora: si el resultado no es menor, sube el
+    original. Si el navegador no soporta `createImageBitmap`, sube el
+    original (el backend igual valida el contenido real).
+-   El selector es `accept="image/*" multiple`: en celular ofrece Camara o
+    Galeria. Maximo 10 fotos por vez (mismo limite que el backend).
+
+### `apiFetch` ahora soporta `FormData`
+
+Antes forzaba `Content-Type: application/json` y hacia `JSON.stringify` del
+body. Con `FormData` eso rompe el multipart (el navegador tiene que poner
+el `Content-Type` con su `boundary`), asi que ahora si el body es
+`FormData` no se setea el header ni se serializa. No cambia el
+comportamiento de ninguna llamada JSON existente. `downloadFile` se
+reescribio sobre `fetchBlob` para no duplicar el manejo de errores.
+
+### Permisos
+
+Recurso nuevo **`archivos`** (`ver`/`crear`/`editar`/`eliminar`), agregado
+a la matriz de permisos. Esta separado de `equipos` a proposito: un
+Tecnico puede subir fotos de su trabajo sin poder editar los datos del
+equipo. Ver = ver miniaturas/galeria; crear = "Agregar fotos"; editar =
+cambiar la descripcion; eliminar = borrar la foto. Para que alguien vea
+fotos hay que otorgar el permiso `archivos:ver` a su rol (el Administrador
+lo recibe al volver a correr el seed). Sin `archivos:ver` la columna y el
+boton de fotos de Equipos no aparecen, y la seccion de Reparaciones
+muestra "No tenes permiso para ver las fotos" (gateado por el 403 real de
+la peticion, no por un flag local — ver la regla del destello de
+Seguimiento).
