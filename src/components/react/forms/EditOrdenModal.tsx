@@ -18,6 +18,9 @@ function toDateInput(value?: string | null) {
 export default function EditOrdenModal({ open, onClose, orden }: EditOrdenModalProps) {
   const { update } = useReparacionMutations(orden.id);
   const [form, setForm] = useState<UpdateOrdenPayload>({});
+  // Con presupuestos aprobados, la mano de obra es la suma de ellos (la
+  // calcula el backend): no se edita a mano.
+  const manoObraDePresupuestos = (orden.presupuestos ?? []).some((p) => p.estado === 'APROBADO');
 
   useEffect(() => {
     if (!open) return;
@@ -42,6 +45,7 @@ export default function EditOrdenModal({ open, onClose, orden }: EditOrdenModalP
     update.mutate(
       {
         ...form,
+        costoManoObra: manoObraDePresupuestos ? undefined : form.costoManoObra,
         fechaPromesa: form.fechaPromesa || undefined,
         fechaEstimadaEntrega: form.fechaEstimadaEntrega || undefined,
         observaciones: form.observaciones || undefined,
@@ -106,14 +110,23 @@ export default function EditOrdenModal({ open, onClose, orden }: EditOrdenModalP
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-graphite-900">Costo mano de obra</label>
-            <input
-              type="number"
-              min={0}
-              step="0.01"
-              value={form.costoManoObra ?? 0}
-              onChange={(e) => set('costoManoObra', Number(e.target.value))}
-              className="w-full rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
-            />
+            {manoObraDePresupuestos ? (
+              <>
+                <p className="rounded-md border border-graphite-100 bg-graphite-50 px-3 py-2 text-sm text-graphite-600">
+                  Bs {Number(orden.costoManoObra ?? 0).toFixed(2)}
+                </p>
+                <p className="mt-1 text-xs text-graphite-400">Suma de los presupuestos aprobados.</p>
+              </>
+            ) : (
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={form.costoManoObra ?? 0}
+                onChange={(e) => set('costoManoObra', Number(e.target.value))}
+                className="w-full rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
+              />
+            )}
           </div>
 
           <div>
@@ -122,7 +135,9 @@ export default function EditOrdenModal({ open, onClose, orden }: EditOrdenModalP
               Bs {Number(orden.totalRepuestos ?? 0).toFixed(2)}
             </p>
             <p className="mt-1 text-xs text-graphite-400">
-              Se calcula con los repuestos cargados en la orden o el presupuesto aprobado.
+              {manoObraDePresupuestos
+                ? 'Suma de los presupuestos aprobados.'
+                : 'Suma de los repuestos cargados en la orden.'}
             </p>
           </div>
         </div>
