@@ -61,7 +61,7 @@ function PerfilPanelContent() {
       </dl>
 
       <p className="text-xs text-graphite-400">
-        Estos datos se cargaron al iniciar sesión. Si algo cambió desde otra pantalla, volvé a
+        Estos datos se cargaron al iniciar sesión. Si algo cambió desde otra pantalla, vuelve a
         iniciar sesión para verlo actualizado aquí.
       </p>
 

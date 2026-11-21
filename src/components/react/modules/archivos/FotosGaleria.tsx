@@ -108,7 +108,7 @@ export default function FotosGaleria({ equipoId, ordenId, ordenCodigo }: FotosGa
   const subiendo = preparando || upload.isPending;
 
   if (error instanceof ApiError && error.statusCode === 403) {
-    return <p className="text-sm text-graphite-400">No tenés permiso para ver las fotos.</p>;
+    return <p className="text-sm text-graphite-400">No tienes permiso para ver las fotos.</p>;
   }
 
   return (

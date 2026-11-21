@@ -48,7 +48,7 @@ export default function ResetPasswordModal({ open, onClose, usuario }: ResetPass
     <Modal open={open} onClose={onClose} title={`Restablecer contraseña de ${usuario.nombre}`}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <p className="text-sm text-graphite-500">
-          Como Administrador podés fijar una contraseña nueva sin conocer la actual. Comunicásela a{' '}
+          Como Administrador puedes fijar una contraseña nueva sin conocer la actual. Comunícasela a{' '}
           {usuario.nombre} por un canal seguro.
         </p>
 
