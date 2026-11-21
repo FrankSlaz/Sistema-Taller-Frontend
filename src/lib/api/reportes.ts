@@ -2,61 +2,66 @@ import { api, downloadFile } from './client';
 import type {
   ClientesFrecuentes,
   ClientesFrecuentesQuery,
-  DateRangeQuery,
+  CuentasPorCobrar,
+  CuentasPorCobrarQuery,
   Ingresos,
   IngresosQuery,
   OrdenesConRetraso,
   OrdenesPorTipoServicio,
+  OrdenesRetrasoQuery,
+  RangoFechas,
   ReparacionesPorEstado,
   ReparacionesPorEstadoQuery,
-  StockBajo,
-  TecnicosMasOrdenes,
-  TecnicosMasOrdenesQuery,
+  ResumenEjecutivo,
+  Stock,
+  StockQuery,
+  Tecnicos,
 } from '../../types/reporte';
 
+/** Arrays van separados por coma (estados=RECIBIDO,DIAGNOSTICO). */
 function toQueryString(params: object): string {
   const usp = new URLSearchParams();
-  Object.entries(params as Record<string, string | number | undefined>).forEach(([key, value]) => {
-    if (value !== undefined && value !== '') usp.set(key, String(value));
+  Object.entries(params as Record<string, unknown>).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    if (Array.isArray(value)) {
+      if (value.length) usp.set(key, value.join(','));
+      return;
+    }
+    usp.set(key, String(value));
   });
   const qs = usp.toString();
   return qs ? `?${qs}` : '';
 }
 
+function hoy() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** GET JSON + descarga PDF con los mismos filtros. */
+function reporte<Q extends object, R>(clave: string, archivo: string) {
+  return {
+    get: (query: Q) => api.get<R>(`/reportes/${clave}${toQueryString(query)}`),
+    pdf: (query: Q) => downloadFile(`/reportes/${clave}/pdf${toQueryString(query)}`, `${archivo}-${hoy()}.pdf`),
+  };
+}
+
 export const reportesApi = {
-  reparacionesPorEstado: (query: ReparacionesPorEstadoQuery) =>
-    api.get<ReparacionesPorEstado>(`/reportes/reparaciones-por-estado${toQueryString(query)}`),
-  reparacionesPorEstadoPdf: (query: ReparacionesPorEstadoQuery) =>
-    downloadFile(
-      `/reportes/reparaciones-por-estado/pdf${toQueryString(query)}`,
-      'reparaciones-por-estado.pdf',
-    ),
-
-  ingresos: (query: IngresosQuery) => api.get<Ingresos>(`/reportes/ingresos${toQueryString(query)}`),
-  ingresosPdf: (query: IngresosQuery) =>
-    downloadFile(`/reportes/ingresos/pdf${toQueryString(query)}`, 'ingresos.pdf'),
-
-  stockBajo: () => api.get<StockBajo>('/reportes/stock-bajo'),
-  stockBajoPdf: () => downloadFile('/reportes/stock-bajo/pdf', 'stock-bajo.pdf'),
-
-  tecnicosMasOrdenes: (query: TecnicosMasOrdenesQuery) =>
-    api.get<TecnicosMasOrdenes>(`/reportes/tecnicos-mas-ordenes${toQueryString(query)}`),
-  tecnicosMasOrdenesPdf: (query: TecnicosMasOrdenesQuery) =>
-    downloadFile(`/reportes/tecnicos-mas-ordenes/pdf${toQueryString(query)}`, 'tecnicos-mas-ordenes.pdf'),
-
-  ordenesPorTipoServicio: (query: DateRangeQuery) =>
-    api.get<OrdenesPorTipoServicio>(`/reportes/ordenes-por-tipo-servicio${toQueryString(query)}`),
-  ordenesPorTipoServicioPdf: (query: DateRangeQuery) =>
-    downloadFile(
-      `/reportes/ordenes-por-tipo-servicio/pdf${toQueryString(query)}`,
-      'ordenes-por-tipo-servicio.pdf',
-    ),
-
-  clientesFrecuentes: (query: ClientesFrecuentesQuery) =>
-    api.get<ClientesFrecuentes>(`/reportes/clientes-frecuentes${toQueryString(query)}`),
-  clientesFrecuentesPdf: (query: ClientesFrecuentesQuery) =>
-    downloadFile(`/reportes/clientes-frecuentes/pdf${toQueryString(query)}`, 'clientes-frecuentes.pdf'),
-
-  ordenesConRetraso: () => api.get<OrdenesConRetraso>('/reportes/ordenes-retraso'),
-  ordenesConRetrasoPdf: () => downloadFile('/reportes/ordenes-retraso/pdf', 'ordenes-retraso.pdf'),
+  resumen: reporte<RangoFechas, ResumenEjecutivo>('resumen', 'resumen-ejecutivo'),
+  reparacionesPorEstado: reporte<ReparacionesPorEstadoQuery, ReparacionesPorEstado>(
+    'reparaciones-por-estado',
+    'reparaciones-por-estado',
+  ),
+  ingresos: reporte<IngresosQuery, Ingresos>('ingresos', 'ingresos'),
+  stock: reporte<StockQuery, Stock>('stock', 'stock'),
+  tecnicos: reporte<RangoFechas, Tecnicos>('tecnicos', 'tecnicos'),
+  ordenesPorTipoServicio: reporte<RangoFechas, OrdenesPorTipoServicio>(
+    'ordenes-por-tipo-servicio',
+    'ordenes-por-tipo-equipo',
+  ),
+  clientesFrecuentes: reporte<ClientesFrecuentesQuery, ClientesFrecuentes>(
+    'clientes-frecuentes',
+    'clientes-frecuentes',
+  ),
+  ordenesConRetraso: reporte<OrdenesRetrasoQuery, OrdenesConRetraso>('ordenes-retraso', 'ordenes-con-retraso'),
+  cuentasPorCobrar: reporte<CuentasPorCobrarQuery, CuentasPorCobrar>('cuentas-por-cobrar', 'cuentas-por-cobrar'),
 };

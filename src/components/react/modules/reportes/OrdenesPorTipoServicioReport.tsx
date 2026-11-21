@@ -1,55 +1,97 @@
 import { useState } from 'react';
-import ReporteShell from './ReporteShell';
-import ReporteTable, { type ReporteColumn } from './ReporteTable';
-import { useDownloadPdf, useOrdenesPorTipoServicio } from '../../../../lib/hooks/useReportes';
-import { reportesApi } from '../../../../lib/api/reportes';
-import type { OrdenesPorTipoRow } from '../../../../types/reporte';
+import { useReporte } from '../../../../lib/hooks/useReportes';
+import type { RangoFechas } from '../../../../types/reporte';
+import {
+  BarList,
+  FiltroFechas,
+  KpiGrid,
+  ReporteShell,
+  Seccion,
+  Tabla,
+  bs,
+  dias,
+  entero,
+  porc,
+} from './compartido';
 
 export default function OrdenesPorTipoServicioReport() {
-  const [fechaInicio, setFechaInicio] = useState('');
-  const [fechaFin, setFechaFin] = useState('');
-
-  const query = { fechaInicio: fechaInicio || undefined, fechaFin: fechaFin || undefined };
-  const { data, isLoading } = useOrdenesPorTipoServicio(query);
-  const pdf = useDownloadPdf(() => reportesApi.ordenesPorTipoServicioPdf(query));
-
-  const columns: ReporteColumn<OrdenesPorTipoRow>[] = [
-    { key: 'tipoEquipo', header: 'Tipo de equipo' },
-    { key: 'cantidad', header: 'Cantidad de órdenes', align: 'right' },
-  ];
+  const [rango, setRango] = useState<RangoFechas>({});
+  const { data, isLoading, isFetching, error, pdf } = useReporte('ordenesPorTipoServicio', rango);
+  const k = data?.kpis;
 
   return (
     <ReporteShell
-      descripcion="El sistema no distingue un 'tipo de servicio' propio, así que se agrupa por tipo de equipo (Laptop, Celular, etc.) como la categorización más cercana disponible. Fechas opcionales."
-      filtros={
-        <>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-graphite-900">Desde (opcional)</label>
-            <input
-              type="date"
-              value={fechaInicio}
-              onChange={(e) => setFechaInicio(e.target.value)}
-              className="rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-graphite-900">Hasta (opcional)</label>
-            <input
-              type="date"
-              value={fechaFin}
-              onChange={(e) => setFechaFin(e.target.value)}
-              className="rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
-            />
-          </div>
-        </>
-      }
-      resumen={data ? [{ label: 'Total de órdenes', value: String(data.totalOrdenes) }] : []}
-      onDescargarPdf={() => pdf.mutate()}
-      isPdfPending={pdf.isPending}
+      descripcion="Qué equipos llegan más, cuáles se reparan con éxito y cuáles dejan mejor ticket. Ayuda a decidir en qué especializarse, qué repuestos tener y qué publicitar."
+      filtros={<FiltroFechas valor={rango} onChange={setRango} permitirTodo label="Fecha de ingreso" />}
+      onPdf={() => pdf.mutate()}
+      pdfPending={pdf.isPending}
       pdfError={pdf.error}
       isLoading={isLoading}
+      isFetching={isFetching}
+      error={error}
     >
-      <ReporteTable columns={columns} rows={data?.detalle ?? []} />
+      {data && k && (
+        <div className="space-y-6">
+          <KpiGrid
+            kpis={[
+              { label: 'Órdenes', valor: entero(k.totalOrdenes) },
+              { label: 'Tipos de equipo', valor: entero(k.tiposDistintos) },
+              { label: 'Más frecuente', valor: k.tipoMasFrecuente ?? '—' },
+              { label: 'Mejor ticket', valor: k.tipoMejorTicket ?? '—', detalle: 'Mayor cobro promedio' },
+              { label: 'Marca más frecuente', valor: k.marcaMasFrecuente ?? '—' },
+            ]}
+          />
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Seccion titulo="Distribución de órdenes">
+              <BarList
+                items={data.detalle.map((t) => ({ etiqueta: t.tipoEquipo, valor: t.cantidad, texto: `${t.cantidad} (${porc(t.porcentaje)})` }))}
+              />
+            </Seccion>
+            <Seccion titulo="Marcas más frecuentes">
+              <BarList
+                items={data.topMarcas.map((m) => ({
+                  etiqueta: `${m.marca} · ${m.tipoEquipo}`,
+                  valor: m.cantidad,
+                  texto: `${m.cantidad} (${porc(m.porcentaje)})`,
+                }))}
+              />
+            </Seccion>
+          </div>
+
+          <Seccion titulo="Rendimiento por tipo de equipo" descripcion="En ámbar: tasa de éxito menor al 70%.">
+            <Tabla
+              clave={(t) => t.tipoEquipo}
+              filas={data.detalle}
+              tono={(t) => (t.tasaExito !== null && t.tasaExito < 70 ? 'alerta' : undefined)}
+              columnas={[
+                { titulo: 'Tipo de equipo', render: (t) => t.tipoEquipo },
+                { titulo: 'Órdenes', alinear: 'right', render: (t) => t.cantidad },
+                { titulo: '%', alinear: 'right', render: (t) => porc(t.porcentaje) },
+                { titulo: 'En curso', alinear: 'right', render: (t) => t.enCurso },
+                { titulo: 'Entregadas', alinear: 'right', render: (t) => t.entregadas },
+                { titulo: 'Fallidas', alinear: 'right', render: (t) => t.fallidas },
+                { titulo: 'Éxito', alinear: 'right', render: (t) => porc(t.tasaExito) },
+                { titulo: 'Tiempo prom.', alinear: 'right', render: (t) => dias(t.tiempoPromedio) },
+                { titulo: 'Ticket prom.', alinear: 'right', render: (t) => bs(t.ticketPromedio) },
+                { titulo: 'Facturado', alinear: 'right', render: (t) => bs(t.facturado) },
+              ]}
+              totales={[
+                'Total',
+                k.totalOrdenes,
+                '100%',
+                data.detalle.reduce((a, t) => a + t.enCurso, 0),
+                data.detalle.reduce((a, t) => a + t.entregadas, 0),
+                data.detalle.reduce((a, t) => a + t.fallidas, 0),
+                '',
+                '',
+                '',
+                bs(data.detalle.reduce((a, t) => a + t.facturado, 0)),
+              ]}
+            />
+          </Seccion>
+        </div>
+      )}
     </ReporteShell>
   );
 }

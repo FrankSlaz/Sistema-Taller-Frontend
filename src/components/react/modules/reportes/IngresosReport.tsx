@@ -1,71 +1,111 @@
 import { useState } from 'react';
-import ReporteShell from './ReporteShell';
-import ReporteTable, { type ReporteColumn } from './ReporteTable';
-import { useDownloadPdf, useIngresos } from '../../../../lib/hooks/useReportes';
-import { reportesApi } from '../../../../lib/api/reportes';
-import type { IngresosPorMetodoRow } from '../../../../types/reporte';
+import { useReporte } from '../../../../lib/hooks/useReportes';
+import type { RangoFechas } from '../../../../types/reporte';
+import {
+  BarList,
+  FiltroFechas,
+  FiltroSelect,
+  KpiGrid,
+  LinkOrden,
+  ReporteShell,
+  Seccion,
+  Tabla,
+  bs,
+  entero,
+  fecha,
+  pl,
+  porc,
+  presetRango,
+  tonoVariacion,
+  variacionTexto,
+} from './compartido';
 
-function formatMonto(value: number) {
-  return `Bs ${value.toFixed(2)}`;
-}
-
-function hoyISO() {
-  return new Date().toISOString().slice(0, 10);
-}
+const METODOS = ['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'QR'].map((m) => ({ valor: m, etiqueta: m }));
 
 export default function IngresosReport() {
-  const [fechaInicio, setFechaInicio] = useState(hoyISO());
-  const [fechaFin, setFechaFin] = useState(hoyISO());
-
-  const query = { fechaInicio, fechaFin };
-  const { data, isLoading } = useIngresos(query);
-  const pdf = useDownloadPdf(() => reportesApi.ingresosPdf(query));
-
-  const columns: ReporteColumn<IngresosPorMetodoRow>[] = [
-    { key: 'metodoPago', header: 'Método de pago' },
-    { key: 'cantidadPagos', header: 'Cant. pagos', align: 'right' },
-    { key: 'totalMonto', header: 'Total', align: 'right', render: (row) => formatMonto(row.totalMonto) },
-  ];
+  const [rango, setRango] = useState<RangoFechas>(presetRango('mes'));
+  const [metodoPago, setMetodoPago] = useState('');
+  const { data, isLoading, isFetching, error, pdf } = useReporte('ingresos', {
+    ...rango,
+    metodoPago: metodoPago || undefined,
+  });
+  const k = data?.kpis;
 
   return (
     <ReporteShell
-      descripcion="Ingresos registrados en el rango de fechas, desglosados por método de pago. Ambas fechas son obligatorias."
+      descripcion="Cuánto cobró el taller, cómo se compara con el período anterior, por qué medios y con qué margen en repuestos. Incluye lo que todavía falta cobrar."
       filtros={
         <>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-graphite-900">Desde</label>
-            <input
-              type="date"
-              value={fechaInicio}
-              onChange={(e) => setFechaInicio(e.target.value)}
-              className="rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-graphite-900">Hasta</label>
-            <input
-              type="date"
-              value={fechaFin}
-              onChange={(e) => setFechaFin(e.target.value)}
-              className="rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
-            />
-          </div>
+          <FiltroFechas valor={rango} onChange={setRango} />
+          <FiltroSelect label="Método de pago" valor={metodoPago} onChange={setMetodoPago} opciones={METODOS} />
         </>
       }
-      resumen={
-        data
-          ? [
-              { label: 'Total de pagos', value: String(data.totalPagos) },
-              { label: 'Total ingresos', value: formatMonto(data.totalIngresos) },
-            ]
-          : []
-      }
-      onDescargarPdf={() => pdf.mutate()}
-      isPdfPending={pdf.isPending}
+      onPdf={() => pdf.mutate()}
+      pdfPending={pdf.isPending}
       pdfError={pdf.error}
       isLoading={isLoading}
+      isFetching={isFetching}
+      error={error}
     >
-      <ReporteTable columns={columns} rows={data?.porMetodoPago ?? []} />
+      {data && k && (
+        <div className="space-y-6">
+          <KpiGrid
+            kpis={[
+              { label: 'Total cobrado', valor: bs(k.totalIngresos), detalle: variacionTexto(k.variacionVsAnterior), tono: tonoVariacion(k.variacionVsAnterior) },
+              { label: 'Pagos recibidos', valor: entero(k.totalPagos), detalle: pl(k.ordenesCobradas, 'orden', 'órdenes') },
+              { label: 'Ticket promedio', valor: bs(k.ticketPromedio), detalle: 'Cobrado por orden' },
+              { label: 'Promedio diario', valor: bs(k.promedioDiario) },
+              { label: 'Período anterior', valor: bs(k.totalPeriodoAnterior) },
+              {
+                label: 'Margen en repuestos',
+                valor: bs(data.repuestos.margen),
+                detalle: data.repuestos.unidades ? `${porc(data.repuestos.margenPorcentaje)} sobre venta de ${bs(data.repuestos.venta)}` : 'Sin repuestos usados',
+                tono: data.repuestos.margen < 0 ? 'malo' : 'neutral',
+              },
+              { label: 'Por cobrar (hoy)', valor: bs(k.saldoPorCobrar), detalle: pl(k.ordenesConSaldo, 'orden con saldo', 'órdenes con saldo'), tono: k.saldoPorCobrar ? 'alerta' : 'bueno' },
+            ]}
+          />
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Seccion titulo="Por método de pago">
+              <BarList
+                items={data.porMetodoPago.map((m) => ({
+                  etiqueta: m.metodoPago,
+                  valor: m.totalMonto,
+                  texto: `${bs(m.totalMonto)} · ${porc(m.porcentaje)}`,
+                }))}
+                vacio="No hay cobros en este período."
+              />
+            </Seccion>
+            <Seccion
+              titulo={data.filtros.granularidad === 'mes' ? 'Evolución mensual' : 'Evolución diaria'}
+              descripcion="Solo días/meses con cobros"
+            >
+              <BarList
+                items={data.evolucion.map((e) => ({ etiqueta: e.periodo, valor: e.total, texto: bs(e.total) }))}
+                vacio="No hay cobros en este período."
+              />
+            </Seccion>
+          </div>
+
+          <Seccion titulo={`Detalle de pagos (${data.detalle.length})`}>
+            <Tabla
+              clave={(_p, i) => i}
+              filas={data.detalle}
+              vacio="No hay pagos registrados en este período."
+              columnas={[
+                { titulo: 'Fecha', render: (p) => fecha(p.fecha), className: 'whitespace-nowrap' },
+                { titulo: 'Orden', render: (p) => <LinkOrden id={p.ordenId} codigo={p.codigoOrden} /> },
+                { titulo: 'Cliente', render: (p) => p.cliente },
+                { titulo: 'Método', render: (p) => p.metodoPago },
+                { titulo: 'Referencia', render: (p) => p.referencia || '—' },
+                { titulo: 'Monto', alinear: 'right', render: (p) => bs(p.monto) },
+              ]}
+              totales={['', '', '', '', 'Total', bs(k.totalIngresos)]}
+            />
+          </Seccion>
+        </div>
+      )}
     </ReporteShell>
   );
 }

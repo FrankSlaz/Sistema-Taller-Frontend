@@ -1,68 +1,27 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { reportesApi } from '../api/reportes';
-import type {
-  ClientesFrecuentesQuery,
-  DateRangeQuery,
-  IngresosQuery,
-  ReparacionesPorEstadoQuery,
-  TecnicosMasOrdenesQuery,
-} from '../../types/reporte';
 
-export function useReparacionesPorEstado(query: ReparacionesPorEstadoQuery) {
-  return useQuery({
-    queryKey: ['reportes', 'reparaciones-por-estado', query],
-    queryFn: () => reportesApi.reparacionesPorEstado(query),
-  });
-}
-
-export function useIngresos(query: IngresosQuery) {
-  return useQuery({
-    queryKey: ['reportes', 'ingresos', query],
-    queryFn: () => reportesApi.ingresos(query),
-    enabled: !!query.fechaInicio && !!query.fechaFin, // ambas fechas son obligatorias en el backend
-  });
-}
-
-export function useStockBajo() {
-  return useQuery({
-    queryKey: ['reportes', 'stock-bajo'],
-    queryFn: reportesApi.stockBajo,
-  });
-}
-
-export function useTecnicosMasOrdenes(query: TecnicosMasOrdenesQuery) {
-  return useQuery({
-    queryKey: ['reportes', 'tecnicos-mas-ordenes', query],
-    queryFn: () => reportesApi.tecnicosMasOrdenes(query),
-  });
-}
-
-export function useOrdenesPorTipoServicio(query: DateRangeQuery) {
-  return useQuery({
-    queryKey: ['reportes', 'ordenes-por-tipo-servicio', query],
-    queryFn: () => reportesApi.ordenesPorTipoServicio(query),
-  });
-}
-
-export function useClientesFrecuentes(query: ClientesFrecuentesQuery) {
-  return useQuery({
-    queryKey: ['reportes', 'clientes-frecuentes', query],
-    queryFn: () => reportesApi.clientesFrecuentes(query),
-  });
-}
-
-export function useOrdenesConRetraso() {
-  return useQuery({
-    queryKey: ['reportes', 'ordenes-retraso'],
-    queryFn: reportesApi.ordenesConRetraso,
-  });
-}
+type Reporte = keyof typeof reportesApi;
+type QueryDe<K extends Reporte> = Parameters<(typeof reportesApi)[K]['get']>[0];
 
 /**
- * Envuelve cualquiera de las funciones *Pdf de reportesApi en una
- * mutation, solo para tener isPending/error/reset ya resueltos por
- * TanStack Query en vez de manejar loading a mano en cada reporte.
+ * Datos de un reporte + descarga del PDF con los MISMOS filtros.
+ * `placeholderData` mantiene la tabla anterior mientras se recalcula al
+ * cambiar un filtro (sin parpadeo a "cargando").
  */
-export function useDownloadPdf(descargar: () => Promise<void>) {
-  return useMutation({ mutationFn: descargar });
+export function useReporte<K extends Reporte>(clave: K, query: QueryDe<K>) {
+  const api = reportesApi[clave] as {
+    get: (q: QueryDe<K>) => Promise<Awaited<ReturnType<(typeof reportesApi)[K]['get']>>>;
+    pdf: (q: QueryDe<K>) => Promise<void>;
+  };
+
+  const datos = useQuery({
+    queryKey: ['reportes', clave, query],
+    queryFn: () => api.get(query),
+    placeholderData: (prev) => prev,
+  });
+
+  const pdf = useMutation({ mutationFn: () => api.pdf(query) });
+
+  return { ...datos, pdf };
 }

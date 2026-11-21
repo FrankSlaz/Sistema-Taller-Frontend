@@ -157,9 +157,9 @@ export function useDashboardIngresosDelMes() {
 
   const query = useQuery({
     queryKey: ['dashboard', 'ingresos-mes'],
-    queryFn: () => reportesApi.ingresos({ fechaInicio: primerDiaDelMes(), fechaFin: hoyISO() }),
+    queryFn: () => reportesApi.ingresos.get({ fechaInicio: primerDiaDelMes(), fechaFin: hoyISO() }),
     enabled: esAdmin,
   });
 
-  return { puedeVer: esAdmin, isLoading: query.isLoading, totalIngresos: query.data?.totalIngresos };
+  return { puedeVer: esAdmin, isLoading: query.isLoading, totalIngresos: query.data?.kpis.totalIngresos };
 }
