@@ -13,7 +13,7 @@ import StockReport from './StockReport';
 const GRUPOS = [
   {
     titulo: 'General',
-    reportes: [{ key: 'resumen', label: 'Resumen ejecutivo', Component: ResumenReport, nuevo: true }],
+    reportes: [{ key: 'resumen', label: 'Resumen ejecutivo', Component: ResumenReport }],
   },
   {
     titulo: 'Operación',
@@ -28,7 +28,7 @@ const GRUPOS = [
     titulo: 'Finanzas',
     reportes: [
       { key: 'ingresos', label: 'Ingresos', Component: IngresosReport },
-      { key: 'cuentas-por-cobrar', label: 'Cuentas por cobrar', Component: CuentasPorCobrarReport, nuevo: true },
+      { key: 'cuentas-por-cobrar', label: 'Cuentas por cobrar', Component: CuentasPorCobrarReport },
       { key: 'clientes-frecuentes', label: 'Clientes frecuentes', Component: ClientesFrecuentesReport },
     ],
   },
@@ -78,22 +78,13 @@ function ReportesPanelContent() {
                     type="button"
                     onClick={() => elegir(r.key)}
                     aria-current={activo === r.key ? 'page' : undefined}
-                    className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm font-medium ${
+                    className={`block w-full rounded-md px-2 py-1.5 text-left text-sm font-medium ${
                       activo === r.key
                         ? 'bg-graphite-900 text-white'
                         : 'text-graphite-600 hover:bg-graphite-100 hover:text-graphite-900'
                     }`}
                   >
                     {r.label}
-                    {'nuevo' in r && r.nuevo && (
-                      <span
-                        className={`rounded px-1.5 text-[10px] font-semibold uppercase ${
-                          activo === r.key ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800'
-                        }`}
-                      >
-                        Nuevo
-                      </span>
-                    )}
                   </button>
                 </li>
               ))}

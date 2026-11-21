@@ -13,7 +13,6 @@ interface FormState {
   direccion: string;
   moneda: string;
   simbolo: string;
-  mensajeDocumentos: string;
 }
 
 const emptyForm: FormState = {
@@ -23,7 +22,6 @@ const emptyForm: FormState = {
   direccion: '',
   moneda: '',
   simbolo: '',
-  mensajeDocumentos: '',
 };
 
 function ConfiguracionPanelContent() {
@@ -44,7 +42,6 @@ function ConfiguracionPanelContent() {
       direccion: config.direccion ?? '',
       moneda: config.moneda ?? '',
       simbolo: config.simbolo ?? '',
-      mensajeDocumentos: config.mensajeDocumentos ?? '',
     });
   }, [config]);
 
@@ -63,7 +60,6 @@ function ConfiguracionPanelContent() {
       direccion: form.direccion || undefined,
       moneda: form.moneda || undefined,
       simbolo: form.simbolo || undefined,
-      mensajeDocumentos: form.mensajeDocumentos || undefined,
     };
 
     const cambioNombre = (config?.nombreTaller ?? '') !== form.nombreTaller;
@@ -161,22 +157,6 @@ function ConfiguracionPanelContent() {
               className="w-full rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800 disabled:bg-graphite-50"
             />
           </div>
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-graphite-900">
-            Mensaje en documentos
-          </label>
-          <textarea
-            rows={3}
-            value={form.mensajeDocumentos}
-            onChange={(e) => set('mensajeDocumentos', e.target.value)}
-            placeholder="Ej. Gracias por confiar en nosotros. Garantía sujeta a términos y condiciones…"
-            className="w-full resize-none rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800 disabled:bg-graphite-50"
-          />
-          <p className="mt-1 text-xs text-graphite-400">
-            Texto que se imprime al pie de órdenes, presupuestos y otros documentos generados.
-          </p>
         </div>
       </fieldset>
 

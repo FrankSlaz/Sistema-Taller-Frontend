@@ -8,7 +8,8 @@ import { logoUrlDe } from '../../../../lib/branding';
 import { ApiError } from '../../../../lib/api/client';
 
 const MAX_BYTES = 2 * 1024 * 1024;
-const TIPOS = ['image/png', 'image/jpeg', 'image/webp'];
+// Solo PNG/JPG: el logo también se imprime en los PDF (pdfmake no admite WEBP).
+const TIPOS = ['image/png', 'image/jpeg'];
 
 /**
  * Logo del taller: se muestra en la barra superior, en el login y como
@@ -39,7 +40,7 @@ function LogoSectionContent() {
 
     setErrorLocal(null);
     if (!TIPOS.includes(file.type)) {
-      setErrorLocal('El logo debe ser una imagen PNG, JPG o WEBP.');
+      setErrorLocal('El logo debe ser una imagen PNG o JPG.');
       return;
     }
     if (file.size > MAX_BYTES) {
@@ -79,7 +80,7 @@ function LogoSectionContent() {
           <input
             ref={inputRef}
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept="image/png,image/jpeg"
             className="hidden"
             onChange={handleArchivo}
           />
@@ -112,7 +113,7 @@ function LogoSectionContent() {
 
       <ul className="space-y-1 border-t border-graphite-100 pt-3 text-xs text-graphite-400">
         <li>Se muestra en la barra superior, el inicio de sesión y la pestaña del navegador.</li>
-        <li>PNG, JPG o WEBP, máximo 2 MB.</li>
+        <li>PNG o JPG, máximo 2 MB (también aparece en los reportes PDF).</li>
         <li>Recomendado: imagen cuadrada con fondo transparente.</li>
       </ul>
 

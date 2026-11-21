@@ -14,7 +14,6 @@ export interface Configuracion {
   direccion?: string | null;
   moneda?: string | null;
   simbolo?: string | null;
-  mensajeDocumentos?: string | null;
   updatedAt?: string | null;
 }
 
