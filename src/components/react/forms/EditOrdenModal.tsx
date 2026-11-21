@@ -28,7 +28,6 @@ export default function EditOrdenModal({ open, onClose, orden }: EditOrdenModalP
       fallaReportada: orden.fallaReportada ?? '',
       observaciones: orden.observaciones ?? '',
       costoManoObra: orden.costoManoObra ? Number(orden.costoManoObra) : 0,
-      totalRepuestos: orden.totalRepuestos ? Number(orden.totalRepuestos) : 0,
     });
     update.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -119,14 +118,12 @@ export default function EditOrdenModal({ open, onClose, orden }: EditOrdenModalP
 
           <div>
             <label className="mb-1 block text-sm font-medium text-graphite-900">Total repuestos</label>
-            <input
-              type="number"
-              min={0}
-              step="0.01"
-              value={form.totalRepuestos ?? 0}
-              onChange={(e) => set('totalRepuestos', Number(e.target.value))}
-              className="w-full rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
-            />
+            <p className="rounded-md border border-graphite-100 bg-graphite-50 px-3 py-2 text-sm text-graphite-600">
+              Bs {Number(orden.totalRepuestos ?? 0).toFixed(2)}
+            </p>
+            <p className="mt-1 text-xs text-graphite-400">
+              Se calcula con los repuestos cargados en la orden o el presupuesto aprobado.
+            </p>
           </div>
         </div>
 

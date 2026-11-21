@@ -8,7 +8,8 @@ export const authApi = {
   me: () => api.get<AuthMe>('/auth/me'),
 
   refresh: (refreshToken: string) =>
-    api.post<{ accessToken: string }>(
+    // El backend devuelve un par nuevo (también rota el refresh token).
+    api.post<{ accessToken: string; refreshToken: string }>(
       '/auth/refresh',
       { refreshToken },
       { auth: false },

@@ -10,6 +10,7 @@ import EntregaPanel from './EntregaPanel';
 import GarantiaPanel from './GarantiaPanel';
 import DiagnosticosPanel from './DiagnosticosPanel';
 import PresupuestosPanel from './PresupuestosPanel';
+import RepuestosPanel from './RepuestosPanel';
 import HistorialTimeline from './HistorialTimeline';
 import QueryProvider from '../../providers/QueryProvider';
 import { useReparacion } from '../../../../lib/hooks/useReparaciones';
@@ -37,6 +38,7 @@ function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
   const { data: presupuestosData } = usePresupuestos({ ordenId, limit: 50 });
   const [editOpen, setEditOpen] = useState(false);
   const puedeEditar = usePermiso('reparaciones:editar');
+  const puedeVerRepuestos = usePermiso('orden-repuestos:ver');
 
   if (isLoading) {
     return <div className="h-64 animate-pulse rounded-lg bg-graphite-100" />;
@@ -150,6 +152,13 @@ function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
             <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Presupuestos</h2>
             <PresupuestosPanel orden={orden} />
           </section>
+
+          {puedeVerRepuestos && (
+            <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
+              <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Repuestos usados</h2>
+              <RepuestosPanel orden={orden} />
+            </section>
+          )}
 
           <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
             <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Pagos</h2>

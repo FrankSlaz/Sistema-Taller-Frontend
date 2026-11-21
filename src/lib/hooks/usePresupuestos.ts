@@ -28,6 +28,8 @@ export function usePresupuestoMutations(ordenId?: number) {
     queryClient.invalidateQueries({ queryKey: ['presupuestos'], exact: false });
     if (ordenId) {
       queryClient.invalidateQueries({ queryKey: ['reparaciones', 'detalle', ordenId] });
+      // El total de la orden cambia → cambia el saldo pendiente de Pagos.
+      queryClient.invalidateQueries({ queryKey: ['pagos'], exact: false });
     }
   };
 

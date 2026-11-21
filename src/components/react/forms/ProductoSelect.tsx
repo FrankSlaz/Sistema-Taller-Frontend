@@ -2,10 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 import { Check, ChevronDown, Plus, Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { productosApi } from '../../../lib/api/productos';
+import type { Producto } from '../../../types/producto';
 
 interface ProductoSelectProps {
   value: number | null;
-  onChange: (productoId: number, label: string) => void;
+  /** `producto` trae el registro completo (precio, stock) por si el llamador lo necesita. */
+  onChange: (productoId: number, label: string, producto: Producto) => void;
   initialLabel?: string | null;
   error?: string;
   /** Si se provee, muestra "Crear producto nuevo" con el término buscado. */
@@ -90,7 +92,7 @@ export default function ProductoSelect({
                     <button
                       type="button"
                       onClick={() => {
-                        onChange(producto.id, label);
+                        onChange(producto.id, label, producto);
                         setSelectedLabel(label);
                         setOpen(false);
                         setTerm('');

@@ -66,6 +66,68 @@ export function getStoredUsuario(): Usuario | null {
   }
 }
 
+/**
+ * Renovación de sesión. El access token dura poco (JWT_EXPIRES_IN); cuando
+ * una petición autenticada vuelve con 401 se intenta UNA vez obtener un par
+ * de tokens nuevo con el refresh token y se repite la petición.
+ *
+ * Si varias peticiones fallan a la vez, comparten la misma promesa de
+ * refresh (no se dispara un /auth/refresh por cada una).
+ */
+let refreshEnCurso: Promise<boolean> | null = null;
+
+function refrescarSesion(): Promise<boolean> {
+  if (refreshEnCurso) return refreshEnCurso;
+
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return Promise.resolve(false);
+
+  refreshEnCurso = (async () => {
+    try {
+      const response = await fetch(`${PUBLIC_API_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!response.ok) return false;
+      const json = (await response.json()) as ApiResponse<{ accessToken: string; refreshToken: string }>;
+      setTokens(json.data.accessToken, json.data.refreshToken);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      refreshEnCurso = null;
+    }
+  })();
+
+  return refreshEnCurso;
+}
+
+/** Sesión irrecuperable (refresh vencido o inválido): limpiar y volver al login. */
+function cerrarSesionExpirada() {
+  clearTokens();
+  if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+    window.location.href = '/login';
+  }
+}
+
+/**
+ * fetch autenticado con reintento tras refresh. `buildInit` se invoca en
+ * cada intento para que el reintento lleve el access token NUEVO.
+ */
+async function fetchConSesion(path: string, buildInit: () => RequestInit): Promise<Response> {
+  const response = await fetch(`${PUBLIC_API_URL}${path}`, buildInit());
+  if (response.status !== 401) return response;
+
+  if (await refrescarSesion()) {
+    const reintento = await fetch(`${PUBLIC_API_URL}${path}`, buildInit());
+    if (reintento.status !== 401) return reintento;
+  }
+
+  cerrarSesionExpirada();
+  return response;
+}
+
 interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
   auth?: boolean;
@@ -85,23 +147,29 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   // con el boundary del multipart. Forzar application/json lo rompería.
   const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
 
-  const finalHeaders: HeadersInit = {
-    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-    ...headers,
+  const buildInit = (): RequestInit => {
+    const finalHeaders: Record<string, string> = {
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(headers as Record<string, string> | undefined),
+    };
+
+    if (auth) {
+      const token = getToken();
+      if (token) finalHeaders.Authorization = `Bearer ${token}`;
+    }
+
+    return {
+      ...rest,
+      headers: finalHeaders,
+      body: body === undefined ? undefined : isFormData ? (body as FormData) : JSON.stringify(body),
+    };
   };
 
-  if (auth) {
-    const token = getToken();
-    if (token) {
-      (finalHeaders as Record<string, string>).Authorization = `Bearer ${token}`;
-    }
-  }
-
-  const response = await fetch(`${PUBLIC_API_URL}${path}`, {
-    ...rest,
-    headers: finalHeaders,
-    body: body === undefined ? undefined : isFormData ? (body as FormData) : JSON.stringify(body),
-  });
+  // Las rutas públicas (login, refresh) no intentan renovar sesión: un 401
+  // ahí es "credenciales inválidas", no "token vencido".
+  const response = auth
+    ? await fetchConSesion(path, buildInit)
+    : await fetch(`${PUBLIC_API_URL}${path}`, buildInit());
 
   const json = await response.json().catch(() => null);
 
@@ -141,10 +209,11 @@ export const api = {
  * para que el llamador cree un object URL.
  */
 export async function fetchBlob(path: string): Promise<Blob> {
-  const token = getToken();
-  const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-
-  const response = await fetch(`${PUBLIC_API_URL}${path}`, { headers });
+  const response = await fetchConSesion(path, (): RequestInit => {
+    const token = getToken();
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+    return { headers };
+  });
 
   if (!response.ok) {
     // El error de estos endpoints sigue viniendo como JSON del HttpExceptionFilter.

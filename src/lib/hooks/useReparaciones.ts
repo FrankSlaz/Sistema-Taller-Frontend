@@ -66,7 +66,11 @@ export function useReparacionMutations(id?: number) {
 
   const update = useMutation({
     mutationFn: (payload: UpdateOrdenPayload) => reparacionesApi.update(id!, payload),
-    onSuccess: invalidateAll,
+    onSuccess: () => {
+      invalidateAll();
+      // La mano de obra cambia el total → cambia el saldo pendiente de Pagos.
+      queryClient.invalidateQueries({ queryKey: ['pagos'], exact: false });
+    },
   });
 
   const changeEstado = useMutation({

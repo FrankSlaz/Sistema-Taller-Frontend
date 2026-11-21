@@ -108,7 +108,7 @@ export interface UpdateOrdenPayload {
   fallaReportada?: string;
   observaciones?: string;
   costoManoObra?: number;
-  totalRepuestos?: number;
+  // totalRepuestos/total no se envían: el backend los deriva.
 }
 
 export interface ChangeEstadoPayload {
