@@ -1,5 +1,6 @@
 ---
 import UserMenu from '../../react/dashboards/UserMenu';
+import Brand from '../ui/Brand.astro';
 ---
 
 <header
@@ -13,6 +14,9 @@ import UserMenu from '../../react/dashboards/UserMenu';
   >
     ☰
   </button>
+
+  <!-- En móvil el sidebar está oculto: la marca se muestra en la barra superior. -->
+  <a href="/dashboard" class="mr-auto ml-2 min-w-0 lg:hidden"><Brand /></a>
 
   <div class="hidden text-sm text-graphite-400 lg:block">
     <slot name="breadcrumb" />

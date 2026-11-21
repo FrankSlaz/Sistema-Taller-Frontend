@@ -1,0 +1,18 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Card from '../../components/astro/cards/Card.astro';
+import BackupsPanel from '../../components/react/modules/backups/BackupsPanel';
+---
+
+<DashboardLayout title="Backups">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-semibold text-graphite-900">Backups</h1>
+    <p class="text-sm text-graphite-400">
+      Copias de seguridad de la base de datos. Solo accesible con rol Administrador.
+    </p>
+  </div>
+
+  <Card>
+    <BackupsPanel client:load />
+  </Card>
+</DashboardLayout>

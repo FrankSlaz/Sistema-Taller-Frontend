@@ -1,0 +1,34 @@
+---
+import { BRANDING_POR_DEFECTO } from '../../../lib/branding';
+/**
+ * Logo + nombre del taller (configurables en Configuración). Si no hay
+ * logo cargado, se muestra el punto ámbar original como marca genérica.
+ */
+interface Props {
+  /** 'dark' sobre fondo oscuro (sidebar), 'light' sobre fondo blanco. */
+  tone?: 'dark' | 'light';
+  class?: string;
+}
+
+const { tone = 'light', class: className = '' } = Astro.props;
+const { nombreTaller, logoUrl } = Astro.locals.branding ?? BRANDING_POR_DEFECTO;
+---
+
+<div class:list={['flex min-w-0 items-center gap-2.5', className]}>
+  {
+    logoUrl ? (
+      <img src={logoUrl} alt={`Logo de ${nombreTaller}`} class="h-9 w-9 shrink-0 rounded-md object-contain" />
+    ) : (
+      <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-amber-500" />
+    )
+  }
+  <span
+    class:list={[
+      'truncate font-display text-lg font-semibold tracking-tight',
+      tone === 'dark' ? 'text-white' : 'text-graphite-900',
+    ]}
+    title={nombreTaller}
+  >
+    {nombreTaller}
+  </span>
+</div>

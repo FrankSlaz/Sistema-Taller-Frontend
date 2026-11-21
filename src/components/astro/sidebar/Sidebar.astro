@@ -1,6 +1,6 @@
 ---
-import { PUBLIC_APP_NAME } from 'astro:env/client';
 import SidebarNav from '../../react/layout/SidebarNav';
+import Brand from '../ui/Brand.astro';
 
 interface NavItem {
   label: string;
@@ -55,6 +55,7 @@ const groups: NavGroup[] = [
       { label: 'Roles', href: '/roles', adminOnly: true },
       { label: 'Reportes', href: '/reportes', adminOnly: true },
       { label: 'Configuración', href: '/configuracion', adminOnly: true },
+      { label: 'Backups', href: '/backups', adminOnly: true },
     ],
   },
 ];
@@ -65,11 +66,8 @@ const currentPath = Astro.url.pathname;
 <aside
   class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col overflow-y-auto border-r border-graphite-700 bg-graphite-900 text-graphite-200 lg:flex"
 >
-  <div class="flex h-16 items-center gap-2 border-b border-graphite-700 px-5">
-    <span class="h-2.5 w-2.5 rounded-full bg-amber-500"></span>
-    <span class="font-display text-lg font-semibold tracking-tight text-white">
-      {PUBLIC_APP_NAME}
-    </span>
+  <div class="flex h-16 items-center border-b border-graphite-700 px-5">
+    <a href="/dashboard" class="min-w-0"><Brand tone="dark" /></a>
   </div>
 
   <SidebarNav client:load groups={groups} currentPath={currentPath} />

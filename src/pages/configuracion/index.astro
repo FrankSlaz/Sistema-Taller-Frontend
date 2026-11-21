@@ -2,6 +2,7 @@
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import Card from '../../components/astro/cards/Card.astro';
 import ConfiguracionPanel from '../../components/react/modules/configuracion/ConfiguracionPanel';
+import LogoSection from '../../components/react/modules/configuracion/LogoSection';
 ---
 
 <DashboardLayout title="Configuración">
@@ -10,7 +11,15 @@ import ConfiguracionPanel from '../../components/react/modules/configuracion/Con
     <p class="text-sm text-graphite-400">Datos generales del taller, usados en documentos y reportes.</p>
   </div>
 
-  <Card class="max-w-2xl">
-    <ConfiguracionPanel client:load />
-  </Card>
+  <!-- Datos generales a la izquierda; logo en su propia tarjeta a la derecha.
+       En pantallas chicas se apilan (logo arriba, para que se vea primero). -->
+  <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+    <Card title="Datos del taller" class="order-2 lg:order-1 lg:col-span-2">
+      <ConfiguracionPanel client:load />
+    </Card>
+
+    <Card title="Logo de la empresa" class="order-1 lg:order-2 lg:sticky lg:top-24">
+      <LogoSection client:load />
+    </Card>
+  </div>
 </DashboardLayout>

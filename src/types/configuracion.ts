@@ -18,4 +18,12 @@ export interface Configuracion {
   updatedAt?: string | null;
 }
 
-export type UpdateConfiguracionPayload = Partial<Omit<Configuracion, 'id' | 'updatedAt'>>;
+/** El logo no va en el PATCH: se sube como archivo (POST /configuracion/logo). */
+export type UpdateConfiguracionPayload = Partial<Omit<Configuracion, 'id' | 'updatedAt' | 'logo'>>;
+
+/** GET /configuracion/publica (sin sesión). */
+export interface ConfiguracionPublica {
+  nombreTaller: string;
+  tieneLogo: boolean;
+  logoVersion: string | null;
+}

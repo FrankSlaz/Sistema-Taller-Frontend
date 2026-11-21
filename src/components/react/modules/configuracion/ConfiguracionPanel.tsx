@@ -66,7 +66,15 @@ function ConfiguracionPanelContent() {
       mensajeDocumentos: form.mensajeDocumentos || undefined,
     };
 
-    mutation.mutate(payload, { onSuccess: () => setSavedAt(Date.now()) });
+    const cambioNombre = (config?.nombreTaller ?? '') !== form.nombreTaller;
+    mutation.mutate(payload, {
+      onSuccess: () => {
+        // El nombre se pinta en el servidor (barra, título de la pestaña):
+        // hay que recargar para verlo actualizado.
+        if (cambioNombre) window.location.reload();
+        else setSavedAt(Date.now());
+      },
+    });
   }
 
   const errorMessage =

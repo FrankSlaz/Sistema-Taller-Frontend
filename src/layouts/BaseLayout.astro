@@ -1,24 +1,26 @@
 ---
+import { BRANDING_POR_DEFECTO } from '../lib/branding';
 import '../styles/global.css';
-import { PUBLIC_APP_NAME } from 'astro:env/client';
 
 interface Props {
   title: string;
   description?: string;
 }
 
-const { title, description = 'Sistema de gestión para talleres automotrices' } = Astro.props;
+const { title, description = 'Sistema de gestión para talleres de reparación' } = Astro.props;
+// Cargado por src/middleware.ts desde GET /configuracion/publica.
+const { nombreTaller, logoUrl } = Astro.locals.branding ?? BRANDING_POR_DEFECTO;
 ---
 
 <!doctype html>
 <html lang="es">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {logoUrl ? <link rel="icon" href={logoUrl} /> : <link rel="icon" type="image/svg+xml" href="/favicon.svg" />}
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
-    <title>{title} · {PUBLIC_APP_NAME}</title>
+    <title>{title} · {nombreTaller}</title>
   </head>
   <body class="min-h-screen bg-graphite-50 text-graphite-900 antialiased">
     <slot />
