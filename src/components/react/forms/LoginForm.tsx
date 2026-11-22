@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { authApi } from '../../../lib/api/auth';
-import { setTokens, setUsuario } from '../../../lib/api/client';
+import { setStoredPerfil, setTokens, setUsuario } from '../../../lib/api/client';
 import { ApiError } from '../../../lib/api/client';
 import QueryProvider from '../providers/QueryProvider';
 
@@ -11,9 +11,16 @@ function LoginFormContent() {
 
   const mutation = useMutation({
     mutationFn: authApi.login,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       setTokens(data.accessToken, data.refreshToken);
       setUsuario(data.usuario);
+      // Rol y permisos antes de entrar: la primera pantalla ya sale con sus
+      // botones (sin que aparezcan después y muevan el contenido).
+      try {
+        setStoredPerfil(await authApi.me());
+      } catch {
+        // si falla, se piden al cargar la página
+      }
       window.location.href = '/dashboard';
     },
   });

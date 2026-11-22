@@ -23,6 +23,6 @@ const clienteNombre = Astro.url.searchParams.get('clienteNombre') ?? undefined;
   </div>
 
   <Card>
-    <EquiposPanel client:load clienteId={clienteId} clienteNombre={clienteNombre} />
+    <EquiposPanel client:only="react" clienteId={clienteId} clienteNombre={clienteNombre} />
   </Card>
 </DashboardLayout>

@@ -14,6 +14,7 @@ import RepuestosPanel from './RepuestosPanel';
 import SeguimientoClientePanel from './SeguimientoClientePanel';
 import HistorialTimeline from './HistorialTimeline';
 import QueryProvider from '../../providers/QueryProvider';
+import Diferido from '../../ui/Diferido';
 import { useReparacion } from '../../../../lib/hooks/useReparaciones';
 import { usePresupuestos } from '../../../../lib/hooks/usePresupuestos';
 import { useAuth, usePermiso } from '../../../../lib/hooks/useAuth';
@@ -169,29 +170,39 @@ function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
 
           <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
             <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Registro fotográfico</h2>
-            <FotosGaleria equipoId={orden.equipoId} ordenId={orden.id} ordenCodigo={orden.codigoOrden} />
+            <Diferido altoReservado={140}>
+              <FotosGaleria equipoId={orden.equipoId} ordenId={orden.id} ordenCodigo={orden.codigoOrden} />
+            </Diferido>
           </section>
 
           <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
             <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Presupuestos</h2>
-            <PresupuestosPanel orden={orden} />
+            <Diferido altoReservado={160}>
+              <PresupuestosPanel orden={orden} />
+            </Diferido>
           </section>
 
           {puedeVerRepuestos && (
             <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
               <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Repuestos usados</h2>
-              <RepuestosPanel orden={orden} />
+              <Diferido altoReservado={120}>
+                <RepuestosPanel orden={orden} />
+              </Diferido>
             </section>
           )}
 
           <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
             <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Pagos</h2>
-            <PagosPanel orden={orden} />
+            <Diferido altoReservado={180}>
+              <PagosPanel orden={orden} />
+            </Diferido>
           </section>
 
           <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
             <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Historial</h2>
-            <HistorialTimeline orden={orden} />
+            <Diferido altoReservado={200}>
+              <HistorialTimeline orden={orden} />
+            </Diferido>
           </section>
         </div>
 
@@ -208,17 +219,23 @@ function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
 
           <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
             <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Técnicos asignados</h2>
-            <TecnicosPanel orden={orden} />
+            <Diferido altoReservado={100}>
+              <TecnicosPanel orden={orden} />
+            </Diferido>
           </section>
 
           <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
             <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Entrega</h2>
-            <EntregaPanel orden={orden} />
+            <Diferido altoReservado={120}>
+              <EntregaPanel orden={orden} />
+            </Diferido>
           </section>
 
           <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
             <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Garantía</h2>
-            <GarantiaPanel orden={orden} />
+            <Diferido altoReservado={100}>
+              <GarantiaPanel orden={orden} />
+            </Diferido>
           </section>
         </div>
       </div>

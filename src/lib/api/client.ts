@@ -1,10 +1,11 @@
 import { PUBLIC_API_URL } from 'astro:env/client';
 import type { ApiErrorResponse, ApiResponse } from '../../types/api';
-import type { Usuario } from '../../types/auth';
+import type { AuthMe, Usuario } from '../../types/auth';
 
 const TOKEN_KEY = 'sistema_taller_token';
 const REFRESH_KEY = 'sistema_taller_refresh_token';
 const USUARIO_KEY = 'sistema_taller_usuario';
+const PERFIL_KEY = 'sistema_taller_perfil';
 
 export class ApiError extends Error {
   statusCode: number;
@@ -34,6 +35,34 @@ export function clearTokens() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_KEY);
   localStorage.removeItem(USUARIO_KEY);
+  localStorage.removeItem(PERFIL_KEY);
+}
+
+/**
+ * Última respuesta de /auth/me (rol y permisos) guardada en el navegador:
+ * permite dibujar la pantalla desde el primer momento con los botones que
+ * corresponden, sin que aparezcan después y muevan el contenido. Siempre
+ * se vuelve a confirmar con el servidor (que es quien manda: los permisos
+ * se validan en el backend en cada petición).
+ */
+export function getStoredPerfil(): AuthMe | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const raw = localStorage.getItem(PERFIL_KEY);
+    const p = raw ? (JSON.parse(raw) as AuthMe) : undefined;
+    return p && Array.isArray(p.permisos) ? p : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function setStoredPerfil(perfil: AuthMe) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(PERFIL_KEY, JSON.stringify(perfil));
+  } catch {
+    // almacenamiento lleno o bloqueado: se sigue sin caché
+  }
 }
 
 export function getRefreshToken(): string | null {

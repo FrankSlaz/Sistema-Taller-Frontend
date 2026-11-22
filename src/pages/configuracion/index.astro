@@ -15,11 +15,22 @@ import LogoSection from '../../components/react/modules/configuracion/LogoSectio
        En pantallas chicas se apilan (logo arriba, para que se vea primero). -->
   <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
     <Card title="Datos del taller" class="order-2 lg:order-1 lg:col-span-2">
-      <ConfiguracionPanel client:load />
+      <ConfiguracionPanel client:only="react">
+        <div slot="fallback" class="h-96 animate-pulse rounded-lg bg-graphite-100"></div>
+      </ConfiguracionPanel>
     </Card>
 
     <Card title="Logo de la empresa" class="order-1 lg:order-2 lg:sticky lg:top-24">
-      <LogoSection client:load />
+      <!-- Mismo alto que la tarjeta cargada: en celular va arriba y, si
+           creciera al cargar, empujaría "Datos del taller". -->
+      <LogoSection client:only="react">
+        <div slot="fallback" class="space-y-4">
+          <div class="aspect-square w-full animate-pulse rounded-lg bg-graphite-100"></div>
+          <div class="h-5"></div>
+          <div class="h-[84px] animate-pulse rounded-md bg-graphite-100"></div>
+          <div class="h-[76px]"></div>
+        </div>
+      </LogoSection>
     </Card>
   </div>
 </DashboardLayout>

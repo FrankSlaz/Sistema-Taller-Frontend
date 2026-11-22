@@ -145,7 +145,9 @@ function PagosGlobalPanelContent() {
         )}
       </div>
 
-      {caja && (
+      {/* Mientras carga se reserva el lugar de los indicadores y de "Por
+          método" (sin saltos al llegar los datos). */}
+      {caja ? (
         <KpiGrid
           kpis={[
             { label: 'Neto en caja', valor: bs(caja.neto), detalle: 'Ingresos − devoluciones', tono: 'bueno' },
@@ -154,20 +156,30 @@ function PagosGlobalPanelContent() {
             { label: 'Anulados', valor: bs(caja.anulados), detalle: `${caja.cantidadAnulados} (no cuentan)`, tono: caja.cantidadAnulados ? 'malo' : 'neutral' },
           ]}
         />
+      ) : (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4" aria-hidden>
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-[92px] animate-pulse rounded-lg bg-graphite-100" />
+          ))}
+        </div>
       )}
 
-      {caja && caja.porMetodo.length > 0 && (
-        <Seccion titulo="Por método de pago" descripcion="Neto de cada medio, para cuadrar efectivo, QR y tarjeta.">
-          <div className="flex flex-wrap gap-2">
-            {caja.porMetodo.map((m) => (
+      <Seccion titulo="Por método de pago" descripcion="Neto de cada medio, para cuadrar efectivo, transferencia y QR.">
+        <div className="flex min-h-[62px] flex-wrap gap-2">
+          {!caja ? (
+            <div className="h-[62px] w-40 animate-pulse rounded-lg bg-graphite-100" aria-hidden />
+          ) : caja.porMetodo.length === 0 ? (
+            <p className="self-center text-sm text-graphite-400">Sin movimientos en el período.</p>
+          ) : (
+            caja.porMetodo.map((m) => (
               <div key={m.metodoPago} className="rounded-lg border border-graphite-200 bg-white px-3 py-2">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-graphite-400">{m.metodoPago}</p>
                 <p className="font-display text-lg font-semibold tabular-nums text-graphite-900">{bs(m.neto)}</p>
               </div>
-            ))}
-          </div>
-        </Seccion>
-      )}
+            ))
+          )}
+        </div>
+      </Seccion>
 
       {msg(recibo.error) && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{msg(recibo.error)}</p>}
 

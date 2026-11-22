@@ -15,10 +15,12 @@ const { title, description } = Astro.props;
   <div class="flex min-h-screen">
     <Sidebar />
 
-    <div class="flex flex-1 flex-col lg:pl-64">
+    <!-- min-w-0: sin esto, una tabla ancha estira toda la página en celular
+         (en vez de desplazarse dentro de su recuadro) y la vista "salta". -->
+    <div class="flex min-w-0 flex-1 flex-col lg:pl-64">
       <Navbar />
 
-      <main class="flex-1 p-4 lg:p-8">
+      <main class="min-w-0 flex-1 p-4 lg:p-8">
         <slot />
       </main>
     </div>

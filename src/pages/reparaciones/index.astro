@@ -21,7 +21,7 @@ const abrirNueva = Astro.url.searchParams.get('nueva') === '1';
 
   <Card>
     <ReparacionesPanel
-      client:load
+      client:only="react"
       clienteId={clienteId}
       equipoId={equipoId}
       estadoInicial={estadoInicial}

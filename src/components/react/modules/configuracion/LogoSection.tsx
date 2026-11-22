@@ -69,9 +69,8 @@ function LogoSectionContent() {
         )}
       </div>
 
-      {publica && (
-        <p className="text-center text-sm font-medium text-graphite-900">{publica.nombreTaller}</p>
-      )}
+      {/* Siempre ocupa su línea (aunque el nombre aún no llegue) para no mover lo de abajo. */}
+      <p className="min-h-5 text-center text-sm font-medium text-graphite-900">{publica?.nombreTaller ?? ' '}</p>
 
       {cargandoSesion ? (
         <div className="h-9 animate-pulse rounded-md bg-graphite-100" />

@@ -15,6 +15,6 @@ const productoNombre = Astro.url.searchParams.get('productoNombre') ?? undefined
   </div>
 
   <Card>
-    <MovimientosPanel client:load productoId={productoId} productoNombre={productoNombre} />
+    <MovimientosPanel client:only="react" productoId={productoId} productoNombre={productoNombre} />
   </Card>
 </DashboardLayout>

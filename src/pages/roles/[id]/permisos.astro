@@ -13,6 +13,6 @@ if (!idParam || Number.isNaN(rolId)) {
 
 <DashboardLayout title="Permisos del rol">
   <Card>
-    <PermisosMatrix client:load rolId={rolId} />
+    <PermisosMatrix client:only="react" rolId={rolId} />
   </Card>
 </DashboardLayout>

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { authApi } from '../api/auth';
-import { clearTokens, getStoredUsuario } from '../api/client';
+import { clearTokens, getStoredPerfil, getStoredUsuario, setStoredPerfil } from '../api/client';
 
 /**
  * Hook de sesión para islas React.
@@ -18,7 +18,15 @@ import { clearTokens, getStoredUsuario } from '../api/client';
 export function useAuth() {
   const query = useQuery({
     queryKey: ['auth', 'me'],
-    queryFn: authApi.me,
+    queryFn: async () => {
+      const perfil = await authApi.me();
+      setStoredPerfil(perfil);
+      return perfil;
+    },
+    // Se arranca con los permisos guardados (la pantalla sale completa
+    // desde el primer momento) y se confirman al instante con el servidor.
+    initialData: getStoredPerfil,
+    initialDataUpdatedAt: 0,
     retry: false,
   });
 

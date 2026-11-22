@@ -11,5 +11,5 @@ if (!idParam || Number.isNaN(ordenId)) {
 ---
 
 <DashboardLayout title={`Orden #${ordenId}`}>
-  <ReparacionDetail client:load ordenId={ordenId} />
+  <ReparacionDetail client:only="react" ordenId={ordenId} />
 </DashboardLayout>

@@ -71,5 +71,5 @@ const currentPath = Astro.url.pathname;
     <a href="/dashboard" class="min-w-0"><Brand tone="dark" /></a>
   </div>
 
-  <SidebarNav client:load groups={groups} currentPath={currentPath} />
+  <SidebarNav client:only="react" groups={groups} currentPath={currentPath} />
 </aside>

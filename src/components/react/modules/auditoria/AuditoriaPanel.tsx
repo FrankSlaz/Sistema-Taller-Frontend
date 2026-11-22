@@ -426,6 +426,14 @@ function AuditoriaPanelContent() {
         <FiltroTexto label="Buscar" valor={busqueda} onChange={setBusqueda} placeholder="Orden, cliente, descripción…" />
       </div>
 
+      {!resumen && (
+        // Reserva el lugar de los indicadores mientras cargan (sin saltos).
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4" aria-hidden>
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-[92px] animate-pulse rounded-lg bg-graphite-100" />
+          ))}
+        </div>
+      )}
       {resumen && (
         <KpiGrid
           kpis={[

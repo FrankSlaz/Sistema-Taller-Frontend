@@ -88,10 +88,11 @@ function Kpi({
         <Icono size={16} className="shrink-0 text-graphite-400" aria-hidden />
       </div>
       <p className={`mt-1.5 font-display text-2xl font-semibold tabular-nums ${TONO_VALOR[tono]}`}>{valor}</p>
-      {detalle && <div className="mt-0.5 text-xs text-graphite-500">{detalle}</div>}
+      {detalle && <div className="mt-0.5 truncate text-xs text-graphite-500">{detalle}</div>}
     </>
   );
-  const clase = `block rounded-lg border p-4 ${TONO_KPI[tono]}`;
+  // Alto fijo (= esqueleto de carga): el inicio no salta al llegar los datos.
+  const clase = `block h-[110px] overflow-hidden rounded-lg border p-4 ${TONO_KPI[tono]}`;
   return href ? (
     <a href={href} className={`${clase} transition hover:border-graphite-400 hover:shadow-sm`}>
       {cuerpo}
@@ -191,7 +192,7 @@ function FilaOrden({ o, derecha }: { o: ItemOrden; derecha: ReactNode }) {
 // Bloques
 // ---------------------------------------------------------------------------
 
-function RequiereAtencion({ d }: { d: Inicio }) {
+function RequiereAtencion({ d, actualizado }: { d: Inicio; actualizado: string }) {
   const a = d.atencion;
   const u = d.umbrales;
   const alertas: ReactNode[] = [];
@@ -329,7 +330,7 @@ function RequiereAtencion({ d }: { d: Inicio }) {
   return (
     <Seccion
       titulo="Requiere atención"
-      extra={alertas.length > 0 && <span className="text-xs text-graphite-400">Se actualiza cada minuto</span>}
+      extra={<span className="text-xs text-graphite-400">Actualizado {actualizado}</span>}
     >
       {alertas.length ? (
         <div className="grid grid-cols-1 gap-3 p-3 xl:grid-cols-2">{alertas}</div>
@@ -493,12 +494,6 @@ function DashboardPanelContent() {
         </h1>
         <p className="text-sm text-graphite-500">
           {fechaLarga()}
-          {dataUpdatedAt > 0 && (
-            <span className="text-graphite-400">
-              {' '}
-              · actualizado {new Date(dataUpdatedAt).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          )}
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -522,11 +517,11 @@ function DashboardPanelContent() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div key="cargando" className="space-y-6">
         {encabezado}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-lg bg-graphite-100" />
+            <div key={i} className="h-[110px] animate-pulse rounded-lg bg-graphite-100" />
           ))}
         </div>
         <div className="h-64 animate-pulse rounded-lg bg-graphite-100" />
@@ -588,8 +583,10 @@ function DashboardPanelContent() {
         ),
       ].filter(Boolean);
 
+  // key distinta a la del esqueleto: React monta el contenido como nuevo en
+  // vez de estirar los bloques grises (Chrome lo contaría como "salto").
   return (
-    <div className="space-y-6">
+    <div key="listo" className="space-y-6">
       {encabezado}
 
       {kpis.length > 0 && <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{kpis}</div>}
@@ -597,7 +594,10 @@ function DashboardPanelContent() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           {esTecnico && d.mias && <MisOrdenes mias={d.mias} />}
-          <RequiereAtencion d={d} />
+          <RequiereAtencion
+            d={d}
+            actualizado={new Date(dataUpdatedAt).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })}
+          />
           {d.tendencia && <Tendencia t={d.tendencia} />}
         </div>
         <div className="space-y-6">

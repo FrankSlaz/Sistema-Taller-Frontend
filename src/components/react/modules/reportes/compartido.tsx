@@ -82,7 +82,7 @@ export function KpiGrid({ kpis }: { kpis: Kpi[] }) {
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
       {kpis.map((k) => (
-        <div key={k.label} className={`rounded-lg border p-3 ${TONO_CARD[k.tono ?? 'neutral']}`}>
+        <div key={k.label} className={`min-h-[92px] rounded-lg border p-3 ${TONO_CARD[k.tono ?? 'neutral']}`}>
           <p className="text-[11px] font-semibold uppercase tracking-wide text-graphite-400">{k.label}</p>
           <p className={`mt-1 font-display text-xl font-semibold tabular-nums ${TONO_VALOR[k.tono ?? 'neutral']}`}>
             {k.valor}
