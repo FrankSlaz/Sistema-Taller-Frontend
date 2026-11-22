@@ -270,18 +270,16 @@ function ConfiguracionPanelContent() {
 
         {/* Solo informativo: el correo se configura en el servidor (variables MAIL_*). */}
         <div className="rounded-md border border-graphite-100 p-4">
-          <p className="text-sm font-medium text-graphite-900">Recuperación de contraseñas</p>
+          <p className="text-sm font-medium text-graphite-900">Si alguien olvida su contraseña</p>
+          {/* Texto para el usuario: cómo configurar el correo está en .env.example (para el instalador). */}
           {config?.correoRecuperacion ? (
             <p className="mt-1 text-xs text-graphite-500">
-              <span className="font-semibold text-green-700">Por correo.</span> Quien olvida su contraseña recibe un enlace
-              para crear una nueva (vence en 30 minutos).
+              Recibe en su correo un enlace para crear una nueva contraseña.
             </p>
           ) : (
             <p className="mt-1 text-xs text-graphite-500">
-              <span className="font-semibold text-amber-700">Por el administrador.</span> No hay correo configurado: las
-              solicitudes aparecen en tu inicio y en Usuarios, donde asignas una contraseña temporal. Para activar el envío
-              por correo, configura las variables <code className="rounded bg-graphite-100 px-1">MAIL_*</code> del servidor
-              (ver <code className="rounded bg-graphite-100 px-1">.env.example</code>).
+              Te llega un aviso en el inicio y en Usuarios. Desde ahí le asignas una contraseña temporal, que deberá cambiar
+              al entrar.
             </p>
           )}
         </div>
