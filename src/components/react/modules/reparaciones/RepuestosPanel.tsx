@@ -6,6 +6,7 @@ import { useOrdenRepuestoMutations, useOrdenRepuestos } from '../../../../lib/ho
 import { usePermiso } from '../../../../lib/hooks/useAuth';
 import type { OrdenReparacion } from '../../../../types/reparacion';
 import type { OrdenRepuesto } from '../../../../types/orden-repuesto';
+import Tip from '../../ui/Tip';
 
 function formatMonto(value: string | number) {
   const num = typeof value === 'string' ? Number(value) : value;
@@ -56,14 +57,16 @@ export default function RepuestosPanel({ orden }: { orden: OrdenReparacion }) {
                   <td className="py-2 text-right font-medium text-graphite-900">{formatMonto(r.subtotal)}</td>
                   {puedeEliminar && (
                     <td className="py-2 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setDeleteTarget(r)}
-                        className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-                        aria-label="Quitar repuesto"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      <Tip label="Quitar repuesto">
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTarget(r)}
+                          className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
+                          aria-label="Quitar repuesto"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </Tip>
                     </td>
                   )}
                 </tr>

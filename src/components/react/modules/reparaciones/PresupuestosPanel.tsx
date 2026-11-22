@@ -12,6 +12,7 @@ import { usePermiso } from '../../../../lib/hooks/useAuth';
 import { presupuestosApi } from '../../../../lib/api/presupuestos';
 import { linkWhatsapp, mensajePresupuesto, seguimientoApi } from '../../../../lib/api/seguimiento';
 import { ApiError } from '../../../../lib/api/client';
+import Tip from '../../ui/Tip';
 
 function formatMonto(value?: string | number | null) {
   if (value === null || value === undefined) return '—';
@@ -75,46 +76,54 @@ export default function PresupuestosPanel({ orden }: { orden: OrdenReparacion })
 
                 {p.estado === 'PENDIENTE' && puedeEditar && (
                   <>
-                    <button
-                      type="button"
-                      onClick={() => changeEstado.mutate({ id: p.id, payload: { estado: 'APROBADO' } })}
-                      disabled={changeEstado.isPending}
-                      className="rounded-md p-1 text-graphite-400 hover:bg-green-50 hover:text-green-700"
-                      aria-label="Aprobar presupuesto"
-                    >
-                      <Check size={14} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => changeEstado.mutate({ id: p.id, payload: { estado: 'RECHAZADO' } })}
-                      disabled={changeEstado.isPending}
-                      className="rounded-md p-1 text-graphite-400 hover:bg-red-50 hover:text-red-700"
-                      aria-label="Rechazar presupuesto"
-                    >
-                      <X size={14} />
-                    </button>
+                    <Tip label="Aprobar">
+                      <button
+                        type="button"
+                        onClick={() => changeEstado.mutate({ id: p.id, payload: { estado: 'APROBADO' } })}
+                        disabled={changeEstado.isPending}
+                        className="rounded-md p-1 text-graphite-400 hover:bg-green-50 hover:text-green-700"
+                        aria-label="Aprobar presupuesto"
+                      >
+                        <Check size={14} />
+                      </button>
+                    </Tip>
+                    <Tip label="Rechazar">
+                      <button
+                        type="button"
+                        onClick={() => changeEstado.mutate({ id: p.id, payload: { estado: 'RECHAZADO' } })}
+                        disabled={changeEstado.isPending}
+                        className="rounded-md p-1 text-graphite-400 hover:bg-red-50 hover:text-red-700"
+                        aria-label="Rechazar presupuesto"
+                      >
+                        <X size={14} />
+                      </button>
+                    </Tip>
                   </>
                 )}
 
                 {puedeEditar && (
-                  <button
-                    type="button"
-                    onClick={() => setFormState({ open: true, presupuesto: p })}
-                    className="rounded-md p-1 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-                    aria-label="Editar presupuesto"
-                  >
-                    <Pencil size={14} />
-                  </button>
+                  <Tip label="Editar">
+                    <button
+                      type="button"
+                      onClick={() => setFormState({ open: true, presupuesto: p })}
+                      className="rounded-md p-1 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+                      aria-label="Editar presupuesto"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                  </Tip>
                 )}
                 {puedeEliminar && (
-                  <button
-                    type="button"
-                    onClick={() => setDeleteTarget(p)}
-                    className="rounded-md p-1 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-                    aria-label="Eliminar presupuesto"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <Tip label="Eliminar">
+                    <button
+                      type="button"
+                      onClick={() => setDeleteTarget(p)}
+                      className="rounded-md p-1 text-graphite-400 hover:bg-red-50 hover:text-red-600"
+                      aria-label="Eliminar presupuesto"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </Tip>
                 )}
               </div>
             </div>

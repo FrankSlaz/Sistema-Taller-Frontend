@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import type { PropsWithChildren } from 'react';
+import Tip from './Tip';
 
 interface ModalProps {
   open: boolean;
@@ -23,14 +24,16 @@ export default function Modal({ open, onClose, title, size = 'md', children }: P
       <div className={`relative w-full ${size === 'xl' ? 'max-w-3xl' : 'max-w-lg'} rounded-xl bg-white p-6 shadow-2xl`}>
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-graphite-900">{title}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md p-1 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-            aria-label="Cerrar"
-          >
-            <X size={18} />
-          </button>
+          <Tip label="Cerrar">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-md p-1 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+              aria-label="Cerrar"
+            >
+              <X size={18} />
+            </button>
+          </Tip>
         </div>
 
         {children}

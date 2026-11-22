@@ -11,6 +11,7 @@ import { entregasApi } from '../../../../lib/api/entregas';
 import { ApiError } from '../../../../lib/api/client';
 import type { Entrega } from '../../../../types/entrega';
 import { FiltroTexto, Tabla } from '../reportes/compartido';
+import Tip from '../../ui/Tip';
 
 const LIMIT = 15;
 
@@ -109,15 +110,16 @@ function EntregasPanelContent() {
             {
               titulo: '',
               render: (e) => (
-                <button
-                  type="button"
-                  onClick={() => acta.mutate(e)}
-                  className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-100 hover:text-graphite-900"
-                  aria-label="Acta de entrega"
-                  title="Acta de entrega (PDF)"
-                >
-                  <FileDown size={15} />
-                </button>
+                <Tip label="Acta de entrega (PDF)">
+                  <button
+                    type="button"
+                    onClick={() => acta.mutate(e)}
+                    className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-100 hover:text-graphite-900"
+                    aria-label="Acta de entrega"
+                  >
+                    <FileDown size={15} />
+                  </button>
+                </Tip>
               ),
             },
           ]}

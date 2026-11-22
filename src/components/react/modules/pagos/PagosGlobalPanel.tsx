@@ -23,6 +23,7 @@ import {
   bs,
   presetRango,
 } from '../reportes/compartido';
+import Tip from '../../ui/Tip';
 
 const LIMIT = 20;
 const msg = (e: unknown) => (e instanceof ApiError ? e.message : e ? 'Error inesperado' : null);
@@ -210,25 +211,27 @@ function PagosGlobalPanelContent() {
                 titulo: '',
                 render: (p) => (
                   <div className="flex justify-end gap-0.5">
-                    <button
-                      type="button"
-                      onClick={() => recibo.mutate(p)}
-                      className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-100 hover:text-graphite-900"
-                      aria-label="Recibo"
-                      title={p.anulado ? `Anulado: ${p.motivoAnulacion ?? ''}` : 'Recibo (PDF)'}
-                    >
-                      <FileDown size={14} />
-                    </button>
-                    {!p.anulado && puedeAnular && (
+                    <Tip label={p.anulado ? `Anulado: ${p.motivoAnulacion ?? ''}` : 'Recibo (PDF)'}>
                       <button
                         type="button"
-                        onClick={() => setAnularTarget(p)}
-                        className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-                        aria-label="Anular"
-                        title="Anular"
+                        onClick={() => recibo.mutate(p)}
+                        className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-100 hover:text-graphite-900"
+                        aria-label="Recibo"
                       >
-                        <Ban size={14} />
+                        <FileDown size={14} />
                       </button>
+                    </Tip>
+                    {!p.anulado && puedeAnular && (
+                      <Tip label="Anular">
+                        <button
+                          type="button"
+                          onClick={() => setAnularTarget(p)}
+                          className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
+                          aria-label="Anular"
+                        >
+                          <Ban size={14} />
+                        </button>
+                      </Tip>
                     )}
                   </div>
                 ),

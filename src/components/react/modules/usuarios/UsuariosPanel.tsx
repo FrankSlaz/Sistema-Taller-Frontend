@@ -10,6 +10,7 @@ import { useUsuarioMutations, useUsuarios } from '../../../../lib/hooks/useUsuar
 import { ApiError } from '../../../../lib/api/client';
 import type { Usuario } from '../../../../types/auth';
 import { useAuth } from '../../../../lib/hooks/useAuth';
+import Tip from '../../ui/Tip';
 
 const msgError = (e: unknown) => (e instanceof ApiError ? e.message : e ? 'Error inesperado' : null);
 
@@ -75,23 +76,26 @@ function UsuariosPanelContent() {
               }}
             />
           )}
-          <button
-            type="button"
-            onClick={() => setResetTarget(row)}
-            className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-            aria-label={`Restablecer contraseña de ${row.nombre}`}
-            title="Restablecer contraseña"
-          >
-            <KeyRound size={15} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setFormState({ open: true, usuario: row })}
-            className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-            aria-label={`Editar ${row.nombre}`}
-          >
-            <Pencil size={15} />
-          </button>
+          <Tip label="Restablecer contraseña">
+            <button
+              type="button"
+              onClick={() => setResetTarget(row)}
+              className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+              aria-label={`Restablecer contraseña de ${row.nombre}`}
+            >
+              <KeyRound size={15} />
+            </button>
+          </Tip>
+          <Tip label="Editar">
+            <button
+              type="button"
+              onClick={() => setFormState({ open: true, usuario: row })}
+              className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+              aria-label={`Editar ${row.nombre}`}
+            >
+              <Pencil size={15} />
+            </button>
+          </Tip>
         </div>
       ),
     },

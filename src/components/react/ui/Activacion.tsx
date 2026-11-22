@@ -1,5 +1,6 @@
 import { Power, RotateCcw } from 'lucide-react';
 import Modal from './Modal';
+import Tip from './Tip';
 
 /**
  * Activar / desactivar registros maestros (clientes, equipos, usuarios,
@@ -71,18 +72,19 @@ export function BotonActivo({
 }) {
   const si = activo !== false;
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`rounded-md p-1.5 text-graphite-400 disabled:opacity-40 ${
-        si ? 'hover:bg-amber-50 hover:text-amber-700' : 'hover:bg-green-50 hover:text-green-700'
-      }`}
-      aria-label={si ? `Desactivar ${nombre}` : `Activar ${nombre}`}
-      title={si ? 'Desactivar' : 'Activar'}
-    >
-      {si ? <Power size={size} /> : <RotateCcw size={size} />}
-    </button>
+    <Tip label={si ? 'Desactivar' : 'Activar'}>
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        className={`rounded-md p-1.5 text-graphite-400 disabled:opacity-40 ${
+          si ? 'hover:bg-amber-50 hover:text-amber-700' : 'hover:bg-green-50 hover:text-green-700'
+        }`}
+        aria-label={si ? `Desactivar ${nombre}` : `Activar ${nombre}`}
+      >
+        {si ? <Power size={size} /> : <RotateCcw size={size} />}
+      </button>
+    </Tip>
   );
 }
 

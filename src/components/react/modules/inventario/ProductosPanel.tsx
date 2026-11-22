@@ -16,6 +16,7 @@ import AccessDenied from '../../ui/AccessDenied';
 import { usePermiso } from '../../../../lib/hooks/useAuth';
 import { ApiError } from '../../../../lib/api/client';
 import type { Producto } from '../../../../types/producto';
+import Tip from '../../ui/Tip';
 
 const LIMIT = 10;
 const msgError = (e: unknown) => (e instanceof ApiError ? e.message : e ? 'Error inesperado' : null);
@@ -90,25 +91,28 @@ function ProductosPanelContent() {
       render: (row) => (
         <div className="flex justify-end gap-1">
           {puedeEditar && (
-            <button
-              type="button"
-              onClick={() => setMovimientoTarget(row)}
-              className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-              aria-label={`Registrar movimiento de ${row.nombre}`}
-              title="Registrar movimiento"
-            >
-              <ArrowLeftRight size={15} />
-            </button>
+            <Tip label="Registrar movimiento">
+              <button
+                type="button"
+                onClick={() => setMovimientoTarget(row)}
+                className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+                aria-label={`Registrar movimiento de ${row.nombre}`}
+              >
+                <ArrowLeftRight size={15} />
+              </button>
+            </Tip>
           )}
           {puedeEditar && (
-            <button
-              type="button"
-              onClick={() => setFormState({ open: true, producto: row })}
-              className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-              aria-label={`Editar ${row.nombre}`}
-            >
-              <Pencil size={15} />
-            </button>
+            <Tip label="Editar">
+              <button
+                type="button"
+                onClick={() => setFormState({ open: true, producto: row })}
+                className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+                aria-label={`Editar ${row.nombre}`}
+              >
+                <Pencil size={15} />
+              </button>
+            </Tip>
           )}
           {puedeEliminar && (
             <BotonActivo

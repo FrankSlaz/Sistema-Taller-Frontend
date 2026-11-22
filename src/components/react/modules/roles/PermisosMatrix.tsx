@@ -5,6 +5,7 @@ import { useRoles, useRolPermisos, useSetRolPermisos } from '../../../../lib/hoo
 import { usePermisos } from '../../../../lib/hooks/usePermisos';
 import { ApiError } from '../../../../lib/api/client';
 import { ACCIONES_PERMISO, RECURSOS_PERMISO, accionLabel, recursoLabel } from '../../../../types/permiso';
+import Tip from '../../ui/Tip';
 
 interface PermisosMatrixProps {
   rolId: number;
@@ -135,14 +136,15 @@ function PermisosMatrixContent({ rolId }: PermisosMatrixProps) {
               {RECURSOS_PERMISO.map((recurso) => (
                 <tr key={recurso} className="hover:bg-graphite-50">
                   <td className="px-4 py-3">
-                    <button
-                      type="button"
-                      onClick={() => toggleFila(recurso)}
-                      className="font-medium text-graphite-900 hover:underline"
-                      title="Marcar/desmarcar toda la fila"
-                    >
-                      {recursoLabel(recurso)}
-                    </button>
+                    <Tip label="Marcar/desmarcar toda la fila">
+                      <button
+                        type="button"
+                        onClick={() => toggleFila(recurso)}
+                        className="font-medium text-graphite-900 hover:underline"
+                      >
+                        {recursoLabel(recurso)}
+                      </button>
+                    </Tip>
                   </td>
                   {ACCIONES_PERMISO.map((accion) => {
                     const permisoId = permisoIdPorClave.get(`${recurso}:${accion}`);
@@ -152,19 +154,21 @@ function PermisosMatrixContent({ rolId }: PermisosMatrixProps) {
                     const checked = seleccion.has(permisoId);
                     return (
                       <td key={accion} className="px-4 py-3 text-center">
-                        <button
-                          type="button"
-                          onClick={() => toggle(permisoId)}
-                          className={`inline-flex h-5 w-5 items-center justify-center rounded border ${
-                            checked
-                              ? 'border-graphite-900 bg-graphite-900 text-white'
-                              : 'border-graphite-300 bg-white'
-                          }`}
-                          aria-label={`${recursoLabel(recurso)} · ${accionLabel(accion)}`}
-                          aria-pressed={checked}
-                        >
-                          {checked && <Check size={13} />}
-                        </button>
+                        <Tip label={`${recursoLabel(recurso)} · ${accionLabel(accion)}`}>
+                          <button
+                            type="button"
+                            onClick={() => toggle(permisoId)}
+                            className={`inline-flex h-5 w-5 items-center justify-center rounded border ${
+                              checked
+                                ? 'border-graphite-900 bg-graphite-900 text-white'
+                                : 'border-graphite-300 bg-white'
+                            }`}
+                            aria-label={`${recursoLabel(recurso)} · ${accionLabel(accion)}`}
+                            aria-pressed={checked}
+                          >
+                            {checked && <Check size={13} />}
+                          </button>
+                        </Tip>
                       </td>
                     );
                   })}

@@ -9,6 +9,7 @@ import QueryProvider from '../../providers/QueryProvider';
 import { usePresupuestoMutations, usePresupuestos } from '../../../../lib/hooks/usePresupuestos';
 import { ESTADOS_PRESUPUESTO, type Presupuesto } from '../../../../types/presupuesto';
 import { estadoPresupuestoClasses, estadoPresupuestoLabel } from '../../../../lib/utils/estado';
+import Tip from '../../ui/Tip';
 
 const LIMIT = 10;
 
@@ -72,32 +73,38 @@ function PresupuestosGlobalPanelContent() {
         <div className="flex justify-end gap-1">
           {row.estado === 'PENDIENTE' && (
             <>
-              <button
-                type="button"
-                onClick={() => changeEstado.mutate({ id: row.id, payload: { estado: 'APROBADO' } })}
-                className="rounded-md p-1.5 text-graphite-400 hover:bg-green-50 hover:text-green-700"
-                aria-label="Aprobar presupuesto"
-              >
-                <Check size={15} />
-              </button>
-              <button
-                type="button"
-                onClick={() => changeEstado.mutate({ id: row.id, payload: { estado: 'RECHAZADO' } })}
-                className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-700"
-                aria-label="Rechazar presupuesto"
-              >
-                <X size={15} />
-              </button>
+              <Tip label="Aprobar">
+                <button
+                  type="button"
+                  onClick={() => changeEstado.mutate({ id: row.id, payload: { estado: 'APROBADO' } })}
+                  className="rounded-md p-1.5 text-graphite-400 hover:bg-green-50 hover:text-green-700"
+                  aria-label="Aprobar presupuesto"
+                >
+                  <Check size={15} />
+                </button>
+              </Tip>
+              <Tip label="Rechazar">
+                <button
+                  type="button"
+                  onClick={() => changeEstado.mutate({ id: row.id, payload: { estado: 'RECHAZADO' } })}
+                  className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-700"
+                  aria-label="Rechazar presupuesto"
+                >
+                  <X size={15} />
+                </button>
+              </Tip>
             </>
           )}
-          <button
-            type="button"
-            onClick={() => setDeleteTarget(row)}
-            className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-            aria-label="Eliminar presupuesto"
-          >
-            <Trash2 size={15} />
-          </button>
+          <Tip label="Eliminar">
+            <button
+              type="button"
+              onClick={() => setDeleteTarget(row)}
+              className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
+              aria-label="Eliminar presupuesto"
+            >
+              <Trash2 size={15} />
+            </button>
+          </Tip>
         </div>
       ),
     },

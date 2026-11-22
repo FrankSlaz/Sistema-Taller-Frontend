@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Tip from './Tip';
 
 interface PaginationProps {
   page: number;
@@ -18,24 +19,28 @@ export default function Pagination({ page, totalPages, total, onPageChange }: Pa
         Página {page} de {totalPages} · {total} registros
       </p>
       <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => onPageChange(page - 1)}
-          disabled={page <= 1}
-          className="flex h-8 w-8 items-center justify-center rounded-md border border-graphite-200 text-graphite-600 hover:bg-graphite-50 disabled:opacity-40"
-          aria-label="Página anterior"
-        >
-          <ChevronLeft size={16} />
-        </button>
-        <button
-          type="button"
-          onClick={() => onPageChange(page + 1)}
-          disabled={page >= totalPages}
-          className="flex h-8 w-8 items-center justify-center rounded-md border border-graphite-200 text-graphite-600 hover:bg-graphite-50 disabled:opacity-40"
-          aria-label="Página siguiente"
-        >
-          <ChevronRight size={16} />
-        </button>
+        <Tip label="Página anterior">
+          <button
+            type="button"
+            onClick={() => onPageChange(page - 1)}
+            disabled={page <= 1}
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-graphite-200 text-graphite-600 hover:bg-graphite-50 disabled:opacity-40"
+            aria-label="Página anterior"
+          >
+            <ChevronLeft size={16} />
+          </button>
+        </Tip>
+        <Tip label="Página siguiente">
+          <button
+            type="button"
+            onClick={() => onPageChange(page + 1)}
+            disabled={page >= totalPages}
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-graphite-200 text-graphite-600 hover:bg-graphite-50 disabled:opacity-40"
+            aria-label="Página siguiente"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </Tip>
       </div>
     </div>
   );

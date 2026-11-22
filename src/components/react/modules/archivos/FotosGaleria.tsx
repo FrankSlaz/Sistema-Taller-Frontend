@@ -7,6 +7,7 @@ import { usePermiso } from '../../../../lib/hooks/useAuth';
 import { ApiError } from '../../../../lib/api/client';
 import { reducirImagen } from '../../../../lib/utils/imagen';
 import { MAX_ARCHIVOS_POR_SUBIDA, type ArchivoEquipo } from '../../../../types/archivo';
+import Tip from '../../ui/Tip';
 
 interface FotosGaleriaProps {
   equipoId: number;
@@ -224,33 +225,39 @@ export default function FotosGaleria({ equipoId, ordenId, ordenCodigo }: FotosGa
                 className="mx-auto max-h-[60vh] w-auto max-w-full object-contain"
               />
 
-              <button
-                type="button"
-                onClick={() => setSeleccionadoId(null)}
-                className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
-                aria-label="Cerrar"
-              >
-                <X size={16} />
-              </button>
-              {indice > 0 && (
+              <Tip label="Cerrar">
                 <button
                   type="button"
-                  onClick={() => setSeleccionadoId(lista[indice - 1].id)}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2 text-white hover:bg-black/80"
-                  aria-label="Foto anterior"
+                  onClick={() => setSeleccionadoId(null)}
+                  className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+                  aria-label="Cerrar"
                 >
-                  <ChevronLeft size={18} />
+                  <X size={16} />
                 </button>
+              </Tip>
+              {indice > 0 && (
+                <Tip label="Foto anterior">
+                  <button
+                    type="button"
+                    onClick={() => setSeleccionadoId(lista[indice - 1].id)}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2 text-white hover:bg-black/80"
+                    aria-label="Foto anterior"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                </Tip>
               )}
               {indice < lista.length - 1 && (
-                <button
-                  type="button"
-                  onClick={() => setSeleccionadoId(lista[indice + 1].id)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2 text-white hover:bg-black/80"
-                  aria-label="Foto siguiente"
-                >
-                  <ChevronRight size={18} />
-                </button>
+                <Tip label="Foto siguiente">
+                  <button
+                    type="button"
+                    onClick={() => setSeleccionadoId(lista[indice + 1].id)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2 text-white hover:bg-black/80"
+                    aria-label="Foto siguiente"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </Tip>
               )}
             </div>
 

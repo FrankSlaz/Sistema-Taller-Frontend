@@ -6,6 +6,7 @@ import { useProveedorMutations, useProveedores } from '../../../../lib/hooks/use
 import { ApiError } from '../../../../lib/api/client';
 import type { Proveedor, ProveedorPayload } from '../../../../types/proveedor';
 import { usePermiso } from '../../../../lib/hooks/useAuth';
+import Tip from '../../ui/Tip';
 
 interface ProveedoresManagerModalProps {
   open: boolean;
@@ -86,14 +87,16 @@ export default function ProveedoresManagerModal({ open, onClose }: ProveedoresMa
               </div>
               <div className="flex items-center gap-1">
                 {puedeEditar && (
-                  <button
-                    type="button"
-                    onClick={() => startEdit(p)}
-                    className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-                    aria-label={`Editar ${p.nombre}`}
-                  >
-                    <Pencil size={14} />
-                  </button>
+                  <Tip label="Editar">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(p)}
+                      className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+                      aria-label={`Editar ${p.nombre}`}
+                    >
+                      <Pencil size={14} />
+                    </button>
+                  </Tip>
                 )}
                 {puedeEliminar && (
                   <BotonActivo
@@ -128,14 +131,16 @@ export default function ProveedoresManagerModal({ open, onClose }: ProveedoresMa
               <p className="text-sm font-medium text-graphite-900">
                 {editing ? `Editar "${editing.nombre}"` : 'Nuevo proveedor'}
               </p>
-              <button
-                type="button"
-                onClick={() => setFormOpen(false)}
-                className="rounded-md p-1 text-graphite-400 hover:bg-graphite-50"
-                aria-label="Cerrar formulario"
-              >
-                <X size={14} />
-              </button>
+              <Tip label="Cerrar">
+                <button
+                  type="button"
+                  onClick={() => setFormOpen(false)}
+                  className="rounded-md p-1 text-graphite-400 hover:bg-graphite-50"
+                  aria-label="Cerrar formulario"
+                >
+                  <X size={14} />
+                </button>
+              </Tip>
             </div>
 
             <div>

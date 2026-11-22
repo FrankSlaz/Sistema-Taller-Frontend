@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, type PropsWithChildren } from 'react';
+import { TipProvider } from '../ui/Tip';
 
 /**
  * Proveedor de TanStack Query para las islas de React.
@@ -21,5 +22,11 @@ export default function QueryProvider({ children }: PropsWithChildren) {
       }),
   );
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  // TipProvider: las etiquetas de los botones de la isla comparten el
+  // "salto" (al pasar de un botón a otro aparece sin esperar).
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TipProvider>{children}</TipProvider>
+    </QueryClientProvider>
+  );
 }

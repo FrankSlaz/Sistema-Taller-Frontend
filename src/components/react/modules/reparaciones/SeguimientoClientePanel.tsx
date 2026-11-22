@@ -7,6 +7,7 @@ import { linkWhatsapp, seguimientoApi } from '../../../../lib/api/seguimiento';
 import { ApiError } from '../../../../lib/api/client';
 import { usePermiso } from '../../../../lib/hooks/useAuth';
 import type { OrdenReparacion } from '../../../../types/reparacion';
+import Tip from '../../ui/Tip';
 
 const msg = (e: unknown) => (e instanceof ApiError ? e.message : e ? 'Error inesperado' : null);
 
@@ -77,25 +78,27 @@ export default function SeguimientoClientePanel({ orden }: { orden: OrdenReparac
         <span className="min-w-0 flex-1 truncate font-mono text-xs text-graphite-600" title={enlace.url}>
           {enlace.url}
         </span>
-        <button
-          type="button"
-          onClick={copiar}
-          className="rounded p-1 text-graphite-500 hover:bg-graphite-200 hover:text-graphite-900"
-          aria-label="Copiar enlace"
-          title="Copiar enlace"
-        >
-          {copiado ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
-        </button>
-        <a
-          href={enlace.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded p-1 text-graphite-500 hover:bg-graphite-200 hover:text-graphite-900"
-          aria-label="Abrir página del cliente"
-          title="Abrir página del cliente"
-        >
-          <ExternalLink size={14} />
-        </a>
+        <Tip label="Copiar enlace">
+          <button
+            type="button"
+            onClick={copiar}
+            className="rounded p-1 text-graphite-500 hover:bg-graphite-200 hover:text-graphite-900"
+            aria-label="Copiar enlace"
+          >
+            {copiado ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+          </button>
+        </Tip>
+        <Tip label="Abrir página del cliente">
+          <a
+            href={enlace.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded p-1 text-graphite-500 hover:bg-graphite-200 hover:text-graphite-900"
+            aria-label="Abrir página del cliente"
+          >
+            <ExternalLink size={14} />
+          </a>
+        </Tip>
       </div>
 
       <a

@@ -1,6 +1,7 @@
 import { LogOut, User } from 'lucide-react';
 import QueryProvider from '../providers/QueryProvider';
 import { useAuth } from '../../../lib/hooks/useAuth';
+import Tip from '../ui/Tip';
 
 function UserMenuContent() {
   const { usuario, rolNombre, isLoading, logout } = useAuth();
@@ -26,14 +27,16 @@ function UserMenuContent() {
         </div>
       </a>
 
-      <button
-        type="button"
-        onClick={logout}
-        className="flex h-9 w-9 items-center justify-center rounded-md text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-        aria-label="Cerrar sesión"
-      >
-        <LogOut size={16} />
-      </button>
+      <Tip label="Cerrar sesión">
+        <button
+          type="button"
+          onClick={logout}
+          className="flex h-9 w-9 items-center justify-center rounded-md text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+          aria-label="Cerrar sesión"
+        >
+          <LogOut size={16} />
+        </button>
+      </Tip>
     </div>
   );
 }

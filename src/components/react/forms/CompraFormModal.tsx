@@ -8,6 +8,7 @@ import { useCompraMutations } from '../../../lib/hooks/useCompras';
 import { ApiError } from '../../../lib/api/client';
 import type { Producto } from '../../../types/producto';
 import { usePermiso } from '../../../lib/hooks/useAuth';
+import Tip from '../ui/Tip';
 
 interface CompraFormModalProps {
   open: boolean;
@@ -178,15 +179,17 @@ export default function CompraFormModal({ open, onClose }: CompraFormModalProps)
                       />
                     </div>
                     <div className="w-24 text-right text-sm text-graphite-600">{formatMonto(subtotal)}</div>
-                    <button
-                      type="button"
-                      onClick={() => removeRow(row.key)}
-                      disabled={detalles.length === 1}
-                      className="shrink-0 rounded-md p-2 text-graphite-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-30"
-                      aria-label={`Quitar línea ${index + 1}`}
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    <Tip label="Quitar línea">
+                      <button
+                        type="button"
+                        onClick={() => removeRow(row.key)}
+                        disabled={detalles.length === 1}
+                        className="shrink-0 rounded-md p-2 text-graphite-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-30"
+                        aria-label={`Quitar línea ${index + 1}`}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </Tip>
                   </div>
                 </div>
               );

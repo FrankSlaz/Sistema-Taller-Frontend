@@ -18,6 +18,7 @@ import { useReparacion } from '../../../../lib/hooks/useReparaciones';
 import { usePresupuestos } from '../../../../lib/hooks/usePresupuestos';
 import { useAuth, usePermiso } from '../../../../lib/hooks/useAuth';
 import { estadoOrdenClasses, estadoOrdenLabel, prioridadClasses } from '../../../../lib/utils/estado';
+import Tip from '../../ui/Tip';
 
 function formatFecha(value?: string | null) {
   if (!value) return '—';
@@ -94,14 +95,15 @@ function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
 
           <div className="flex flex-wrap gap-2">
             {esAdmin && (
-              <a
-                href={`/auditoria?ordenId=${orden.id}&orden=${encodeURIComponent(orden.codigoOrden)}`}
-                className="inline-flex items-center gap-1.5 rounded-md border border-graphite-200 px-3 py-1.5 text-sm font-medium text-graphite-700 hover:bg-graphite-50"
-                title="Quién hizo cada cambio en esta orden"
-              >
-                <History size={14} />
-                Auditoría
-              </a>
+              <Tip label="Quién hizo cada cambio en esta orden">
+                <a
+                  href={`/auditoria?ordenId=${orden.id}&orden=${encodeURIComponent(orden.codigoOrden)}`}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-graphite-200 px-3 py-1.5 text-sm font-medium text-graphite-700 hover:bg-graphite-50"
+                >
+                  <History size={14} />
+                  Auditoría
+                </a>
+              </Tip>
             )}
             {puedeEditar && (
               <button

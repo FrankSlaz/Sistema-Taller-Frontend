@@ -11,6 +11,7 @@ import { useDiagnosticoMutations, useDiagnosticos } from '../../../../lib/hooks/
 import { usePermiso } from '../../../../lib/hooks/useAuth';
 import { ApiError } from '../../../../lib/api/client';
 import type { Diagnostico } from '../../../../types/diagnostico';
+import Tip from '../../ui/Tip';
 
 const LIMIT = 15;
 
@@ -78,24 +79,28 @@ function DiagnosticosGlobalPanelContent() {
       render: (row) => (
         <div className="flex justify-end gap-1">
           {puedeEditar && (
-            <button
-              type="button"
-              onClick={() => setFormState({ open: true, diagnostico: row })}
-              className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-              aria-label="Editar diagnóstico"
-            >
-              <Pencil size={15} />
-            </button>
+            <Tip label="Editar">
+              <button
+                type="button"
+                onClick={() => setFormState({ open: true, diagnostico: row })}
+                className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+                aria-label="Editar diagnóstico"
+              >
+                <Pencil size={15} />
+              </button>
+            </Tip>
           )}
           {puedeEliminar && (
-            <button
-              type="button"
-              onClick={() => setDeleteTarget(row)}
-              className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-              aria-label="Eliminar diagnóstico"
-            >
-              <Trash2 size={15} />
-            </button>
+            <Tip label="Eliminar">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(row)}
+                className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
+                aria-label="Eliminar diagnóstico"
+              >
+                <Trash2 size={15} />
+              </button>
+            </Tip>
           )}
         </div>
       ),

@@ -11,6 +11,7 @@ import { useClienteMutations, useClientes } from '../../../../lib/hooks/useClien
 import { usePermiso } from '../../../../lib/hooks/useAuth';
 import { ApiError } from '../../../../lib/api/client';
 import type { Cliente } from '../../../../types/cliente';
+import Tip from '../../ui/Tip';
 
 const LIMIT = 10;
 const msgError = (e: unknown) => (e instanceof ApiError ? e.message : e ? 'Error inesperado' : null);
@@ -67,23 +68,27 @@ function ClientesPanelContent() {
       className: 'text-right',
       render: (row) => (
         <div className="flex justify-end gap-1">
-          <a
-            href={`/equipos?clienteId=${row.id}&clienteNombre=${encodeURIComponent(row.nombre)}`}
-            className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-            aria-label={`Ver equipos de ${row.nombre}`}
-          >
-            <Wrench size={15} />
-          </a>
-          <button
-            type="button"
-            onClick={() => setFormState({ open: true, cliente: row })}
-            className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-            aria-label={`Editar ${row.nombre}`}
-            disabled={!puedeEditar}
-            hidden={!puedeEditar}
-          >
-            <Pencil size={15} />
-          </button>
+          <Tip label="Ver equipos">
+            <a
+              href={`/equipos?clienteId=${row.id}&clienteNombre=${encodeURIComponent(row.nombre)}`}
+              className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+              aria-label={`Ver equipos de ${row.nombre}`}
+            >
+              <Wrench size={15} />
+            </a>
+          </Tip>
+          <Tip label="Editar">
+            <button
+              type="button"
+              onClick={() => setFormState({ open: true, cliente: row })}
+              className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+              aria-label={`Editar ${row.nombre}`}
+              disabled={!puedeEditar}
+              hidden={!puedeEditar}
+            >
+              <Pencil size={15} />
+            </button>
+          </Tip>
           {puedeEliminar && (
             <BotonActivo
               activo={row.estado}

@@ -4,6 +4,7 @@ import { useReparacionMutations, useTecnicos } from '../../../../lib/hooks/useRe
 import { ApiError } from '../../../../lib/api/client';
 import { TIPOS_PARTICIPACION, type OrdenReparacion } from '../../../../types/reparacion';
 import { usePermiso } from '../../../../lib/hooks/useAuth';
+import Tip from '../../ui/Tip';
 
 export default function TecnicosPanel({ orden }: { orden: OrdenReparacion }) {
   const { data: tecnicos, error: tecnicosError } = useTecnicos();
@@ -50,15 +51,17 @@ export default function TecnicosPanel({ orden }: { orden: OrdenReparacion }) {
               <p className="text-xs text-graphite-400">{t.tipoParticipacion ?? 'PRINCIPAL'}</p>
             </div>
             {puedeEditar && (
-              <button
-                type="button"
-                onClick={() => removeTecnico.mutate(t.usuarioId)}
-                disabled={removeTecnico.isPending}
-                className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-                aria-label={`Quitar a ${t.usuario.nombre}`}
-              >
-                <UserMinus size={15} />
-              </button>
+              <Tip label="Quitar técnico">
+                <button
+                  type="button"
+                  onClick={() => removeTecnico.mutate(t.usuarioId)}
+                  disabled={removeTecnico.isPending}
+                  className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
+                  aria-label={`Quitar a ${t.usuario.nombre}`}
+                >
+                  <UserMinus size={15} />
+                </button>
+              </Tip>
             )}
           </li>
         ))}

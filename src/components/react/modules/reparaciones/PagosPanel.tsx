@@ -11,6 +11,7 @@ import { linkWhatsapp, seguimientoApi, type EnlaceSeguimiento } from '../../../.
 import { ApiError } from '../../../../lib/api/client';
 import type { OrdenReparacion } from '../../../../types/reparacion';
 import { METODOS_PAGO, type MetodoPago, type Pago, type PagosResumen } from '../../../../types/pago';
+import Tip from '../../ui/Tip';
 
 const bs = (value: string | number) => {
   const num = typeof value === 'string' ? Number(value) : value;
@@ -138,37 +139,40 @@ export default function PagosPanel({ orden }: { orden: OrdenReparacion }) {
                   )}
                 </div>
                 <div className="flex shrink-0 items-center gap-0.5">
-                  <button
-                    type="button"
-                    onClick={() => recibo.mutate(p)}
-                    className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-100 hover:text-graphite-900"
-                    aria-label="Descargar recibo"
-                    title="Recibo (PDF)"
-                  >
-                    <FileDown size={14} />
-                  </button>
-                  {!p.anulado && enlace && (
-                    <a
-                      href={linkWhatsapp(enlace, mensajeRecibo(enlace, p, resumen))}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="rounded-md p-1.5 text-graphite-400 hover:bg-green-50 hover:text-green-700"
-                      aria-label="Enviar comprobante por WhatsApp"
-                      title="Enviar comprobante por WhatsApp"
-                    >
-                      <MessageCircle size={14} />
-                    </a>
-                  )}
-                  {!p.anulado && puedeAnular && (
+                  <Tip label="Recibo (PDF)">
                     <button
                       type="button"
-                      onClick={() => setAnularTarget(p)}
-                      className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-                      aria-label="Anular"
-                      title="Anular"
+                      onClick={() => recibo.mutate(p)}
+                      className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-100 hover:text-graphite-900"
+                      aria-label="Descargar recibo"
                     >
-                      <Ban size={14} />
+                      <FileDown size={14} />
                     </button>
+                  </Tip>
+                  {!p.anulado && enlace && (
+                    <Tip label="Enviar comprobante por WhatsApp">
+                      <a
+                        href={linkWhatsapp(enlace, mensajeRecibo(enlace, p, resumen))}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-md p-1.5 text-graphite-400 hover:bg-green-50 hover:text-green-700"
+                        aria-label="Enviar comprobante por WhatsApp"
+                      >
+                        <MessageCircle size={14} />
+                      </a>
+                    </Tip>
+                  )}
+                  {!p.anulado && puedeAnular && (
+                    <Tip label="Anular">
+                      <button
+                        type="button"
+                        onClick={() => setAnularTarget(p)}
+                        className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
+                        aria-label="Anular"
+                      >
+                        <Ban size={14} />
+                      </button>
+                    </Tip>
                   )}
                 </div>
               </div>

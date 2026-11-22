@@ -13,6 +13,7 @@ import { useEquipoMutations, useEquipos } from '../../../../lib/hooks/useEquipos
 import { usePermiso } from '../../../../lib/hooks/useAuth';
 import { ApiError } from '../../../../lib/api/client';
 import type { Equipo } from '../../../../types/equipo';
+import Tip from '../../ui/Tip';
 
 const LIMIT = 10;
 const msgError = (e: unknown) => (e instanceof ApiError ? e.message : e ? 'Error inesperado' : null);
@@ -113,26 +114,29 @@ function EquiposPanelContent({ clienteId, clienteNombre }: EquiposPanelProps) {
       render: (row) => (
         <div className="flex justify-end gap-1">
           {puedeVerFotos && (
+            <Tip label="Fotos">
+              <button
+                type="button"
+                onClick={() => setFotosTarget(row)}
+                className="inline-flex items-center gap-1 rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+                aria-label={`Fotos del equipo ${row.id}`}
+              >
+                <Camera size={15} />
+                {!!row._count?.archivos && <span className="text-xs">{row._count.archivos}</span>}
+              </button>
+            </Tip>
+          )}
+          <Tip label="Editar">
             <button
               type="button"
-              onClick={() => setFotosTarget(row)}
-              className="inline-flex items-center gap-1 rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-              aria-label={`Fotos del equipo ${row.id}`}
-              title="Fotos"
+              onClick={() => setFormState({ open: true, equipo: row })}
+              className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+              aria-label={`Editar equipo ${row.id}`}
+              hidden={!puedeEditar}
             >
-              <Camera size={15} />
-              {!!row._count?.archivos && <span className="text-xs">{row._count.archivos}</span>}
+              <Pencil size={15} />
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setFormState({ open: true, equipo: row })}
-            className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-            aria-label={`Editar equipo ${row.id}`}
-            hidden={!puedeEditar}
-          >
-            <Pencil size={15} />
-          </button>
+          </Tip>
           {puedeEliminar && (
             <BotonActivo
               activo={row.estado}

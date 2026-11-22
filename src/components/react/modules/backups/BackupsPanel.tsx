@@ -8,6 +8,7 @@ import Modal from '../../ui/Modal';
 import { useBackupMutations, useBackups } from '../../../../lib/hooks/useBackups';
 import { ApiError } from '../../../../lib/api/client';
 import type { Backup, TipoBackup } from '../../../../types/backup';
+import Tip from '../../ui/Tip';
 
 const TIPO_LABEL: Record<TipoBackup, { label: string; className: string }> = {
   manual: { label: 'Manual', className: 'bg-blue-50 text-blue-700 ring-blue-600/20' },
@@ -147,33 +148,36 @@ function BackupsPanelContent() {
                   <td className="whitespace-nowrap py-2.5 text-right text-graphite-700">{formatTamano(b.tamano)}</td>
                   <td className="py-2.5">
                     <div className="flex justify-end gap-1">
-                      <button
-                        type="button"
-                        onClick={() => descargar.mutate(b.nombre)}
-                        className="rounded-md p-1.5 text-graphite-500 hover:bg-graphite-100 hover:text-graphite-900"
-                        aria-label="Descargar"
-                        title="Descargar"
-                      >
-                        <Download size={15} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRestaurarTarget(b)}
-                        className="rounded-md p-1.5 text-graphite-500 hover:bg-amber-50 hover:text-amber-700"
-                        aria-label="Restaurar"
-                        title="Restaurar"
-                      >
-                        <History size={15} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEliminarTarget(b)}
-                        className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-                        aria-label="Eliminar"
-                        title="Eliminar"
-                      >
-                        <Trash2 size={15} />
-                      </button>
+                      <Tip label="Descargar">
+                        <button
+                          type="button"
+                          onClick={() => descargar.mutate(b.nombre)}
+                          className="rounded-md p-1.5 text-graphite-500 hover:bg-graphite-100 hover:text-graphite-900"
+                          aria-label="Descargar"
+                        >
+                          <Download size={15} />
+                        </button>
+                      </Tip>
+                      <Tip label="Restaurar">
+                        <button
+                          type="button"
+                          onClick={() => setRestaurarTarget(b)}
+                          className="rounded-md p-1.5 text-graphite-500 hover:bg-amber-50 hover:text-amber-700"
+                          aria-label="Restaurar"
+                        >
+                          <History size={15} />
+                        </button>
+                      </Tip>
+                      <Tip label="Eliminar">
+                        <button
+                          type="button"
+                          onClick={() => setEliminarTarget(b)}
+                          className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
+                          aria-label="Eliminar"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </Tip>
                     </div>
                   </td>
                 </tr>

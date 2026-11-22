@@ -13,6 +13,7 @@ import { useAsignaciones } from '../../../../lib/hooks/useAsignaciones';
 import { estadoHerramientaClasses, estadoHerramientaLabel } from '../../../../lib/utils/estado';
 import { ESTADOS_HERRAMIENTA, type Herramienta } from '../../../../types/herramienta';
 import { usePermiso } from '../../../../lib/hooks/useAuth';
+import Tip from '../../ui/Tip';
 
 const LIMIT = 10;
 
@@ -88,46 +89,51 @@ function HerramientasPanelContent() {
         return (
           <div className="flex justify-end gap-1">
             {row.estado === 'DISPONIBLE' && puedeEditar && (
-              <button
-                type="button"
-                onClick={() => setAsignarTarget(row)}
-                className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-                aria-label={`Asignar ${row.nombre}`}
-                title="Asignar"
-              >
-                <ArrowLeftRight size={15} />
-              </button>
+              <Tip label="Asignar">
+                <button
+                  type="button"
+                  onClick={() => setAsignarTarget(row)}
+                  className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+                  aria-label={`Asignar ${row.nombre}`}
+                >
+                  <ArrowLeftRight size={15} />
+                </button>
+              </Tip>
             )}
             {row.estado === 'ASIGNADA' && asignacionId && puedeEditar && (
-              <button
-                type="button"
-                onClick={() => devolver.mutate(asignacionId)}
-                disabled={devolver.isPending}
-                className="rounded-md p-1.5 text-graphite-400 hover:bg-blue-50 hover:text-blue-700"
-                aria-label={`Registrar devolución de ${row.nombre}`}
-                title="Registrar devolución"
-              >
-                <Undo2 size={15} />
-              </button>
+              <Tip label="Registrar devolución">
+                <button
+                  type="button"
+                  onClick={() => devolver.mutate(asignacionId)}
+                  disabled={devolver.isPending}
+                  className="rounded-md p-1.5 text-graphite-400 hover:bg-blue-50 hover:text-blue-700"
+                  aria-label={`Registrar devolución de ${row.nombre}`}
+                >
+                  <Undo2 size={15} />
+                </button>
+              </Tip>
             )}
-            <button
-              type="button"
-              onClick={() => setDetailId(row.id)}
-              className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-              aria-label={`Ver detalle de ${row.nombre}`}
-              title="Ver detalle"
-            >
-              <Eye size={15} />
-            </button>
-            {puedeEditar && (
+            <Tip label="Ver detalle">
               <button
                 type="button"
-                onClick={() => setFormState({ open: true, herramienta: row })}
+                onClick={() => setDetailId(row.id)}
                 className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-                aria-label={`Editar ${row.nombre}`}
+                aria-label={`Ver detalle de ${row.nombre}`}
               >
-                <Pencil size={15} />
+                <Eye size={15} />
               </button>
+            </Tip>
+            {puedeEditar && (
+              <Tip label="Editar">
+                <button
+                  type="button"
+                  onClick={() => setFormState({ open: true, herramienta: row })}
+                  className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+                  aria-label={`Editar ${row.nombre}`}
+                >
+                  <Pencil size={15} />
+                </button>
+              </Tip>
             )}
           </div>
         );

@@ -7,6 +7,7 @@ import QueryProvider from '../../providers/QueryProvider';
 import { useRolMutations, useRoles } from '../../../../lib/hooks/useRoles';
 import { ApiError } from '../../../../lib/api/client';
 import type { RolConConteo } from '../../../../types/rol';
+import Tip from '../../ui/Tip';
 
 function RolesPanelContent() {
   const { data: roles, isLoading, error } = useRoles();
@@ -33,30 +34,35 @@ function RolesPanelContent() {
       className: 'text-right',
       render: (row) => (
         <div className="flex justify-end gap-1">
-          <a
-            href={`/roles/${row.id}/permisos`}
-            className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-            aria-label={`Permisos de ${row.nombre}`}
-            title="Gestionar permisos"
-          >
-            <ShieldCheck size={15} />
-          </a>
-          <button
-            type="button"
-            onClick={() => setFormState({ open: true, rol: row })}
-            className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-            aria-label={`Editar ${row.nombre}`}
-          >
-            <Pencil size={15} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setDeleteTarget(row)}
-            className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-            aria-label={`Eliminar ${row.nombre}`}
-          >
-            <Trash2 size={15} />
-          </button>
+          <Tip label="Gestionar permisos">
+            <a
+              href={`/roles/${row.id}/permisos`}
+              className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+              aria-label={`Permisos de ${row.nombre}`}
+            >
+              <ShieldCheck size={15} />
+            </a>
+          </Tip>
+          <Tip label="Editar">
+            <button
+              type="button"
+              onClick={() => setFormState({ open: true, rol: row })}
+              className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+              aria-label={`Editar ${row.nombre}`}
+            >
+              <Pencil size={15} />
+            </button>
+          </Tip>
+          <Tip label="Eliminar">
+            <button
+              type="button"
+              onClick={() => setDeleteTarget(row)}
+              className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
+              aria-label={`Eliminar ${row.nombre}`}
+            >
+              <Trash2 size={15} />
+            </button>
+          </Tip>
         </div>
       ),
     },

@@ -6,6 +6,7 @@ import { useDiagnosticoMutations, useDiagnosticos } from '../../../../lib/hooks/
 import { usePermiso } from '../../../../lib/hooks/useAuth';
 import type { OrdenReparacion } from '../../../../types/reparacion';
 import type { Diagnostico } from '../../../../types/diagnostico';
+import Tip from '../../ui/Tip';
 
 function formatFechaHora(value: string) {
   return new Date(value).toLocaleString('es-BO', {
@@ -53,24 +54,28 @@ export default function DiagnosticosPanel({ orden }: { orden: OrdenReparacion })
               </p>
               <div className="flex items-center gap-1">
                 {puedeEditar && (
-                  <button
-                    type="button"
-                    onClick={() => setFormState({ open: true, diagnostico: d })}
-                    className="rounded-md p-1 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-                    aria-label="Editar diagnóstico"
-                  >
-                    <Pencil size={13} />
-                  </button>
+                  <Tip label="Editar">
+                    <button
+                      type="button"
+                      onClick={() => setFormState({ open: true, diagnostico: d })}
+                      className="rounded-md p-1 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
+                      aria-label="Editar diagnóstico"
+                    >
+                      <Pencil size={13} />
+                    </button>
+                  </Tip>
                 )}
                 {puedeEliminar && (
-                  <button
-                    type="button"
-                    onClick={() => setDeleteTarget(d)}
-                    className="rounded-md p-1 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-                    aria-label="Eliminar diagnóstico"
-                  >
-                    <Trash2 size={13} />
-                  </button>
+                  <Tip label="Eliminar">
+                    <button
+                      type="button"
+                      onClick={() => setDeleteTarget(d)}
+                      className="rounded-md p-1 text-graphite-400 hover:bg-red-50 hover:text-red-600"
+                      aria-label="Eliminar diagnóstico"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </Tip>
                 )}
               </div>
             </div>
