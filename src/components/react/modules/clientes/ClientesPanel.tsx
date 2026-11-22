@@ -1,9 +1,9 @@
-import { Pencil, Plus, Trash2, Wrench } from 'lucide-react';
+import { Pencil, Plus, Wrench } from 'lucide-react';
 import { useState } from 'react';
 import DataTable, { type Column } from '../../tables/DataTable';
 import SearchInput from '../../filters/SearchInput';
 import Pagination from '../../ui/Pagination';
-import ConfirmDialog from '../../ui/ConfirmDialog';
+import { BadgeActivo, BotonActivo, ConfirmarActivo, FiltroActivoSelector, type FiltroActivo } from '../../ui/Activacion';
 import AccessDenied from '../../ui/AccessDenied';
 import ClienteFormModal from '../../forms/ClienteFormModal';
 import QueryProvider from '../../providers/QueryProvider';
@@ -13,6 +13,7 @@ import { ApiError } from '../../../../lib/api/client';
 import type { Cliente } from '../../../../types/cliente';
 
 const LIMIT = 10;
+const msgError = (e: unknown) => (e instanceof ApiError ? e.message : e ? 'Error inesperado' : null);
 
 function ClientesPanelContent() {
   const [page, setPage] = useState(1);
@@ -21,10 +22,11 @@ function ClientesPanelContent() {
     open: false,
     cliente: null,
   });
-  const [deleteTarget, setDeleteTarget] = useState<Cliente | null>(null);
+  const [filtro, setFiltro] = useState<FiltroActivo>('activos');
+  const [activoTarget, setActivoTarget] = useState<Cliente | null>(null);
 
-  const { data, isLoading, isFetching, error } = useClientes({ page, limit: LIMIT, search });
-  const { remove } = useClienteMutations();
+  const { data, isLoading, isFetching, error } = useClientes({ page, limit: LIMIT, search, estado: filtro });
+  const { cambiarActivo } = useClienteMutations();
 
   const puedeCrear = usePermiso('clientes:crear');
   const puedeEditar = usePermiso('clientes:editar');
@@ -57,17 +59,7 @@ function ClientesPanelContent() {
     {
       key: 'estado',
       header: 'Estado',
-      render: (row) => (
-        <span
-          className={
-            row.estado
-              ? 'inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20'
-              : 'inline-flex items-center rounded-full bg-graphite-100 px-2.5 py-0.5 text-xs font-medium text-graphite-600 ring-1 ring-inset ring-graphite-500/20'
-          }
-        >
-          {row.estado ? 'Activo' : 'Inactivo'}
-        </span>
-      ),
+      render: (row) => <BadgeActivo activo={row.estado} />,
     },
     {
       key: 'acciones',
@@ -92,15 +84,16 @@ function ClientesPanelContent() {
           >
             <Pencil size={15} />
           </button>
-          <button
-            type="button"
-            onClick={() => setDeleteTarget(row)}
-            className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-            aria-label={`Eliminar ${row.nombre}`}
-            hidden={!puedeEliminar}
-          >
-            <Trash2 size={15} />
-          </button>
+          {puedeEliminar && (
+            <BotonActivo
+              activo={row.estado}
+              nombre={row.nombre}
+              onClick={() => {
+                cambiarActivo.reset();
+                setActivoTarget(row);
+              }}
+            />
+          )}
         </div>
       ),
     },
@@ -109,11 +102,20 @@ function ClientesPanelContent() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <SearchInput
-          value={search}
-          onChange={handleSearchChange}
-          placeholder="Buscar por nombre, documento o teléfono…"
-        />
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <SearchInput
+            value={search}
+            onChange={handleSearchChange}
+            placeholder="Buscar por nombre, documento o teléfono…"
+          />
+          <FiltroActivoSelector
+            valor={filtro}
+            onChange={(v) => {
+              setFiltro(v);
+              setPage(1);
+            }}
+          />
+        </div>
 
         <button
           type="button"
@@ -130,7 +132,7 @@ function ClientesPanelContent() {
         columns={columns}
         data={data?.items ?? []}
         isLoading={isLoading || isFetching}
-        emptyMessage="No se encontraron clientes."
+        emptyMessage={filtro === 'inactivos' ? 'No hay clientes inactivos.' : 'No se encontraron clientes.'}
         getRowId={(row) => row.id}
       />
 
@@ -149,18 +151,20 @@ function ClientesPanelContent() {
         onClose={() => setFormState({ open: false, cliente: null })}
       />
 
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        title="Desactivar cliente"
-        description={`¿Seguro que deseas desactivar a "${deleteTarget?.nombre}"? Podrás reactivarlo luego editándolo.`}
-        confirmLabel="Desactivar"
-        isLoading={remove.isPending}
-        onConfirm={() => {
-          if (deleteTarget) {
-            remove.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
-          }
-        }}
+      <ConfirmarActivo
+        objetivo={activoTarget && { nombre: activoTarget.nombre, activo: activoTarget.estado }}
+        entidad="el cliente"
+        efectoDesactivar="No se le podrán crear órdenes ni registrar equipos nuevos."
+        isLoading={cambiarActivo.isPending}
+        error={msgError(cambiarActivo.error)}
+        onClose={() => setActivoTarget(null)}
+        onConfirm={() =>
+          activoTarget &&
+          cambiarActivo.mutate(
+            { id: activoTarget.id, activo: activoTarget.estado === false },
+            { onSuccess: () => setActivoTarget(null) },
+          )
+        }
       />
     </div>
   );

@@ -15,7 +15,10 @@ export function useClientes(query: ClientesQuery) {
 export function useClienteMutations() {
   const queryClient = useQueryClient();
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['clientes'] });
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['clientes'] });
+    queryClient.invalidateQueries({ queryKey: ['equipos'] });
+  };
 
   const create = useMutation({
     mutationFn: (payload: ClientePayload) => clientesApi.create(payload),
@@ -28,10 +31,10 @@ export function useClienteMutations() {
     onSuccess: invalidate,
   });
 
-  const remove = useMutation({
-    mutationFn: (id: number) => clientesApi.remove(id),
+  const cambiarActivo = useMutation({
+    mutationFn: ({ id, activo }: { id: number; activo: boolean }) => clientesApi.cambiarActivo(id, activo),
     onSuccess: invalidate,
   });
 
-  return { create, update, remove };
+  return { create, update, cambiarActivo };
 }

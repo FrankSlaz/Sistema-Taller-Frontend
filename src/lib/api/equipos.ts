@@ -8,6 +8,7 @@ function toQueryString(query: EquiposQuery): string {
   if (query.limit) params.set('limit', String(query.limit));
   if (query.search) params.set('search', query.search);
   if (query.clienteId) params.set('clienteId', String(query.clienteId));
+  if (query.estado) params.set('estado', query.estado);
   const qs = params.toString();
   return qs ? `?${qs}` : '';
 }
@@ -23,5 +24,7 @@ export const equiposApi = {
   update: (id: number, payload: Partial<EquipoPayload>) =>
     api.patch<Equipo>(`/equipos/${id}`, payload),
 
-  remove: (id: number) => api.delete<{ message: string }>(`/equipos/${id}`),
+  /** Activar / desactivar (reemplaza al borrado). */
+  cambiarActivo: (id: number, activo: boolean) =>
+    api.patch<Equipo>(`/equipos/${id}/activo`, { activo }),
 };

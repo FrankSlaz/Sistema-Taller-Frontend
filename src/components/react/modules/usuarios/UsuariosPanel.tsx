@@ -1,24 +1,29 @@
-import { KeyRound, Pencil, Plus, Power, Trash2 } from 'lucide-react';
+import { KeyRound, Pencil, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import DataTable, { type Column } from '../../tables/DataTable';
 import SearchInput from '../../filters/SearchInput';
-import ConfirmDialog from '../../ui/ConfirmDialog';
+import { BadgeActivo, BotonActivo, ConfirmarActivo, FiltroActivoSelector, type FiltroActivo } from '../../ui/Activacion';
 import UsuarioFormModal from '../../forms/UsuarioFormModal';
 import ResetPasswordModal from '../../forms/ResetPasswordModal';
 import QueryProvider from '../../providers/QueryProvider';
 import { useUsuarioMutations, useUsuarios } from '../../../../lib/hooks/useUsuarios';
 import { ApiError } from '../../../../lib/api/client';
 import type { Usuario } from '../../../../types/auth';
+import { useAuth } from '../../../../lib/hooks/useAuth';
+
+const msgError = (e: unknown) => (e instanceof ApiError ? e.message : e ? 'Error inesperado' : null);
 
 function UsuariosPanelContent() {
-  const { data: usuarios, isLoading, error } = useUsuarios();
-  const { update, remove } = useUsuarioMutations();
+  const [filtro, setFiltro] = useState<FiltroActivo>('activos');
+  const { data: usuarios, isLoading, error } = useUsuarios(filtro);
+  const { cambiarActivo } = useUsuarioMutations();
+  const { usuario: yo } = useAuth();
   const [search, setSearch] = useState('');
   const [formState, setFormState] = useState<{ open: boolean; usuario: Usuario | null }>({
     open: false,
     usuario: null,
   });
-  const [deleteTarget, setDeleteTarget] = useState<Usuario | null>(null);
+  const [activoTarget, setActivoTarget] = useState<Usuario | null>(null);
   const [resetTarget, setResetTarget] = useState<Usuario | null>(null);
 
   // GET /usuarios no admite `search` por query: filtra en el cliente
@@ -52,17 +57,7 @@ function UsuariosPanelContent() {
     {
       key: 'estado',
       header: 'Estado',
-      render: (row) => (
-        <span
-          className={
-            row.estado
-              ? 'inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20'
-              : 'inline-flex items-center rounded-full bg-graphite-100 px-2.5 py-0.5 text-xs font-medium text-graphite-600 ring-1 ring-inset ring-graphite-500/20'
-          }
-        >
-          {row.estado ? 'Activo' : 'Inactivo'}
-        </span>
-      ),
+      render: (row) => <BadgeActivo activo={row.estado} />,
     },
     {
       key: 'acciones',
@@ -70,18 +65,16 @@ function UsuariosPanelContent() {
       className: 'text-right',
       render: (row) => (
         <div className="flex justify-end gap-1">
-          <button
-            type="button"
-            onClick={() => update.mutate({ id: row.id, payload: { estado: !row.estado } })}
-            disabled={update.isPending}
-            className={`rounded-md p-1.5 hover:bg-graphite-50 ${
-              row.estado ? 'text-graphite-400 hover:text-amber-600' : 'text-graphite-400 hover:text-green-600'
-            }`}
-            aria-label={row.estado ? `Desactivar ${row.nombre}` : `Reactivar ${row.nombre}`}
-            title={row.estado ? 'Desactivar (reversible)' : 'Reactivar'}
-          >
-            <Power size={15} />
-          </button>
+          {row.id !== yo?.id && (
+            <BotonActivo
+              activo={row.estado}
+              nombre={row.nombre}
+              onClick={() => {
+                cambiarActivo.reset();
+                setActivoTarget(row);
+              }}
+            />
+          )}
           <button
             type="button"
             onClick={() => setResetTarget(row)}
@@ -99,15 +92,6 @@ function UsuariosPanelContent() {
           >
             <Pencil size={15} />
           </button>
-          <button
-            type="button"
-            onClick={() => setDeleteTarget(row)}
-            className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-            aria-label={`Eliminar ${row.nombre}`}
-            title="Eliminar (irreversible)"
-          >
-            <Trash2 size={15} />
-          </button>
         </div>
       ),
     },
@@ -124,7 +108,10 @@ function UsuariosPanelContent() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <SearchInput value={search} onChange={setSearch} placeholder="Buscar por nombre o email…" />
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <SearchInput value={search} onChange={setSearch} placeholder="Buscar por nombre o email…" />
+          <FiltroActivoSelector valor={filtro} onChange={setFiltro} />
+        </div>
 
         <button
           type="button"
@@ -152,18 +139,25 @@ function UsuariosPanelContent() {
 
       <ResetPasswordModal open={!!resetTarget} usuario={resetTarget} onClose={() => setResetTarget(null)} />
 
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        title="Eliminar usuario"
-        description={`Esta acción es irreversible: "${deleteTarget?.nombre}" desaparecerá por completo del sistema (no solo se desactiva). Si solo quieres bloquear su acceso temporalmente, usa el botón de encendido (⏻) en vez de esto.`}
-        confirmLabel="Eliminar definitivamente"
-        isLoading={remove.isPending}
-        onConfirm={() => {
-          if (deleteTarget) {
-            remove.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
+      <ConfirmarActivo
+        objetivo={
+          activoTarget && {
+            nombre: [activoTarget.nombre, activoTarget.apellido].filter(Boolean).join(' '),
+            activo: activoTarget.estado,
           }
-        }}
+        }
+        entidad="el usuario"
+        efectoDesactivar="No podrá iniciar sesión (pierde el acceso de inmediato) ni se le asignarán órdenes."
+        isLoading={cambiarActivo.isPending}
+        error={msgError(cambiarActivo.error)}
+        onClose={() => setActivoTarget(null)}
+        onConfirm={() =>
+          activoTarget &&
+          cambiarActivo.mutate(
+            { id: activoTarget.id, activo: !activoTarget.estado },
+            { onSuccess: () => setActivoTarget(null) },
+          )
+        }
       />
     </div>
   );

@@ -35,7 +35,7 @@ export default function StockReport() {
   const [categoriaId, setCategoriaId] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [search, setSearch] = useState('');
-  const { data: categorias } = useCategorias();
+  const { data: categorias } = useCategorias('todos');
 
   // Espera a que el usuario deje de escribir para no consultar por cada tecla.
   useEffect(() => {

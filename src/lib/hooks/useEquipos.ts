@@ -28,10 +28,10 @@ export function useEquipoMutations() {
     onSuccess: invalidate,
   });
 
-  const remove = useMutation({
-    mutationFn: (id: number) => equiposApi.remove(id),
+  const cambiarActivo = useMutation({
+    mutationFn: ({ id, activo }: { id: number; activo: boolean }) => equiposApi.cambiarActivo(id, activo),
     onSuccess: invalidate,
   });
 
-  return { create, update, remove };
+  return { create, update, cambiarActivo };
 }

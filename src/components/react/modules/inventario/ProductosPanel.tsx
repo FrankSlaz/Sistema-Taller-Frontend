@@ -1,10 +1,10 @@
-import { ArrowLeftRight, ListTree, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeftRight, ListTree, Pencil, Plus } from 'lucide-react';
 import { useState } from 'react';
 import DataTable, { type Column } from '../../tables/DataTable';
 import SearchInput from '../../filters/SearchInput';
 import Pagination from '../../ui/Pagination';
 import Badge from '../../ui/Badge';
-import ConfirmDialog from '../../ui/ConfirmDialog';
+import { BadgeActivo, BotonActivo, ConfirmarActivo, FiltroActivoSelector, type FiltroActivo } from '../../ui/Activacion';
 import ProductoFormModal from '../../forms/ProductoFormModal';
 import MovimientoFormModal from '../../forms/MovimientoFormModal';
 import CategoriasManagerModal from './CategoriasManagerModal';
@@ -18,6 +18,7 @@ import { ApiError } from '../../../../lib/api/client';
 import type { Producto } from '../../../../types/producto';
 
 const LIMIT = 10;
+const msgError = (e: unknown) => (e instanceof ApiError ? e.message : e ? 'Error inesperado' : null);
 
 function formatMonto(value?: string | number | null) {
   if (value === null || value === undefined) return '—';
@@ -36,11 +37,13 @@ function ProductosPanelContent() {
   });
   const [movimientoTarget, setMovimientoTarget] = useState<Producto | null>(null);
   const [categoriasOpen, setCategoriasOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Producto | null>(null);
+  const [filtro, setFiltro] = useState<FiltroActivo>('activos');
+  const [activoTarget, setActivoTarget] = useState<Producto | null>(null);
 
-  const { data: categorias } = useCategorias();
-  const { data, isLoading, isFetching, error } = useProductos({ page, limit: LIMIT, search, categoriaId, stockBajo });
-  const { remove } = useProductoMutations();
+  // Para filtrar se listan todas las categorías (también las inactivas).
+  const { data: categorias } = useCategorias('todos');
+  const { data, isLoading, isFetching, error } = useProductos({ page, limit: LIMIT, search, categoriaId, stockBajo, estado: filtro });
+  const { cambiarActivo } = useProductoMutations();
 
   const puedeCrear = usePermiso('inventario:crear');
   const puedeEditar = usePermiso('inventario:editar');
@@ -79,6 +82,7 @@ function ProductosPanelContent() {
       ),
     },
     { key: 'precioReferencia', header: 'Precio ref.', render: (row) => formatMonto(row.precioReferencia) },
+    { key: 'estado', header: 'Estado', render: (row) => <BadgeActivo activo={row.estado} /> },
     {
       key: 'acciones',
       header: '',
@@ -107,14 +111,14 @@ function ProductosPanelContent() {
             </button>
           )}
           {puedeEliminar && (
-            <button
-              type="button"
-              onClick={() => setDeleteTarget(row)}
-              className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-              aria-label={`Eliminar ${row.nombre}`}
-            >
-              <Trash2 size={15} />
-            </button>
+            <BotonActivo
+              activo={row.estado}
+              nombre={row.nombre}
+              onClick={() => {
+                cambiarActivo.reset();
+                setActivoTarget(row);
+              }}
+            />
           )}
         </div>
       ),
@@ -155,6 +159,14 @@ function ProductosPanelContent() {
             />
             Solo stock bajo
           </label>
+
+          <FiltroActivoSelector
+            valor={filtro}
+            onChange={(v) => {
+              setFiltro(v);
+              setPage(1);
+            }}
+          />
         </div>
 
         <div className="flex gap-2">
@@ -213,18 +225,20 @@ function ProductosPanelContent() {
 
       <CategoriasManagerModal open={categoriasOpen} onClose={() => setCategoriasOpen(false)} />
 
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        title="Desactivar producto"
-        description={`¿Seguro que deseas desactivar "${deleteTarget?.nombre}"?`}
-        confirmLabel="Desactivar"
-        isLoading={remove.isPending}
-        onConfirm={() => {
-          if (deleteTarget) {
-            remove.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
-          }
-        }}
+      <ConfirmarActivo
+        objetivo={activoTarget && { nombre: activoTarget.nombre, activo: activoTarget.estado }}
+        entidad="el producto"
+        efectoDesactivar="No se podrá usar en órdenes ni en compras nuevas; su stock se conserva."
+        isLoading={cambiarActivo.isPending}
+        error={msgError(cambiarActivo.error)}
+        onClose={() => setActivoTarget(null)}
+        onConfirm={() =>
+          activoTarget &&
+          cambiarActivo.mutate(
+            { id: activoTarget.id, activo: activoTarget.estado === false },
+            { onSuccess: () => setActivoTarget(null) },
+          )
+        }
       />
     </div>
   );

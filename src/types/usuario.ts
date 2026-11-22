@@ -10,7 +10,6 @@ export interface CreateUsuarioPayload {
   email: string;
   password: string;
   telefono?: string;
-  estado?: boolean;
 }
 
 /**

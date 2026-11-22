@@ -18,5 +18,4 @@ export interface ProveedorPayload {
   telefono?: string;
   email?: string;
   direccion?: string;
-  estado?: boolean;
 }

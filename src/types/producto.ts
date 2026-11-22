@@ -1,3 +1,4 @@
+import type { FiltroActivo } from '../components/react/ui/Activacion';
 /**
  * Espejo de backend-nest/src/modules/inventario/productos
  * (CreateProductoDto, UpdateProductoDto, modelo Producto en schema.prisma)
@@ -39,7 +40,6 @@ export interface CreateProductoPayload {
   /** Solo en creación: genera un movimiento ENTRADA de stock inicial. */
   stockActual?: number;
   stockMinimo?: number;
-  estado?: boolean;
 }
 
 /**
@@ -54,4 +54,5 @@ export interface ProductosQuery {
   search?: string;
   categoriaId?: number;
   stockBajo?: boolean;
+  estado?: FiltroActivo;
 }

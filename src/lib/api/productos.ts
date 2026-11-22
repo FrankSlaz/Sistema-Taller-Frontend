@@ -9,6 +9,7 @@ function toQueryString(query: ProductosQuery): string {
   if (query.search) params.set('search', query.search);
   if (query.categoriaId) params.set('categoriaId', String(query.categoriaId));
   if (query.stockBajo) params.set('stockBajo', 'true');
+  if (query.estado) params.set('estado', query.estado);
   const qs = params.toString();
   return qs ? `?${qs}` : '';
 }
@@ -24,5 +25,7 @@ export const productosApi = {
   update: (id: number, payload: Partial<UpdateProductoPayload>) =>
     api.patch<Producto>(`/productos/${id}`, payload),
 
-  remove: (id: number) => api.delete<{ message: string }>(`/productos/${id}`),
+  /** Activar / desactivar (reemplaza al borrado). */
+  cambiarActivo: (id: number, activo: boolean) =>
+    api.patch<Producto>(`/productos/${id}/activo`, { activo }),
 };

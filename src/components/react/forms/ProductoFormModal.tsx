@@ -34,7 +34,6 @@ const emptyForm: CreateProductoPayload = {
   precioReferencia: 0,
   stockActual: 0,
   stockMinimo: 0,
-  estado: true,
 };
 
 export default function ProductoFormModal({
@@ -68,7 +67,6 @@ export default function ProductoFormModal({
             precioCompra: Number(producto.precioCompra ?? 0),
             precioReferencia: Number(producto.precioReferencia ?? 0),
             stockMinimo: producto.stockMinimo ?? 0,
-            estado: producto.estado ?? true,
           }
         : { ...emptyForm, nombre: initialNombre ?? '' },
     );
@@ -97,7 +95,6 @@ export default function ProductoFormModal({
       precioCompra: form.precioCompra,
       precioReferencia: form.precioReferencia,
       stockMinimo: form.stockMinimo,
-      estado: form.estado,
     };
 
     if (isEdit && producto) {
@@ -277,18 +274,6 @@ export default function ProductoFormModal({
             />
           </div>
         </div>
-
-        {isEdit && (
-          <label className="flex items-center gap-2 text-sm text-graphite-900">
-            <input
-              type="checkbox"
-              checked={!!form.estado}
-              onChange={(e) => set('estado', e.target.checked)}
-              className="rounded border-graphite-300"
-            />
-            Producto activo
-          </label>
-        )}
 
         {errorMessage && (
           <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errorMessage}</p>

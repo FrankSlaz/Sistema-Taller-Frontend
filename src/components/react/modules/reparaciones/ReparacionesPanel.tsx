@@ -101,7 +101,7 @@ function ReparacionesPanelContent({ clienteId, equipoId }: ReparacionesPanelProp
           <SearchInput
             value={search}
             onChange={handleSearchChange}
-            placeholder="Buscar por código o falla reportada…"
+            placeholder="Buscar por código, cliente, teléfono, CI, equipo, serie o técnico…"
           />
 
           <select

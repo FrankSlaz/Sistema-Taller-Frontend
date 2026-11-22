@@ -7,6 +7,7 @@ function toQueryString(query: ClientesQuery): string {
   if (query.page) params.set('page', String(query.page));
   if (query.limit) params.set('limit', String(query.limit));
   if (query.search) params.set('search', query.search);
+  if (query.estado) params.set('estado', query.estado);
   const qs = params.toString();
   return qs ? `?${qs}` : '';
 }
@@ -22,5 +23,7 @@ export const clientesApi = {
   update: (id: number, payload: Partial<ClientePayload>) =>
     api.patch<Cliente>(`/clientes/${id}`, payload),
 
-  remove: (id: number) => api.delete<{ message: string }>(`/clientes/${id}`),
+  /** Activar / desactivar (reemplaza al borrado). */
+  cambiarActivo: (id: number, activo: boolean) =>
+    api.patch<Cliente>(`/clientes/${id}/activo`, { activo }),
 };

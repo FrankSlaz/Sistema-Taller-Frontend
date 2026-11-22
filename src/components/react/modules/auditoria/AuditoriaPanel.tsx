@@ -23,6 +23,8 @@ const ACCIONES: Record<string, { etiqueta: string; clase: string }> = {
   CAMBIAR_ESTADO: { etiqueta: 'Cambio de estado', clase: 'bg-indigo-50 text-indigo-700 ring-indigo-600/20' },
   ELIMINAR: { etiqueta: 'Eliminación', clase: 'bg-red-50 text-red-700 ring-red-600/20' },
   ANULAR: { etiqueta: 'Anulación', clase: 'bg-red-50 text-red-700 ring-red-600/20' },
+  ACTIVAR: { etiqueta: 'Activación', clase: 'bg-green-50 text-green-700 ring-green-600/20' },
+  DESACTIVAR: { etiqueta: 'Desactivación', clase: 'bg-amber-50 text-amber-800 ring-amber-600/30' },
   LOGIN: { etiqueta: 'Inicio de sesión', clase: 'bg-graphite-50 text-graphite-600 ring-graphite-500/20' },
   LOGIN_FALLIDO: { etiqueta: 'Acceso fallido', clase: 'bg-amber-50 text-amber-800 ring-amber-600/30' },
   RESTAURAR: { etiqueta: 'Restauración', clase: 'bg-amber-50 text-amber-800 ring-amber-600/30' },
@@ -430,7 +432,8 @@ function AuditoriaPanelContent() {
             { label: 'Eventos', valor: entero(resumen.total) },
             { label: 'Usuarios', valor: entero(resumen.usuarios), detalle: 'con actividad en el período' },
             {
-              label: 'Eliminaciones y anulaciones',
+              label: 'Bajas y anulaciones',
+              detalle: 'desactivaciones, eliminaciones y anulaciones',
               valor: entero(resumen.eliminaciones),
               tono: resumen.eliminaciones > 0 ? 'alerta' : 'neutral',
             },

@@ -165,7 +165,7 @@ function SeguimientoPanelContent() {
       </div>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
-        <SearchInput value={search} onChange={handleSearchChange} placeholder="Buscar por código o falla…" />
+        <SearchInput value={search} onChange={handleSearchChange} placeholder="Buscar por código, cliente, teléfono, CI, equipo, serie o técnico…" />
 
         {esAdmin && (
           <div>

@@ -60,6 +60,8 @@ export interface PagosQuery {
   usuarioId?: number;
   tipo?: TipoPago;
   incluirAnulados?: boolean;
+  /** Orden, cliente, n.º de recibo, referencia u observación. */
+  search?: string;
 }
 
 /** Resumen de una orden (solo cuando se filtra por ordenId). */

@@ -17,7 +17,6 @@ const emptyForm: ClientePayload = {
   telefono: '',
   email: '',
   direccion: '',
-  estado: true,
 };
 
 export default function ClienteFormModal({ open, onClose, cliente }: ClienteFormModalProps) {
@@ -37,7 +36,6 @@ export default function ClienteFormModal({ open, onClose, cliente }: ClienteForm
               telefono: cliente.telefono ?? '',
               email: cliente.email ?? '',
               direccion: cliente.direccion ?? '',
-              estado: cliente.estado ?? true,
             }
           : emptyForm,
       );
@@ -152,18 +150,6 @@ export default function ClienteFormModal({ open, onClose, cliente }: ClienteForm
             className="w-full rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
           />
         </div>
-
-        {isEdit && (
-          <label className="flex items-center gap-2 text-sm text-graphite-900">
-            <input
-              type="checkbox"
-              checked={!!form.estado}
-              onChange={(e) => set('estado', e.target.checked)}
-              className="rounded border-graphite-300"
-            />
-            Cliente activo
-          </label>
-        )}
 
         {errorMessage && (
           <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errorMessage}</p>

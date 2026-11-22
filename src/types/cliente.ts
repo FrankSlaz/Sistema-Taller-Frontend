@@ -1,3 +1,4 @@
+import type { FiltroActivo } from '../components/react/ui/Activacion';
 /**
  * Espejo de backend-nest/src/modules/clientes
  * (CreateClienteDto, UpdateClienteDto, modelo Cliente en schema.prisma)
@@ -27,13 +28,14 @@ export interface ClientePayload {
   telefono?: string;
   email?: string;
   direccion?: string;
-  estado?: boolean;
 }
 
 export interface ClientesQuery {
   page?: number;
   limit?: number;
   search?: string;
+  /** Por defecto el backend devuelve solo activos. */
+  estado?: FiltroActivo;
 }
 
 export const TIPOS_DOCUMENTO = ['CI', 'NIT', 'Pasaporte', 'Otro'] as const;

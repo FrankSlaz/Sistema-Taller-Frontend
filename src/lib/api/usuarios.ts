@@ -1,4 +1,5 @@
 import { api } from './client';
+import type { FiltroActivo } from '../../components/react/ui/Activacion';
 import type { ChangePasswordPayload, ResetPasswordPayload, Usuario } from '../../types/auth';
 import type { CreateUsuarioPayload, UpdateUsuarioPayload } from '../../types/usuario';
 
@@ -13,7 +14,8 @@ import type { CreateUsuarioPayload, UpdateUsuarioPayload } from '../../types/usu
  * implementa paginación para este recurso.
  */
 export const usuariosApi = {
-  findAll: () => api.get<Usuario[]>('/usuarios'),
+  /** Por defecto solo activos; la gestión de usuarios pide 'todos'. */
+  findAll: (estado?: FiltroActivo) => api.get<Usuario[]>(`/usuarios${estado ? `?estado=${estado}` : ''}`),
 
   findOne: (id: number) => api.get<Usuario>(`/usuarios/${id}`),
 
@@ -22,13 +24,10 @@ export const usuariosApi = {
   update: (id: number, payload: UpdateUsuarioPayload) => api.patch<Usuario>(`/usuarios/${id}`, payload),
 
   /**
-   * Baja lógica: además de estado:false, el backend setea deletedAt.
-   * findAll/findOne filtran deletedAt:null, así que un usuario
-   * eliminado desaparece POR COMPLETO de la API — no existe forma de
-   * recuperarlo desde ningún endpoint. Distinto de un PATCH con
-   * estado:false (ver update), que sí es reversible.
+   * Activar / desactivar (reemplaza al borrado). Un usuario inactivo no
+   * puede entrar (pierde el acceso al instante) ni recibe órdenes.
    */
-  remove: (id: number) => api.delete<{ message: string }>(`/usuarios/${id}`),
+  cambiarActivo: (id: number, activo: boolean) => api.patch<Usuario>(`/usuarios/${id}/activo`, { activo }),
 
   /** Autoservicio: cambia MI PROPIA contraseña, exige la actual. Cualquier usuario autenticado. */
   changeOwnPassword: (payload: ChangePasswordPayload) =>

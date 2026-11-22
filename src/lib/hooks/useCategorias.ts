@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { categoriasApi } from '../api/categorias';
 import type { CategoriaPayload } from '../../types/categoria';
+import type { FiltroActivo } from '../../components/react/ui/Activacion';
 
-export function useCategorias() {
+/** Por defecto solo activas (para elegir); 'todos' para gestionar o filtrar. */
+export function useCategorias(estado?: FiltroActivo) {
   return useQuery({
-    queryKey: ['categorias-producto'],
-    queryFn: categoriasApi.findAll,
+    queryKey: ['categorias-producto', estado ?? 'activos'],
+    queryFn: () => categoriasApi.findAll(estado),
   });
 }
 
@@ -29,10 +31,10 @@ export function useCategoriaMutations() {
     onSuccess: invalidate,
   });
 
-  const remove = useMutation({
-    mutationFn: (id: number) => categoriasApi.remove(id),
+  const cambiarActivo = useMutation({
+    mutationFn: ({ id, activo }: { id: number; activo: boolean }) => categoriasApi.cambiarActivo(id, activo),
     onSuccess: invalidate,
   });
 
-  return { create, update, remove };
+  return { create, update, cambiarActivo };
 }

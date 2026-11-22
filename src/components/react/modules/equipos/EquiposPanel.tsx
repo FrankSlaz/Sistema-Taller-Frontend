@@ -1,9 +1,9 @@
-import { Camera, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Camera, Pencil, Plus } from 'lucide-react';
 import { useState } from 'react';
 import DataTable, { type Column } from '../../tables/DataTable';
 import SearchInput from '../../filters/SearchInput';
 import Pagination from '../../ui/Pagination';
-import ConfirmDialog from '../../ui/ConfirmDialog';
+import { BadgeActivo, BotonActivo, ConfirmarActivo, FiltroActivoSelector, type FiltroActivo } from '../../ui/Activacion';
 import EquipoFormModal from '../../forms/EquipoFormModal';
 import AccessDenied from '../../ui/AccessDenied';
 import AuthImage from '../archivos/AuthImage';
@@ -15,6 +15,7 @@ import { ApiError } from '../../../../lib/api/client';
 import type { Equipo } from '../../../../types/equipo';
 
 const LIMIT = 10;
+const msgError = (e: unknown) => (e instanceof ApiError ? e.message : e ? 'Error inesperado' : null);
 
 interface EquiposPanelProps {
   /** Si se provee, fija el listado a los equipos de ese cliente (ej. desde su ficha). */
@@ -29,10 +30,11 @@ function EquiposPanelContent({ clienteId, clienteNombre }: EquiposPanelProps) {
     open: false,
     equipo: null,
   });
-  const [deleteTarget, setDeleteTarget] = useState<Equipo | null>(null);
+  const [filtro, setFiltro] = useState<FiltroActivo>('activos');
+  const [activoTarget, setActivoTarget] = useState<Equipo | null>(null);
 
-  const { data, isLoading, isFetching, error } = useEquipos({ page, limit: LIMIT, search, clienteId });
-  const { remove } = useEquipoMutations();
+  const { data, isLoading, isFetching, error } = useEquipos({ page, limit: LIMIT, search, clienteId, estado: filtro });
+  const { cambiarActivo } = useEquipoMutations();
 
   const puedeCrear = usePermiso('equipos:crear');
   const puedeEditar = usePermiso('equipos:editar');
@@ -103,6 +105,7 @@ function EquiposPanelContent({ clienteId, clienteNombre }: EquiposPanelProps) {
       header: 'Órdenes',
       render: (row) => row._count?.ordenesReparacion ?? 0,
     },
+    { key: 'estado', header: 'Estado', render: (row) => <BadgeActivo activo={row.estado} /> },
     {
       key: 'acciones',
       header: '',
@@ -130,15 +133,16 @@ function EquiposPanelContent({ clienteId, clienteNombre }: EquiposPanelProps) {
           >
             <Pencil size={15} />
           </button>
-          <button
-            type="button"
-            onClick={() => setDeleteTarget(row)}
-            className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-            aria-label={`Eliminar equipo ${row.id}`}
-            hidden={!puedeEliminar}
-          >
-            <Trash2 size={15} />
-          </button>
+          {puedeEliminar && (
+            <BotonActivo
+              activo={row.estado}
+              nombre={`el equipo ${row.tipoEquipo} ${row.marca ?? ''}`.trim()}
+              onClick={() => {
+                cambiarActivo.reset();
+                setActivoTarget(row);
+              }}
+            />
+          )}
         </div>
       ),
     },
@@ -147,11 +151,20 @@ function EquiposPanelContent({ clienteId, clienteNombre }: EquiposPanelProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <SearchInput
-          value={search}
-          onChange={handleSearchChange}
-          placeholder="Buscar por marca, modelo, serie o IMEI…"
-        />
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <SearchInput
+            value={search}
+            onChange={handleSearchChange}
+            placeholder={clienteId ? 'Buscar por tipo, marca, modelo, serie o IMEI…' : 'Buscar por cliente, tipo, marca, modelo, serie o IMEI…'}
+          />
+          <FiltroActivoSelector
+            valor={filtro}
+            onChange={(v) => {
+              setFiltro(v);
+              setPage(1);
+            }}
+          />
+        </div>
 
         <button
           type="button"
@@ -193,20 +206,25 @@ function EquiposPanelContent({ clienteId, clienteNombre }: EquiposPanelProps) {
 
       <FotosEquipoModal equipo={fotosTarget} onClose={() => setFotosTarget(null)} />
 
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        title="Desactivar equipo"
-        description={`¿Seguro que deseas desactivar el equipo "${deleteTarget?.tipoEquipo} ${
-          deleteTarget?.marca ?? ''
-        }"?`}
-        confirmLabel="Desactivar"
-        isLoading={remove.isPending}
-        onConfirm={() => {
-          if (deleteTarget) {
-            remove.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
+      <ConfirmarActivo
+        objetivo={
+          activoTarget && {
+            nombre: [activoTarget.tipoEquipo, activoTarget.marca, activoTarget.modelo].filter(Boolean).join(' '),
+            activo: activoTarget.estado,
           }
-        }}
+        }
+        entidad="el equipo"
+        efectoDesactivar="No se le podrán crear órdenes nuevas."
+        isLoading={cambiarActivo.isPending}
+        error={msgError(cambiarActivo.error)}
+        onClose={() => setActivoTarget(null)}
+        onConfirm={() =>
+          activoTarget &&
+          cambiarActivo.mutate(
+            { id: activoTarget.id, activo: activoTarget.estado === false },
+            { onSuccess: () => setActivoTarget(null) },
+          )
+        }
       />
     </div>
   );

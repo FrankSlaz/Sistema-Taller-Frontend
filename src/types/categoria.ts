@@ -15,5 +15,4 @@ export interface Categoria {
 export interface CategoriaPayload {
   nombre: string;
   descripcion?: string;
-  estado?: boolean;
 }

@@ -19,7 +19,6 @@ const emptyForm: CreateUsuarioPayload = {
   email: '',
   password: '',
   telefono: '',
-  estado: true,
 };
 
 export default function UsuarioFormModal({ open, onClose, usuario }: UsuarioFormModalProps) {
@@ -42,7 +41,6 @@ export default function UsuarioFormModal({ open, onClose, usuario }: UsuarioForm
             email: usuario.email,
             password: '',
             telefono: usuario.telefono ?? '',
-            estado: usuario.estado,
           }
         : emptyForm,
     );
@@ -72,7 +70,6 @@ export default function UsuarioFormModal({ open, onClose, usuario }: UsuarioForm
             apellido: form.apellido || undefined,
             email: form.email,
             telefono: form.telefono || undefined,
-            estado: form.estado,
           },
         },
         { onSuccess: onClose },
@@ -186,18 +183,6 @@ export default function UsuarioFormModal({ open, onClose, usuario }: UsuarioForm
             className="w-full rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
           />
         </div>
-
-        {isEdit && (
-          <label className="flex items-center gap-2 text-sm text-graphite-900">
-            <input
-              type="checkbox"
-              checked={!!form.estado}
-              onChange={(e) => set('estado', e.target.checked)}
-              className="rounded border-graphite-300"
-            />
-            Usuario activo
-          </label>
-        )}
 
         {errorMessage && (
           <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errorMessage}</p>

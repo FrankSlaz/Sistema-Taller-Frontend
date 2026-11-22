@@ -1,3 +1,4 @@
+import type { FiltroActivo } from '../components/react/ui/Activacion';
 /**
  * Espejo de backend-nest/src/modules/equipos
  * (CreateEquipoDto, UpdateEquipoDto, modelo Equipo en schema.prisma)
@@ -20,6 +21,8 @@ export interface Equipo {
   imei?: string | null;
   color?: string | null;
   estadoFisico?: string | null;
+  /** Activo / inactivo (un equipo no se elimina, se desactiva). */
+  estado?: boolean | null;
   accesoriosRecibidos?: string | null;
   observaciones?: string | null;
   createdAt: string;
@@ -50,6 +53,7 @@ export interface EquiposQuery {
   limit?: number;
   search?: string;
   clienteId?: number;
+  estado?: FiltroActivo;
 }
 
 export const TIPOS_EQUIPO = [

@@ -1,12 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { usuariosApi } from '../api/usuarios';
 import type { CreateUsuarioPayload, UpdateUsuarioPayload } from '../../types/usuario';
+import type { FiltroActivo } from '../../components/react/ui/Activacion';
 import type { ChangePasswordPayload, ResetPasswordPayload } from '../../types/auth';
 
-export function useUsuarios() {
+/** Por defecto solo activos (para asignar); 'todos' para la gestión. */
+export function useUsuarios(estado?: FiltroActivo) {
   return useQuery({
-    queryKey: ['usuarios'],
-    queryFn: usuariosApi.findAll,
+    queryKey: ['usuarios', estado ?? 'activos'],
+    queryFn: () => usuariosApi.findAll(estado),
     retry: false,
   });
 }
@@ -26,8 +28,8 @@ export function useUsuarioMutations() {
     onSuccess: invalidate,
   });
 
-  const remove = useMutation({
-    mutationFn: (id: number) => usuariosApi.remove(id),
+  const cambiarActivo = useMutation({
+    mutationFn: ({ id, activo }: { id: number; activo: boolean }) => usuariosApi.cambiarActivo(id, activo),
     onSuccess: invalidate,
   });
 
@@ -36,7 +38,7 @@ export function useUsuarioMutations() {
       usuariosApi.resetPassword(id, payload),
   });
 
-  return { create, update, remove, resetPassword };
+  return { create, update, cambiarActivo, resetPassword };
 }
 
 /** Autoservicio: cualquier usuario logueado cambia su propia contraseña. */

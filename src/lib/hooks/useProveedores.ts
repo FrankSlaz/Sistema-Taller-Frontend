@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { proveedoresApi } from '../api/proveedores';
 import type { ProveedorPayload } from '../../types/proveedor';
+import type { FiltroActivo } from '../../components/react/ui/Activacion';
 
-export function useProveedores() {
+/** Por defecto solo activos (para elegir); 'todos' para gestionar o filtrar. */
+export function useProveedores(estado?: FiltroActivo) {
   return useQuery({
-    queryKey: ['proveedores'],
-    queryFn: proveedoresApi.findAll,
+    queryKey: ['proveedores', estado ?? 'activos'],
+    queryFn: () => proveedoresApi.findAll(estado),
   });
 }
 
@@ -24,10 +26,10 @@ export function useProveedorMutations() {
     onSuccess: invalidate,
   });
 
-  const remove = useMutation({
-    mutationFn: (id: number) => proveedoresApi.remove(id),
+  const cambiarActivo = useMutation({
+    mutationFn: ({ id, activo }: { id: number; activo: boolean }) => proveedoresApi.cambiarActivo(id, activo),
     onSuccess: invalidate,
   });
 
-  return { create, update, remove };
+  return { create, update, cambiarActivo };
 }

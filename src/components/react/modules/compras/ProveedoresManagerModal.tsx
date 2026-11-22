@@ -1,7 +1,7 @@
-import { Pencil, Plus, Trash2, X } from 'lucide-react';
+import { Pencil, Plus, X } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import Modal from '../../ui/Modal';
-import ConfirmDialog from '../../ui/ConfirmDialog';
+import { BadgeActivo, BotonActivo, ConfirmarActivo } from '../../ui/Activacion';
 import { useProveedorMutations, useProveedores } from '../../../../lib/hooks/useProveedores';
 import { ApiError } from '../../../../lib/api/client';
 import type { Proveedor, ProveedorPayload } from '../../../../types/proveedor';
@@ -12,15 +12,15 @@ interface ProveedoresManagerModalProps {
   onClose: () => void;
 }
 
-const emptyForm: ProveedorPayload = { nombre: '', telefono: '', email: '', direccion: '', estado: true };
+const emptyForm: ProveedorPayload = { nombre: '', telefono: '', email: '', direccion: '' };
 
 export default function ProveedoresManagerModal({ open, onClose }: ProveedoresManagerModalProps) {
-  const { data: proveedores, isLoading } = useProveedores();
-  const { create, update, remove } = useProveedorMutations();
+  const { data: proveedores, isLoading } = useProveedores('todos');
+  const { create, update, cambiarActivo } = useProveedorMutations();
   const [editing, setEditing] = useState<Proveedor | null>(null);
   const [form, setForm] = useState<ProveedorPayload>(emptyForm);
   const [formOpen, setFormOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Proveedor | null>(null);
+  const [activoTarget, setActivoTarget] = useState<Proveedor | null>(null);
   const puedeCrear = usePermiso('compras:crear');
   const puedeEditar = usePermiso('compras:editar');
   const puedeEliminar = usePermiso('compras:eliminar');
@@ -43,7 +43,6 @@ export default function ProveedoresManagerModal({ open, onClose }: ProveedoresMa
       telefono: proveedor.telefono ?? '',
       email: proveedor.email ?? '',
       direccion: proveedor.direccion ?? '',
-      estado: proveedor.estado ?? true,
     });
     setFormOpen(true);
     mutation.reset();
@@ -75,12 +74,14 @@ export default function ProveedoresManagerModal({ open, onClose }: ProveedoresMa
               key={p.id}
               className="flex items-center justify-between rounded-md border border-graphite-100 px-3 py-2 text-sm"
             >
-              <div>
-                <p className="font-medium text-graphite-900">{p.nombre}</p>
+              <div className={p.estado === false ? 'opacity-60' : ''}>
+                <p className="flex items-center gap-2 font-medium text-graphite-900">
+                  {p.nombre}
+                  {p.estado === false && <BadgeActivo activo={false} />}
+                </p>
                 <p className="text-xs text-graphite-400">
                   {p.telefono || p.email || 'Sin contacto'} · {p._count?.compras ?? 0} compra
                   {p._count?.compras === 1 ? '' : 's'}
-                  {p.estado === false && ' · inactivo'}
                 </p>
               </div>
               <div className="flex items-center gap-1">
@@ -95,14 +96,15 @@ export default function ProveedoresManagerModal({ open, onClose }: ProveedoresMa
                   </button>
                 )}
                 {puedeEliminar && (
-                  <button
-                    type="button"
-                    onClick={() => setDeleteTarget(p)}
-                    className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-                    aria-label={`Eliminar ${p.nombre}`}
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <BotonActivo
+                    activo={p.estado}
+                    nombre={p.nombre}
+                    size={14}
+                    onClick={() => {
+                      cambiarActivo.reset();
+                      setActivoTarget(p);
+                    }}
+                  />
                 )}
               </div>
             </li>
@@ -179,18 +181,6 @@ export default function ProveedoresManagerModal({ open, onClose }: ProveedoresMa
               />
             </div>
 
-            {editing && (
-              <label className="flex items-center gap-2 text-sm text-graphite-900">
-                <input
-                  type="checkbox"
-                  checked={!!form.estado}
-                  onChange={(e) => setForm((p) => ({ ...p, estado: e.target.checked }))}
-                  className="rounded border-graphite-300"
-                />
-                Proveedor activo
-              </label>
-            )}
-
             {errorMessage && (
               <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errorMessage}</p>
             )}
@@ -208,18 +198,20 @@ export default function ProveedoresManagerModal({ open, onClose }: ProveedoresMa
         )}
       </div>
 
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        title="Eliminar proveedor"
-        description={`¿Seguro que deseas eliminar "${deleteTarget?.nombre}"? Si tiene compras registradas, no se podrá eliminar.`}
-        confirmLabel="Eliminar"
-        isLoading={remove.isPending}
-        onConfirm={() => {
-          if (deleteTarget) {
-            remove.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
-          }
-        }}
+      <ConfirmarActivo
+        objetivo={activoTarget && { nombre: activoTarget.nombre, activo: activoTarget.estado }}
+        entidad="el proveedor"
+        efectoDesactivar="No se podrá elegir en compras nuevas (las registradas lo conservan)."
+        isLoading={cambiarActivo.isPending}
+        error={cambiarActivo.error instanceof ApiError ? cambiarActivo.error.message : cambiarActivo.error ? 'Error inesperado' : null}
+        onClose={() => setActivoTarget(null)}
+        onConfirm={() =>
+          activoTarget &&
+          cambiarActivo.mutate(
+            { id: activoTarget.id, activo: activoTarget.estado === false },
+            { onSuccess: () => setActivoTarget(null) },
+          )
+        }
       />
     </Modal>
   );

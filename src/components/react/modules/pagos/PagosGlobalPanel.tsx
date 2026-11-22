@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Ban, FileDown, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Pagination from '../../ui/Pagination';
 import AccessDenied from '../../ui/AccessDenied';
 import MotivoDialog from '../../ui/MotivoDialog';
@@ -16,6 +16,7 @@ import type { RangoFechas } from '../../../../types/reporte';
 import {
   FiltroFechas,
   FiltroSelect,
+  FiltroTexto,
   KpiGrid,
   Seccion,
   Tabla,
@@ -46,6 +47,16 @@ function PagosGlobalPanelContent() {
   const [usuarioId, setUsuarioId] = useState('');
   const [tipo, setTipo] = useState('');
   const [incluirAnulados, setIncluirAnulados] = useState(false);
+  const [busqueda, setBusqueda] = useState('');
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setSearch(busqueda.trim());
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [busqueda]);
   const [formOpen, setFormOpen] = useState(false);
   const [anularTarget, setAnularTarget] = useState<Pago | null>(null);
 
@@ -54,14 +65,21 @@ function PagosGlobalPanelContent() {
   const { data, isLoading, isFetching, error } = usePagos({
     page,
     limit: LIMIT,
-    ...rango,
+    // Al buscar se miran todas las fechas: se busca un pago concreto.
+    ...(search ? {} : rango),
+    search: search || undefined,
     metodoPago: metodoPago || undefined,
     usuarioId: usuarioId ? Number(usuarioId) : undefined,
     tipo: (tipo || undefined) as TipoPago | undefined,
     incluirAnulados,
   });
   // Lista de usuarios para el filtro (solo Administrador puede listarlos).
-  const { data: usuarios } = useQuery({ queryKey: ['usuarios'], queryFn: usuariosApi.findAll, enabled: esAdmin, retry: false });
+  const { data: usuarios } = useQuery({
+    queryKey: ['usuarios', 'todos'],
+    queryFn: () => usuariosApi.findAll('todos'),
+    enabled: esAdmin,
+    retry: false,
+  });
   const { anular } = usePagoMutations();
   const recibo = useMutation({ mutationFn: (p: Pago) => pagosApi.recibo(p) });
 
@@ -79,6 +97,12 @@ function PagosGlobalPanelContent() {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end gap-3 rounded-lg border border-graphite-200 bg-graphite-50/60 p-3">
+        <FiltroTexto
+          label="Buscar"
+          valor={busqueda}
+          onChange={setBusqueda}
+          placeholder="Orden, cliente, recibo, referencia…"
+        />
         <FiltroFechas valor={rango} onChange={cambiar(setRango)} permitirTodo />
         <FiltroSelect
           label="Método"
@@ -107,6 +131,7 @@ function PagosGlobalPanelContent() {
           <input type="checkbox" checked={incluirAnulados} onChange={(e) => cambiar(setIncluirAnulados)(e.target.checked)} />
           Mostrar anulados
         </label>
+        {search && <span className="mb-2 text-xs text-graphite-500">La búsqueda incluye todas las fechas.</span>}
         {puedeCrear && (
           <button
             type="button"

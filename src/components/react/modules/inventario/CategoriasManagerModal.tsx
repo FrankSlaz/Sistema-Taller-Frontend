@@ -1,7 +1,7 @@
-import { Pencil, Plus, Trash2, X } from 'lucide-react';
+import { Pencil, Plus, X } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import Modal from '../../ui/Modal';
-import ConfirmDialog from '../../ui/ConfirmDialog';
+import { BadgeActivo, BotonActivo, ConfirmarActivo } from '../../ui/Activacion';
 import { useCategoriaMutations, useCategorias } from '../../../../lib/hooks/useCategorias';
 import { ApiError } from '../../../../lib/api/client';
 import type { Categoria, CategoriaPayload } from '../../../../types/categoria';
@@ -12,15 +12,15 @@ interface CategoriasManagerModalProps {
   onClose: () => void;
 }
 
-const emptyForm: CategoriaPayload = { nombre: '', descripcion: '', estado: true };
+const emptyForm: CategoriaPayload = { nombre: '', descripcion: '' };
 
 export default function CategoriasManagerModal({ open, onClose }: CategoriasManagerModalProps) {
-  const { data: categorias, isLoading } = useCategorias();
-  const { create, update, remove } = useCategoriaMutations();
+  const { data: categorias, isLoading } = useCategorias('todos');
+  const { create, update, cambiarActivo } = useCategoriaMutations();
   const [editing, setEditing] = useState<Categoria | null>(null);
   const [form, setForm] = useState<CategoriaPayload>(emptyForm);
   const [formOpen, setFormOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Categoria | null>(null);
+  const [activoTarget, setActivoTarget] = useState<Categoria | null>(null);
   const puedeCrear = usePermiso('inventario:crear');
   const puedeEditar = usePermiso('inventario:editar');
   const puedeEliminar = usePermiso('inventario:eliminar');
@@ -41,7 +41,6 @@ export default function CategoriasManagerModal({ open, onClose }: CategoriasMana
     setForm({
       nombre: categoria.nombre,
       descripcion: categoria.descripcion ?? '',
-      estado: categoria.estado ?? true,
     });
     setFormOpen(true);
     mutation.reset();
@@ -68,11 +67,13 @@ export default function CategoriasManagerModal({ open, onClose }: CategoriasMana
               key={cat.id}
               className="flex items-center justify-between rounded-md border border-graphite-100 px-3 py-2 text-sm"
             >
-              <div>
-                <p className="font-medium text-graphite-900">{cat.nombre}</p>
+              <div className={cat.estado === false ? 'opacity-60' : ''}>
+                <p className="flex items-center gap-2 font-medium text-graphite-900">
+                  {cat.nombre}
+                  {cat.estado === false && <BadgeActivo activo={false} femenino />}
+                </p>
                 <p className="text-xs text-graphite-400">
                   {cat._count?.productos ?? 0} producto{cat._count?.productos === 1 ? '' : 's'}
-                  {cat.estado === false && ' · inactiva'}
                 </p>
               </div>
               <div className="flex items-center gap-1">
@@ -87,14 +88,15 @@ export default function CategoriasManagerModal({ open, onClose }: CategoriasMana
                   </button>
                 )}
                 {puedeEliminar && (
-                  <button
-                    type="button"
-                    onClick={() => setDeleteTarget(cat)}
-                    className="rounded-md p-1.5 text-graphite-400 hover:bg-red-50 hover:text-red-600"
-                    aria-label={`Eliminar ${cat.nombre}`}
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <BotonActivo
+                    activo={cat.estado}
+                    nombre={cat.nombre}
+                    size={14}
+                    onClick={() => {
+                      cambiarActivo.reset();
+                      setActivoTarget(cat);
+                    }}
+                  />
                 )}
               </div>
             </li>
@@ -151,18 +153,6 @@ export default function CategoriasManagerModal({ open, onClose }: CategoriasMana
               />
             </div>
 
-            {editing && (
-              <label className="flex items-center gap-2 text-sm text-graphite-900">
-                <input
-                  type="checkbox"
-                  checked={!!form.estado}
-                  onChange={(e) => setForm((p) => ({ ...p, estado: e.target.checked }))}
-                  className="rounded border-graphite-300"
-                />
-                Categoría activa
-              </label>
-            )}
-
             {errorMessage && (
               <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errorMessage}</p>
             )}
@@ -180,18 +170,20 @@ export default function CategoriasManagerModal({ open, onClose }: CategoriasMana
         )}
       </div>
 
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        title="Eliminar categoría"
-        description={`¿Seguro que deseas eliminar "${deleteTarget?.nombre}"? Si tiene productos asociados, no se podrá eliminar.`}
-        confirmLabel="Eliminar"
-        isLoading={remove.isPending}
-        onConfirm={() => {
-          if (deleteTarget) {
-            remove.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
-          }
-        }}
+      <ConfirmarActivo
+        objetivo={activoTarget && { nombre: activoTarget.nombre, activo: activoTarget.estado }}
+        entidad="la categoría"
+        efectoDesactivar="No se podrá elegir para productos nuevos (los que ya la tienen la conservan)."
+        isLoading={cambiarActivo.isPending}
+        error={cambiarActivo.error instanceof ApiError ? cambiarActivo.error.message : cambiarActivo.error ? 'Error inesperado' : null}
+        onClose={() => setActivoTarget(null)}
+        onConfirm={() =>
+          activoTarget &&
+          cambiarActivo.mutate(
+            { id: activoTarget.id, activo: activoTarget.estado === false },
+            { onSuccess: () => setActivoTarget(null) },
+          )
+        }
       />
     </Modal>
   );

@@ -31,7 +31,7 @@ function ComprasPanelContent() {
   const [proveedoresOpen, setProveedoresOpen] = useState(false);
   const [detailTarget, setDetailTarget] = useState<Compra | null>(null);
 
-  const { data: proveedores } = useProveedores();
+  const { data: proveedores } = useProveedores('todos');
   const { data, isLoading, isFetching, error } = useCompras({ page, limit: LIMIT, proveedorId });
   const puedeCrear = usePermiso('compras:crear');
 

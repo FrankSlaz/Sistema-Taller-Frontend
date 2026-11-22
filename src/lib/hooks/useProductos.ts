@@ -25,10 +25,10 @@ export function useProductoMutations() {
     onSuccess: invalidate,
   });
 
-  const remove = useMutation({
-    mutationFn: (id: number) => productosApi.remove(id),
+  const cambiarActivo = useMutation({
+    mutationFn: ({ id, activo }: { id: number; activo: boolean }) => productosApi.cambiarActivo(id, activo),
     onSuccess: invalidate,
   });
 
-  return { create, update, remove };
+  return { create, update, cambiarActivo };
 }
