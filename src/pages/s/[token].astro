@@ -53,9 +53,19 @@ const { token = '' } = Astro.params;
 let datos: Seguimiento | null = null;
 let error: string | null = null;
 
+// IP del visitante: el backend limita los intentos con enlaces inválidos
+// por cliente (sin esto, todas las visitas parecerían venir de este servidor).
+let ipCliente = '';
+try {
+  ipCliente = Astro.clientAddress;
+} catch {
+  // el adaptador no la expone: el backend usa la del servidor
+}
+
 try {
   const res = await fetch(`${PUBLIC_API_URL}/publico/seguimiento/${encodeURIComponent(token)}`, {
     signal: AbortSignal.timeout(5000),
+    headers: ipCliente ? { 'X-Forwarded-For': ipCliente } : undefined,
   });
   if (res.ok) {
     datos = ((await res.json()) as { data: Seguimiento }).data;
@@ -63,8 +73,10 @@ try {
     error =
       res.status === 404
         ? 'Este enlace de seguimiento no es válido o fue reemplazado. Solicita uno nuevo al taller.'
-        : 'No pudimos cargar la información en este momento. Intenta de nuevo en unos minutos.';
-    Astro.response.status = res.status === 404 ? 404 : 503;
+        : res.status === 429
+          ? 'Se intentaron demasiados enlaces no válidos desde tu conexión. Espera unos minutos e intenta de nuevo.'
+          : 'No pudimos cargar la información en este momento. Intenta de nuevo en unos minutos.';
+    Astro.response.status = res.status === 404 ? 404 : res.status === 429 ? 429 : 503;
   }
 } catch {
   error = 'No pudimos conectarnos con el taller. Revisa tu conexión e intenta de nuevo.';
