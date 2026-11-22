@@ -4,15 +4,18 @@ export interface Branding {
   nombreTaller: string;
   /** URL pública del logo (con ?v= para invalidar caché), o null si no hay. */
   logoUrl: string | null;
+  /** Paleta de colores del sistema (ver lib/temas.ts). */
+  tema: string;
 }
 
 interface ConfiguracionPublica {
   nombreTaller: string;
   tieneLogo: boolean;
   logoVersion: string | null;
+  tema?: string;
 }
 
-export const BRANDING_POR_DEFECTO: Branding = { nombreTaller: PUBLIC_APP_NAME, logoUrl: null };
+export const BRANDING_POR_DEFECTO: Branding = { nombreTaller: PUBLIC_APP_NAME, logoUrl: null, tema: 'grafito' };
 
 export function logoUrlDe(logoVersion: string | null, tieneLogo: boolean): string | null {
   // Ruta del propio frontend (src/pages/marca/logo.ts, proxy al backend):
@@ -38,6 +41,7 @@ export async function obtenerBranding(): Promise<Branding> {
     return {
       nombreTaller: json.data.nombreTaller || PUBLIC_APP_NAME,
       logoUrl: logoUrlDe(json.data.logoVersion, json.data.tieneLogo),
+      tema: json.data.tema || 'grafito',
     };
   } catch {
     return BRANDING_POR_DEFECTO;

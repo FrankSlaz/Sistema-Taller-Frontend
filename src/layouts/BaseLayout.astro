@@ -1,5 +1,6 @@
 ---
 import { BRANDING_POR_DEFECTO } from '../lib/branding';
+import { cssDeTema } from '../lib/temas';
 import '../styles/global.css';
 
 interface Props {
@@ -13,7 +14,9 @@ interface Props {
 
 const { title, description = 'Sistema de gestión para talleres de reparación', noindex = false, og } = Astro.props;
 // Cargado por src/middleware.ts desde GET /configuracion/publica.
-const { nombreTaller, logoUrl } = Astro.locals.branding ?? BRANDING_POR_DEFECTO;
+const { nombreTaller, logoUrl, tema } = Astro.locals.branding ?? BRANDING_POR_DEFECTO;
+// Paleta del taller: reemplaza la escala grafito desde el servidor (sin parpadeo).
+const cssTema = cssDeTema(tema);
 ---
 
 <!doctype html>
@@ -37,6 +40,7 @@ const { nombreTaller, logoUrl } = Astro.locals.branding ?? BRANDING_POR_DEFECTO;
       )
     }
     <title>{title} · {nombreTaller}</title>
+    {cssTema && <style is:inline set:html={cssTema} />}
   </head>
   <body class="min-h-screen bg-graphite-50 text-graphite-900 antialiased">
     <slot />

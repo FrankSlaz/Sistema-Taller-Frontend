@@ -19,6 +19,8 @@ export interface Configuracion {
   /** Condiciones de garantía por defecto (se imprimen en el acta de entrega). */
   garantiaCondiciones?: string | null;
   updatedAt?: string | null;
+  /** Paleta de colores del sistema (ver lib/temas.ts). */
+  tema?: string;
   /** Solo lectura: hay correo para "Olvidé mi contraseña" (variables MAIL_* del backend). */
   correoRecuperacion?: boolean;
 }
