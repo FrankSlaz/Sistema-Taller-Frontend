@@ -135,7 +135,7 @@ export default function ReparacionFormModal({
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
             <label className="mb-1 block text-sm font-medium text-graphite-900">Prioridad</label>
             <select

@@ -2,6 +2,7 @@ import { Download, Loader2 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { ApiError } from '../../../../lib/api/client';
 import type { EstadoOrden, RangoFechas } from '../../../../types/reporte';
+import TarjetasMovil from '../../tables/TarjetasMovil';
 
 // ---------------------------------------------------------------------------
 // Formato (igual que el PDF)
@@ -154,8 +155,33 @@ export function Tabla<T>({
   vacio?: string;
   clave: (fila: T, i: number) => string | number;
 }) {
+  const totalesMovil =
+    totales && filas.length > 0 ? (
+      <dl className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-lg border border-graphite-200 bg-graphite-50 p-3 text-sm">
+        {totales.map((t, i) =>
+          t === '' || t === null || t === undefined ? null : (
+            <div key={i}>
+              <dt className="text-[11px] font-semibold uppercase tracking-wide text-graphite-400">{columnas[i]?.titulo || 'Total'}</dt>
+              <dd className="font-semibold text-graphite-900">{t}</dd>
+            </div>
+          ),
+        )}
+      </dl>
+    ) : null;
   return (
-    <div className="overflow-x-auto rounded-lg border border-graphite-200">
+    <>
+      {/* Celular: cada fila como tarjeta (sin desplazarse de costado). */}
+      <div className="sm:hidden">
+        <TarjetasMovil
+          columnas={columnas.map((c, i) => ({ clave: `${i}-${c.titulo}`, titulo: c.titulo, render: c.render }))}
+          filas={filas}
+          clave={clave}
+          vacio={vacio}
+          tono={(f) => TONO_FILA[tono?.(f) ?? 'neutral'] || undefined}
+          pie={totalesMovil}
+        />
+      </div>
+    <div className="hidden overflow-x-auto rounded-lg border border-graphite-200 sm:block">
       <table className="min-w-full divide-y divide-graphite-200 text-sm">
         <thead className="bg-graphite-50">
           <tr>
@@ -208,12 +234,13 @@ export function Tabla<T>({
         )}
       </table>
     </div>
+    </>
   );
 }
 
 export function Seccion({ titulo, descripcion, children }: { titulo: string; descripcion?: string; children: ReactNode }) {
   return (
-    <section className="space-y-2">
+    <section className="min-w-0 space-y-2">
       <div>
         <h3 className="font-display text-base font-semibold text-graphite-900">{titulo}</h3>
         {descripcion && <p className="text-xs text-graphite-500">{descripcion}</p>}
@@ -292,11 +319,11 @@ export function ReporteShell({
 // Filtros
 // ---------------------------------------------------------------------------
 const inputCls =
-  'rounded-md border border-graphite-200 bg-white px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800';
+  'w-full rounded-md border border-graphite-200 bg-white px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800';
 
 export function Campo({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="block">
+    <label className="block w-full sm:w-auto">
       <span className="mb-1 block text-xs font-medium text-graphite-700">{label}</span>
       {children}
     </label>
@@ -446,7 +473,7 @@ export function FiltroTexto({
     <Campo label={label}>
       <input
         type="search"
-        className={`${inputCls} w-56`}
+        className={`${inputCls} sm:w-56`}
         value={valor}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}

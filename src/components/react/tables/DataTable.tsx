@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { cn } from '../../../lib/utils/cn';
+import TarjetasMovil from './TarjetasMovil';
 
 export interface Column<T> {
   key: string;
@@ -36,8 +37,22 @@ export default function DataTable<T>({
   // mantienen las filas actuales atenuadas en vez de vaciar la tabla.
   const primeraCarga = !!isLoading && data.length === 0;
   const recargando = !!isLoading && data.length > 0;
+  const valor = (col: Column<T>, row: T) =>
+    col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? '');
   return (
-    <div className="overflow-x-auto rounded-lg border border-graphite-200">
+    <>
+      {/* Celular: cada fila como tarjeta (sin desplazarse de costado). */}
+      <div className="sm:hidden">
+        <TarjetasMovil
+          columnas={columns.map((c) => ({ clave: c.key, titulo: c.header, render: (r: T) => valor(c, r) }))}
+          filas={data}
+          clave={(r) => getRowId(r)}
+          cargando={primeraCarga}
+          recargando={recargando}
+          vacio={emptyMessage}
+        />
+      </div>
+    <div className="hidden overflow-x-auto rounded-lg border border-graphite-200 sm:block">
       <table className="min-w-full divide-y divide-graphite-200 text-sm">
         <thead className="bg-graphite-50">
           <tr>
@@ -84,5 +99,6 @@ export default function DataTable<T>({
         </tbody>
       </table>
     </div>
+    </>
   );
 }

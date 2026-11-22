@@ -64,12 +64,64 @@ const groups: NavGroup[] = [
 const currentPath = Astro.url.pathname;
 ---
 
+<!-- Fondo oscuro del menú en celular/tablet (solo visible con el menú abierto). -->
+<div id="sidebar-fondo" class="fixed inset-0 z-30 hidden bg-graphite-900/50 lg:hidden" aria-hidden="true"></div>
+
+<!-- En escritorio, fija a la izquierda. En pantallas chicas está oculta y se
+     abre como menú deslizable con el botón ☰ de la barra superior. -->
 <aside
-  class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col overflow-y-auto border-r border-graphite-700 bg-graphite-900 text-graphite-200 lg:flex"
+  id="sidebar"
+  class="fixed inset-y-0 left-0 z-40 flex w-64 max-w-[85vw] -translate-x-full flex-col overflow-y-auto border-r border-graphite-700 bg-graphite-900 text-graphite-200 transition-transform duration-200 ease-out lg:translate-x-0"
+  aria-label="Menú principal"
 >
-  <div class="flex h-16 items-center border-b border-graphite-700 px-5">
+  <div class="flex h-16 shrink-0 items-center justify-between border-b border-graphite-700 px-5">
     <a href="/dashboard" class="min-w-0"><Brand tone="dark" /></a>
+    <button
+      id="sidebar-cerrar"
+      type="button"
+      class="-mr-2 rounded-md p-2 text-graphite-300 hover:bg-graphite-800 hover:text-white lg:hidden"
+      aria-label="Cerrar menú"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+    </button>
   </div>
 
   <SidebarNav client:only="react" groups={groups} currentPath={currentPath} />
 </aside>
+
+<script>
+  // Menú lateral en pantallas chicas: abrir con ☰; cerrar con la ✕, tocando
+  // el fondo, con Esc o al elegir un módulo.
+  const menu = document.getElementById('sidebar');
+  const fondo = document.getElementById('sidebar-fondo');
+  const abrirBtn = document.getElementById('sidebar-toggle');
+  const cerrarBtn = document.getElementById('sidebar-cerrar');
+  const escritorio = window.matchMedia('(min-width: 1024px)');
+
+  function poner(abierto: boolean) {
+    if (!menu || !fondo) return;
+    menu.classList.toggle('-translate-x-full', !abierto);
+    fondo.classList.toggle('hidden', !abierto);
+    document.body.classList.toggle('overflow-hidden', abierto);
+    abrirBtn?.setAttribute('aria-expanded', String(abierto));
+    if (abierto) cerrarBtn?.focus();
+  }
+
+  abrirBtn?.addEventListener('click', () => poner(true));
+  cerrarBtn?.addEventListener('click', () => {
+    poner(false);
+    abrirBtn?.focus();
+  });
+  fondo?.addEventListener('click', () => poner(false));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !escritorio.matches) poner(false);
+  });
+  // Al elegir un módulo, cerrar (la navegación ya cambia de página).
+  menu?.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('a') && !escritorio.matches) poner(false);
+  });
+  // Si se agranda la pantalla con el menú abierto, quitar el fondo y el bloqueo.
+  escritorio.addEventListener('change', (e) => {
+    if (e.matches) poner(false);
+  });
+</script>

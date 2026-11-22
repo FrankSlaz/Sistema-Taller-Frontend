@@ -9,10 +9,12 @@ import Brand from '../ui/Brand.astro';
   <button
     id="sidebar-toggle"
     type="button"
-    class="rounded-md p-2 text-graphite-600 hover:bg-graphite-50 lg:hidden"
+    class="-ml-2 rounded-md p-2 text-graphite-700 hover:bg-graphite-50 lg:hidden"
     aria-label="Abrir menú"
+    aria-controls="sidebar"
+    aria-expanded="false"
   >
-    ☰
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
   </button>
 
   <!-- En móvil el sidebar está oculto: la marca se muestra en la barra superior. -->

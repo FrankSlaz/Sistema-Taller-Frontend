@@ -119,13 +119,13 @@ function PermisosMatrixContent({ rolId }: PermisosMatrixProps) {
           <table className="min-w-full divide-y divide-graphite-100 text-sm">
             <thead className="bg-graphite-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-graphite-400">
+                <th className="px-2 py-3 text-left text-xs sm:px-4 font-semibold uppercase tracking-wider text-graphite-400">
                   Recurso
                 </th>
                 {ACCIONES_PERMISO.map((accion) => (
                   <th
                     key={accion}
-                    className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-graphite-400"
+                    className="px-1 py-3 text-center text-[10px] sm:px-4 sm:text-xs font-semibold uppercase tracking-wider text-graphite-400"
                   >
                     {accionLabel(accion)}
                   </th>
@@ -135,7 +135,7 @@ function PermisosMatrixContent({ rolId }: PermisosMatrixProps) {
             <tbody className="divide-y divide-graphite-100 bg-white">
               {RECURSOS_PERMISO.map((recurso) => (
                 <tr key={recurso} className="hover:bg-graphite-50">
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-3 sm:px-4">
                     <Tip label="Marcar/desmarcar toda la fila">
                       <button
                         type="button"
@@ -149,11 +149,11 @@ function PermisosMatrixContent({ rolId }: PermisosMatrixProps) {
                   {ACCIONES_PERMISO.map((accion) => {
                     const permisoId = permisoIdPorClave.get(`${recurso}:${accion}`);
                     if (!permisoId) {
-                      return <td key={accion} className="px-4 py-3 text-center text-graphite-300">—</td>;
+                      return <td key={accion} className="px-1 py-3 text-center text-graphite-300 sm:px-4">—</td>;
                     }
                     const checked = seleccion.has(permisoId);
                     return (
-                      <td key={accion} className="px-4 py-3 text-center">
+                      <td key={accion} className="px-1 py-3 text-center sm:px-4">
                         <Tip label={`${recursoLabel(recurso)} · ${accionLabel(accion)}`}>
                           <button
                             type="button"
