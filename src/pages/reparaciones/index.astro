@@ -7,6 +7,10 @@ const clienteIdParam = Astro.url.searchParams.get('clienteId');
 const clienteId = clienteIdParam ? Number(clienteIdParam) : undefined;
 const equipoIdParam = Astro.url.searchParams.get('equipoId');
 const equipoId = equipoIdParam ? Number(equipoIdParam) : undefined;
+// Accesos desde el inicio: lista filtrada por estado o formulario de nueva orden.
+const estadoIdParam = Number(Astro.url.searchParams.get('estadoId'));
+const estadoInicial = Number.isInteger(estadoIdParam) && estadoIdParam > 0 ? estadoIdParam : undefined;
+const abrirNueva = Astro.url.searchParams.get('nueva') === '1';
 ---
 
 <DashboardLayout title="Órdenes de reparación">
@@ -16,6 +20,12 @@ const equipoId = equipoIdParam ? Number(equipoIdParam) : undefined;
   </div>
 
   <Card>
-    <ReparacionesPanel client:load clienteId={clienteId} equipoId={equipoId} />
+    <ReparacionesPanel
+      client:load
+      clienteId={clienteId}
+      equipoId={equipoId}
+      estadoInicial={estadoInicial}
+      abrirNueva={abrirNueva}
+    />
   </Card>
 </DashboardLayout>

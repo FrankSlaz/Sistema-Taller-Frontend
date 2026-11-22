@@ -24,13 +24,17 @@ function formatFecha(value?: string | null) {
 interface ReparacionesPanelProps {
   clienteId?: number;
   equipoId?: number;
+  /** Filtro inicial por estado (?estadoId= desde el inicio). */
+  estadoInicial?: number;
+  /** Abrir directamente el formulario de nueva orden (?nueva=1). */
+  abrirNueva?: boolean;
 }
 
-function ReparacionesPanelContent({ clienteId, equipoId }: ReparacionesPanelProps) {
+function ReparacionesPanelContent({ clienteId, equipoId, estadoInicial, abrirNueva }: ReparacionesPanelProps) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [estadoId, setEstadoId] = useState<number | undefined>(undefined);
-  const [formOpen, setFormOpen] = useState(false);
+  const [estadoId, setEstadoId] = useState<number | undefined>(estadoInicial);
+  const [formOpen, setFormOpen] = useState(!!abrirNueva);
 
   const { data: estados } = useEstadosOrden();
   const { data, isLoading, isFetching, error } = useReparaciones({

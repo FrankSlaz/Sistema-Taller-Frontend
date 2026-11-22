@@ -3,11 +3,6 @@ import DashboardLayout from '../layouts/DashboardLayout.astro';
 import DashboardPanel from '../components/react/modules/dashboard/DashboardPanel';
 ---
 
-<DashboardLayout title="Dashboard">
-  <div class="mb-6">
-    <h1 class="font-display text-2xl font-semibold text-graphite-900">Dashboard</h1>
-    <p class="text-sm text-graphite-400">Resumen general del taller.</p>
-  </div>
-
+<DashboardLayout title="Inicio">
   <DashboardPanel client:load />
 </DashboardLayout>
