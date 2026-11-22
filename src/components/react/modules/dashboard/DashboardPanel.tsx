@@ -10,6 +10,7 @@ import {
   Plus,
   ShieldCheck,
   Siren,
+  UserCog,
   Wallet,
   Wrench,
   type LucideIcon,
@@ -197,6 +198,31 @@ function RequiereAtencion({ d, actualizado }: { d: Inicio; actualizado: string }
   const u = d.umbrales;
   const alertas: ReactNode[] = [];
 
+  if (a.solicitudesPassword?.total)
+    alertas.push(
+      <Alerta
+        key="password"
+        titulo="Olvidaron su contraseña"
+        descripcion="Asígnales una contraseña temporal desde Usuarios."
+        icono={UserCog}
+        tono="alerta"
+        lista={a.solicitudesPassword}
+        clave={(x) => x.id}
+        verTodas="/usuarios"
+        fila={(x) => (
+          <a href="/usuarios" className="flex items-center gap-3 px-3 py-2 hover:bg-graphite-50">
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold text-graphite-900">{x.nombre ?? 'Correo no registrado'}</span>
+              <span className="block truncate text-xs text-graphite-500">{x.email}</span>
+            </span>
+            <span className="shrink-0 text-xs text-graphite-500">
+              {new Date(x.fecha).toLocaleString('es-BO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+            </span>
+            <ChevronRight size={14} className="shrink-0 text-graphite-300" aria-hidden />
+          </a>
+        )}
+      />,
+    );
   if (a.urgentesSinTecnico?.total)
     alertas.push(
       <Alerta

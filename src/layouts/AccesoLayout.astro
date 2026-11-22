@@ -1,0 +1,24 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Brand from '../components/astro/ui/Brand.astro';
+
+/** Pantallas de acceso (login, recuperar y cambiar contraseña): tarjeta centrada, sin menú. */
+interface Props {
+  title: string;
+  subtitulo?: string;
+}
+const { title, subtitulo } = Astro.props;
+---
+
+<BaseLayout title={title}>
+  <div class="flex min-h-screen items-center justify-center bg-graphite-950 px-4 py-8">
+    <div class="w-full max-w-sm rounded-xl border border-graphite-700 bg-white p-6 shadow-xl sm:p-8">
+      <Brand class="mb-6" />
+      <h1 class="font-display text-lg font-semibold text-graphite-900">{title}</h1>
+      {subtitulo && <p class="mt-1 text-sm text-graphite-400">{subtitulo}</p>}
+      <div class="mt-5">
+        <slot />
+      </div>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,4 +1,4 @@
-import { KeyRound, Pencil, Plus } from 'lucide-react';
+import { KeyRound, LockOpen, Pencil, Plus, UserCog, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import DataTable, { type Column } from '../../tables/DataTable';
 import SearchInput from '../../filters/SearchInput';
@@ -6,7 +6,7 @@ import { BadgeActivo, BotonActivo, ConfirmarActivo, FiltroActivoSelector, type F
 import UsuarioFormModal from '../../forms/UsuarioFormModal';
 import ResetPasswordModal from '../../forms/ResetPasswordModal';
 import QueryProvider from '../../providers/QueryProvider';
-import { useUsuarioMutations, useUsuarios } from '../../../../lib/hooks/useUsuarios';
+import { useSolicitudesPassword, useUsuarioMutations, useUsuarios } from '../../../../lib/hooks/useUsuarios';
 import { ApiError } from '../../../../lib/api/client';
 import type { Usuario } from '../../../../types/auth';
 import { useAuth } from '../../../../lib/hooks/useAuth';
@@ -17,7 +17,10 @@ const msgError = (e: unknown) => (e instanceof ApiError ? e.message : e ? 'Error
 function UsuariosPanelContent() {
   const [filtro, setFiltro] = useState<FiltroActivo>('activos');
   const { data: usuarios, isLoading, error } = useUsuarios(filtro);
-  const { cambiarActivo } = useUsuarioMutations();
+  const { cambiarActivo, desbloquear, descartarSolicitud } = useUsuarioMutations();
+  const { data: solicitudes } = useSolicitudesPassword();
+  // Para atender una solicitud hace falta el usuario aunque esté filtrado.
+  const { data: todos } = useUsuarios('todos');
   const { usuario: yo } = useAuth();
   const [search, setSearch] = useState('');
   const [formState, setFormState] = useState<{ open: boolean; usuario: Usuario | null }>({
@@ -50,6 +53,20 @@ function UsuariosPanelContent() {
             {row.nombre} {row.apellido ?? ''}
           </p>
           <p className="text-xs text-graphite-400">{row.email}</p>
+          {(row.bloqueadoHasta || row.debeCambiarPassword) && (
+            <p className="mt-1 flex flex-wrap gap-1">
+              {row.bloqueadoHasta && (
+                <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
+                  Bloqueado hasta {new Date(row.bloqueadoHasta).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+              {row.debeCambiarPassword && (
+                <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">
+                  Contraseña temporal
+                </span>
+              )}
+            </p>
+          )}
         </div>
       ),
     },
@@ -76,12 +93,25 @@ function UsuariosPanelContent() {
               }}
             />
           )}
-          <Tip label="Restablecer contraseña">
+          {row.bloqueadoHasta && (
+            <Tip label="Desbloquear">
+              <button
+                type="button"
+                onClick={() => desbloquear.mutate(row.id)}
+                disabled={desbloquear.isPending}
+                className="rounded-md p-1.5 text-red-500 hover:bg-red-50 hover:text-red-700"
+                aria-label={`Desbloquear a ${row.nombre}`}
+              >
+                <LockOpen size={15} />
+              </button>
+            </Tip>
+          )}
+          <Tip label="Asignar contraseña temporal">
             <button
               type="button"
               onClick={() => setResetTarget(row)}
               className="rounded-md p-1.5 text-graphite-400 hover:bg-graphite-50 hover:text-graphite-900"
-              aria-label={`Restablecer contraseña de ${row.nombre}`}
+              aria-label={`Asignar contraseña temporal a ${row.nombre}`}
             >
               <KeyRound size={15} />
             </button>
@@ -111,6 +141,53 @@ function UsuariosPanelContent() {
 
   return (
     <div className="space-y-4">
+      {/* "Olvidé mi contraseña" sin correo configurado: las atiende el admin. */}
+      {!!solicitudes?.length && (
+        <section className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <p className="flex items-center gap-2 text-sm font-semibold text-amber-900">
+            <UserCog size={16} />
+            {solicitudes.length === 1 ? '1 persona olvidó su contraseña' : `${solicitudes.length} personas olvidaron su contraseña`}
+          </p>
+          <ul className="mt-2 divide-y divide-amber-200/70">
+            {solicitudes.map((s) => {
+              const u = todos?.find((x) => x.id === s.usuario?.id) ?? null;
+              return (
+                <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                  <span className="min-w-0">
+                    <span className="font-medium text-graphite-900">
+                      {s.usuario ? [s.usuario.nombre, s.usuario.apellido].filter(Boolean).join(' ') : 'Correo no registrado'}
+                    </span>
+                    <span className="block truncate text-xs text-graphite-600">
+                      {s.email} · {new Date(s.fecha).toLocaleString('es-BO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </span>
+                  <span className="flex gap-2">
+                    {u && (
+                      <button
+                        type="button"
+                        onClick={() => setResetTarget(u)}
+                        className="inline-flex items-center gap-1.5 rounded-md bg-graphite-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-graphite-800"
+                      >
+                        <KeyRound size={13} />
+                        Asignar contraseña temporal
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => descartarSolicitud.mutate(s.id)}
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-graphite-600 hover:bg-amber-100"
+                    >
+                      <X size={13} />
+                      Descartar
+                    </button>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <SearchInput value={search} onChange={setSearch} placeholder="Buscar por nombre o email…" />

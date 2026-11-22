@@ -1,3 +1,4 @@
+import { Check, Copy, RefreshCw } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import Modal from '../ui/Modal';
 import { useUsuarioMutations } from '../../../lib/hooks/useUsuarios';
@@ -10,95 +11,134 @@ interface ResetPasswordModalProps {
   usuario: Usuario | null;
 }
 
+const ALFABETO = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+/** Contraseña temporal fácil de dictar (sin 0/O, 1/l/I). */
+function generar(largo = 10) {
+  const bytes = new Uint32Array(largo);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => ALFABETO[b % ALFABETO.length]).join('');
+}
+
+/**
+ * El Administrador asigna una contraseña TEMPORAL: el usuario debe
+ * cambiarla al iniciar sesión (así el administrador no conoce la
+ * definitiva). También desbloquea la cuenta, cierra las sesiones abiertas
+ * y marca como atendidas sus solicitudes de "olvidé mi contraseña".
+ */
 export default function ResetPasswordModal({ open, onClose, usuario }: ResetPasswordModalProps) {
   const { resetPassword } = useUsuarioMutations();
-  const [passwordNueva, setPasswordNueva] = useState('');
-  const [confirmacion, setConfirmacion] = useState('');
-  const [touched, setTouched] = useState(false);
+  const [clave, setClave] = useState('');
+  const [copiada, setCopiada] = useState(false);
 
   useEffect(() => {
     if (!open) return;
-    setPasswordNueva('');
-    setConfirmacion('');
-    setTouched(false);
+    setClave(generar());
+    setCopiada(false);
     resetPassword.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, usuario]);
 
-  const coinciden = passwordNueva === confirmacion;
+  async function copiar() {
+    try {
+      await navigator.clipboard.writeText(clave);
+      setCopiada(true);
+    } catch {
+      // portapapeles no disponible: se copia a mano
+    }
+  }
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    setTouched(true);
-    if (!usuario || passwordNueva.length < 8 || !coinciden) return;
-
-    resetPassword.mutate({ id: usuario.id, payload: { passwordNueva } }, { onSuccess: onClose });
+    if (!usuario || clave.length < 8) return;
+    resetPassword.mutate({ id: usuario.id, payload: { passwordNueva: clave } });
   }
 
   const errorMessage =
-    resetPassword.error instanceof ApiError
-      ? resetPassword.error.message
-      : resetPassword.error
-        ? 'Error inesperado'
-        : null;
+    resetPassword.error instanceof ApiError ? resetPassword.error.message : resetPassword.error ? 'Error inesperado' : null;
 
   if (!usuario) return null;
+  const nombre = [usuario.nombre, usuario.apellido].filter(Boolean).join(' ');
+
+  if (resetPassword.isSuccess) {
+    return (
+      <Modal open={open} onClose={onClose} title="Contraseña temporal asignada">
+        <div className="space-y-4">
+          <p className="text-sm text-graphite-600">
+            Entrégale esta contraseña a <strong>{nombre}</strong> por un medio seguro (en persona o por mensaje directo):
+          </p>
+          <div className="flex items-center gap-2 rounded-md border border-graphite-200 bg-graphite-50 px-3 py-2">
+            <code className="flex-1 select-all font-mono text-lg tracking-wider text-graphite-900">{clave}</code>
+            <button type="button" onClick={copiar} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-graphite-600 hover:bg-white">
+              {copiada ? <Check size={14} /> : <Copy size={14} />}
+              {copiada ? 'Copiada' : 'Copiar'}
+            </button>
+          </div>
+          <ul className="list-disc space-y-1 pl-5 text-xs text-graphite-500">
+            <li>Al entrar, el sistema le pedirá cambiarla por una propia.</li>
+            <li>Sus sesiones abiertas se cerraron y, si estaba bloqueado, quedó desbloqueado.</li>
+          </ul>
+          <div className="flex justify-end">
+            <button type="button" onClick={onClose} className="rounded-md bg-graphite-900 px-4 py-2 text-sm font-semibold text-white hover:bg-graphite-800">
+              Listo
+            </button>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
-    <Modal open={open} onClose={onClose} title={`Restablecer contraseña de ${usuario.nombre}`}>
+    <Modal open={open} onClose={onClose} title={`Contraseña temporal para ${usuario.nombre}`}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <p className="text-sm text-graphite-500">
-          Como Administrador puedes fijar una contraseña nueva sin conocer la actual. Comunícasela a{' '}
-          {usuario.nombre} por un canal seguro.
+          Se asignará una contraseña temporal a <strong className="text-graphite-800">{nombre}</strong>. Deberá
+          cambiarla al iniciar sesión, así nadie más conoce la definitiva.
         </p>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-graphite-900">Contraseña nueva</label>
-          <input
-            type="password"
-            required
-            minLength={8}
-            autoComplete="new-password"
-            value={passwordNueva}
-            onChange={(e) => setPasswordNueva(e.target.value)}
-            className="w-full rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
-          />
-          {touched && passwordNueva.length < 8 && (
-            <p className="mt-1 text-xs text-red-600">Mínimo 8 caracteres</p>
-          )}
+          <label htmlFor="clave-temporal" className="mb-1 block text-sm font-medium text-graphite-900">
+            Contraseña temporal
+          </label>
+          <div className="flex gap-2">
+            <input
+              id="clave-temporal"
+              type="text"
+              required
+              minLength={8}
+              maxLength={72}
+              autoComplete="off"
+              spellCheck={false}
+              value={clave}
+              onChange={(e) => setClave(e.target.value)}
+              className="w-full rounded-md border border-graphite-200 px-3 py-2 font-mono text-sm tracking-wider focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
+            />
+            <button
+              type="button"
+              onClick={() => setClave(generar())}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-graphite-200 px-3 text-sm font-medium text-graphite-700 hover:bg-graphite-50"
+            >
+              <RefreshCw size={14} />
+              Otra
+            </button>
+          </div>
+          <p className={`mt-1 text-xs ${clave.length < 8 ? 'text-red-600' : 'text-graphite-400'}`}>
+            Mínimo 8 caracteres. Puedes usar la generada o escribir otra.
+          </p>
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-graphite-900">Confirmar contraseña nueva</label>
-          <input
-            type="password"
-            required
-            autoComplete="new-password"
-            value={confirmacion}
-            onChange={(e) => setConfirmacion(e.target.value)}
-            className="w-full rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
-          />
-          {touched && !coinciden && <p className="mt-1 text-xs text-red-600">Las contraseñas no coinciden</p>}
-        </div>
-
-        {errorMessage && (
-          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errorMessage}</p>
-        )}
+        {errorMessage && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errorMessage}</p>}
 
         <div className="flex justify-end gap-2 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md px-4 py-2 text-sm font-medium text-graphite-600 hover:bg-graphite-50"
-          >
+          <button type="button" onClick={onClose} className="rounded-md px-4 py-2 text-sm font-medium text-graphite-600 hover:bg-graphite-50">
             Cancelar
           </button>
           <button
             type="submit"
-            disabled={resetPassword.isPending}
+            disabled={resetPassword.isPending || clave.length < 8}
             className="rounded-md bg-graphite-900 px-4 py-2 text-sm font-semibold text-white hover:bg-graphite-800 disabled:opacity-60"
           >
-            {resetPassword.isPending ? 'Guardando…' : 'Restablecer contraseña'}
+            {resetPassword.isPending ? 'Asignando…' : 'Asignar contraseña temporal'}
           </button>
         </div>
       </form>

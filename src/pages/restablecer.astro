@@ -1,0 +1,12 @@
+---
+import AccesoLayout from '../layouts/AccesoLayout.astro';
+import { RestablecerForm } from '../components/react/forms/AccesoForms';
+
+// El enlace lleva un código privado: que no se guarde ni se indexe.
+Astro.response.headers.set('Cache-Control', 'no-store');
+Astro.response.headers.set('Referrer-Policy', 'no-referrer');
+---
+
+<AccesoLayout title="Nueva contraseña">
+  <RestablecerForm client:only="react" />
+</AccesoLayout>

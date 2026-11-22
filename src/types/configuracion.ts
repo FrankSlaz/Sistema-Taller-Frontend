@@ -19,10 +19,12 @@ export interface Configuracion {
   /** Condiciones de garantía por defecto (se imprimen en el acta de entrega). */
   garantiaCondiciones?: string | null;
   updatedAt?: string | null;
+  /** Solo lectura: hay correo para "Olvidé mi contraseña" (variables MAIL_* del backend). */
+  correoRecuperacion?: boolean;
 }
 
 /** El logo no va en el PATCH: se sube como archivo (POST /configuracion/logo). */
-export type UpdateConfiguracionPayload = Partial<Omit<Configuracion, 'id' | 'updatedAt' | 'logo'>>;
+export type UpdateConfiguracionPayload = Partial<Omit<Configuracion, 'id' | 'updatedAt' | 'logo' | 'correoRecuperacion'>>;
 
 /** GET /configuracion/publica (sin sesión). */
 export interface ConfiguracionPublica {

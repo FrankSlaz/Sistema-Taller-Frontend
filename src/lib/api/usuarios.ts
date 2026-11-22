@@ -36,4 +36,21 @@ export const usuariosApi = {
   /** Solo Administrador: resetea la contraseña de OTRO usuario, sin pedir la actual. */
   resetPassword: (id: number, payload: ResetPasswordPayload) =>
     api.patch<{ message: string }>(`/usuarios/${id}/password`, payload),
+
+  /** Quita el bloqueo por contraseñas incorrectas. */
+  desbloquear: (id: number) => api.patch<Usuario>(`/usuarios/${id}/desbloquear`, {}),
+
+  /** "Olvidé mi contraseña" pendientes (sin correo configurado). */
+  solicitudesPassword: () =>
+    api.get<
+      {
+        id: number;
+        email: string;
+        fecha: string;
+        usuario: { id: number; nombre: string; apellido?: string | null; estado: boolean | null } | null;
+      }[]
+    >('/usuarios/solicitudes-password'),
+
+  descartarSolicitud: (id: number) =>
+    api.patch<{ message: string }>(`/usuarios/solicitudes-password/${id}/descartar`, {}),
 };

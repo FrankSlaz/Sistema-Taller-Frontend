@@ -53,6 +53,8 @@ export interface Inicio {
     urgentesSinTecnico: Lista<ItemOrden> | null;
     garantiasPorVencer: Lista<ItemOrden> | null;
     stockBajo: Lista<ProductoBajo> | null;
+    /** "Olvidé mi contraseña" pendientes (solo Administrador). */
+    solicitudesPassword: Lista<{ id: number; email: string; fecha: string; nombre: string | null }> | null;
   };
   mias: (Lista<ItemOrden> & { porDiagnosticar: number }) | null;
   embudo: {

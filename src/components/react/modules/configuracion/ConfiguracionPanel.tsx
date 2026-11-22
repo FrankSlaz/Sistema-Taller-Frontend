@@ -170,7 +170,7 @@ function ConfiguracionPanelContent() {
         <div className="rounded-md border border-graphite-100 p-4">
           <p className="text-sm font-medium text-graphite-900">Garantía por defecto</p>
           <p className="mb-3 text-xs text-graphite-400">
-            Se aplica automáticamente al entregar un equipo reparado (se puede cambiar en cada entrega).
+            Valor inicial que ve el técnico al definir la garantía cuando termina la reparación.
           </p>
           <div className="grid gap-4 sm:grid-cols-4">
             <div>
@@ -197,6 +197,24 @@ function ConfiguracionPanelContent() {
               <p className="mt-1 text-xs text-graphite-400">Se imprimen en el acta de entrega.</p>
             </div>
           </div>
+        </div>
+
+        {/* Solo informativo: el correo se configura en el servidor (variables MAIL_*). */}
+        <div className="rounded-md border border-graphite-100 p-4">
+          <p className="text-sm font-medium text-graphite-900">Recuperación de contraseñas</p>
+          {config?.correoRecuperacion ? (
+            <p className="mt-1 text-xs text-graphite-500">
+              <span className="font-semibold text-green-700">Por correo.</span> Quien olvida su contraseña recibe un enlace
+              para crear una nueva (vence en 30 minutos).
+            </p>
+          ) : (
+            <p className="mt-1 text-xs text-graphite-500">
+              <span className="font-semibold text-amber-700">Por el administrador.</span> No hay correo configurado: las
+              solicitudes aparecen en tu inicio y en Usuarios, donde asignas una contraseña temporal. Para activar el envío
+              por correo, configura las variables <code className="rounded bg-graphite-100 px-1">MAIL_*</code> del servidor
+              (ver <code className="rounded bg-graphite-100 px-1">.env.example</code>).
+            </p>
+          )}
         </div>
       </fieldset>
 

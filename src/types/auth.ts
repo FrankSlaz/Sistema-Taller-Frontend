@@ -18,6 +18,10 @@ export interface Usuario {
   email: string;
   telefono?: string | null;
   estado: boolean;
+  /** Contraseña temporal: debe cambiarla al entrar. */
+  debeCambiarPassword?: boolean;
+  /** Bloqueado por intentos fallidos hasta esta fecha (null si no). */
+  bloqueadoHasta?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -49,6 +53,7 @@ export interface AuthMe {
   rolId: number;
   rolNombre: string;
   permisos: string[];
+  debeCambiarPassword?: boolean;
 }
 
 export interface ChangePasswordPayload {

@@ -156,7 +156,7 @@ export default function UsuarioFormModal({ open, onClose, usuario }: UsuarioForm
         {!isEdit && (
           <div>
             <label className="mb-1 block text-sm font-medium text-graphite-900">
-              Contraseña <span className="text-red-500">*</span>
+              Contraseña temporal <span className="text-red-500">*</span>
             </label>
             <input
               type="password"
@@ -167,8 +167,12 @@ export default function UsuarioFormModal({ open, onClose, usuario }: UsuarioForm
               onChange={(e) => set('password', e.target.value)}
               className="w-full rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800"
             />
-            {touched && form.password.length < 8 && (
+            {touched && form.password.length < 8 ? (
               <p className="mt-1 text-xs text-red-600">Mínimo 8 caracteres</p>
+            ) : (
+              <p className="mt-1 text-xs text-graphite-400">
+                Al entrar por primera vez, el usuario deberá cambiarla por una propia.
+              </p>
             )}
           </div>
         )}

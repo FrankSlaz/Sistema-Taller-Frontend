@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { authApi } from '../api/auth';
 import { clearTokens, getStoredPerfil, getStoredUsuario, setStoredPerfil } from '../api/client';
 
@@ -32,6 +33,15 @@ export function useAuth() {
 
   const usuario = getStoredUsuario();
   const permisos = query.data?.permisos ?? [];
+
+  // Contraseña temporal: hasta cambiarla no se usa el resto del sistema
+  // (el backend responde 403; aquí se lleva directo a la pantalla).
+  const debeCambiar = query.data?.debeCambiarPassword === true;
+  useEffect(() => {
+    if (debeCambiar && window.location.pathname !== '/cambiar-password') {
+      window.location.href = '/cambiar-password';
+    }
+  }, [debeCambiar]);
 
   function hasPermiso(permiso: string): boolean {
     return permisos.includes(permiso);

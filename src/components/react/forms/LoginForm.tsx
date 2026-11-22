@@ -1,7 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
-import { authApi } from '../../../lib/api/auth';
-import { setStoredPerfil, setTokens, setUsuario } from '../../../lib/api/client';
+import { ingresar } from '../../../lib/api/auth';
 import { ApiError } from '../../../lib/api/client';
 import QueryProvider from '../providers/QueryProvider';
 
@@ -10,18 +9,12 @@ function LoginFormContent() {
   const [password, setPassword] = useState('');
 
   const mutation = useMutation({
-    mutationFn: authApi.login,
-    onSuccess: async (data) => {
-      setTokens(data.accessToken, data.refreshToken);
-      setUsuario(data.usuario);
-      // Rol y permisos antes de entrar: la primera pantalla ya sale con sus
-      // botones (sin que aparezcan después y muevan el contenido).
-      try {
-        setStoredPerfil(await authApi.me());
-      } catch {
-        // si falla, se piden al cargar la página
-      }
-      window.location.href = '/dashboard';
+    // Guarda sesión, usuario y permisos (la primera pantalla ya sale con
+    // sus botones, sin que aparezcan después y muevan el contenido).
+    mutationFn: ({ email, password }: { email: string; password: string }) => ingresar(email, password),
+    onSuccess: (data) => {
+      // Contraseña temporal: primero debe cambiarla.
+      window.location.href = data.usuario.debeCambiarPassword ? '/cambiar-password' : '/dashboard';
     },
   });
 
@@ -52,9 +45,14 @@ function LoginFormContent() {
       </div>
 
       <div>
-        <label htmlFor="password" className="mb-1 block text-sm font-medium text-graphite-900">
-          Contraseña
-        </label>
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <label htmlFor="password" className="block text-sm font-medium text-graphite-900">
+            Contraseña
+          </label>
+          <a href="/olvide-password" className="text-xs font-medium text-graphite-500 hover:text-graphite-900 hover:underline">
+            ¿Olvidaste tu contraseña?
+          </a>
+        </div>
         <input
           id="password"
           type="password"
