@@ -1,4 +1,4 @@
-import { api } from './client';
+import { api, downloadFile } from './client';
 import type { PaginatedResult } from '../../types/api';
 import type {
   AssignTecnicoPayload,
@@ -42,6 +42,9 @@ export const reparacionesApi = {
 
   changeEstado: (id: number, payload: ChangeEstadoPayload) =>
     api.patch<OrdenReparacion>(`/reparaciones/${id}/estado`, payload),
+
+  /** Informe completo de la orden en PDF (cliente, equipo, diagnósticos, pagos, historial…). */
+  informe: (id: number, codigoOrden: string) => downloadFile(`/reparaciones/${id}/informe`, `informe-${codigoOrden}.pdf`),
 
   /** Define o corrige la garantía de la reparación (antes de entregar). */
   definirGarantia: (id: number, payload: DefinirGarantiaPayload) =>

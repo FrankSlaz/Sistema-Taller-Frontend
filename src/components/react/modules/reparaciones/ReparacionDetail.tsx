@@ -1,5 +1,8 @@
-import { ArrowLeft, History, Pencil } from 'lucide-react';
+import { ArrowLeft, FileText, History, Loader2, Pencil } from 'lucide-react';
 import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { reparacionesApi } from '../../../../lib/api/reparaciones';
+import { ApiError } from '../../../../lib/api/client';
 import Badge from '../../ui/Badge';
 import EditOrdenModal from '../../forms/EditOrdenModal';
 import EstadoChanger from './EstadoChanger';
@@ -43,6 +46,9 @@ function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
   const puedeEditar = usePermiso('reparaciones:editar');
   const puedeVerRepuestos = usePermiso('orden-repuestos:ver');
   const esAdmin = useAuth().rolNombre === 'Administrador';
+  const informe = useMutation({
+    mutationFn: () => reparacionesApi.informe(ordenId, orden?.codigoOrden ?? String(ordenId)),
+  });
 
   if (isLoading) {
     return <div className="h-64 animate-pulse rounded-lg bg-graphite-100" />;
@@ -84,6 +90,11 @@ function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
             <p className="mt-1 text-sm text-graphite-500">
               {orden.cliente.nombre} · {orden.equipo.tipoEquipo} {orden.equipo.marca} {orden.equipo.modelo}
             </p>
+            {informe.error && (
+              <p className="mt-2 text-xs text-red-600">
+                {informe.error instanceof ApiError ? informe.error.message : 'No se pudo generar el informe.'}
+              </p>
+            )}
             {orden.garantiaOrigen && (
               <p className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-800">
                 Reclamo de garantía de la orden{' '}
@@ -95,6 +106,15 @@ function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
           </div>
 
           <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => informe.mutate()}
+              disabled={informe.isPending}
+              className="inline-flex items-center gap-1.5 rounded-md border border-graphite-200 px-3 py-1.5 text-sm font-medium text-graphite-700 hover:bg-graphite-50 disabled:opacity-60"
+            >
+              {informe.isPending ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
+              Informe PDF
+            </button>
             {esAdmin && (
               <Tip label="Quién hizo cada cambio en esta orden">
                 <a
