@@ -32,15 +32,24 @@ export function useEntregaByOrden(ordenId: number) {
 export function useEntregaMutations(ordenId?: number) {
   const queryClient = useQueryClient();
 
+  // Entregar/anular cambia la orden, su garantía y el seguimiento.
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['entregas'], exact: false });
+    queryClient.invalidateQueries({ queryKey: ['garantias'], exact: false });
+    if (ordenId) {
+      queryClient.invalidateQueries({ queryKey: ['reparaciones', 'detalle', ordenId] });
+    }
+  };
+
   const create = useMutation({
     mutationFn: (payload: CreateEntregaPayload) => entregasApi.create(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['entregas'], exact: false });
-      if (ordenId) {
-        queryClient.invalidateQueries({ queryKey: ['reparaciones', 'detalle', ordenId] });
-      }
-    },
+    onSuccess: invalidate,
   });
 
-  return { create };
+  const anular = useMutation({
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) => entregasApi.anular(id, motivo),
+    onSuccess: invalidate,
+  });
+
+  return { create, anular };
 }

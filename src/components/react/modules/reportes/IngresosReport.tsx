@@ -20,7 +20,7 @@ import {
   variacionTexto,
 } from './compartido';
 
-const METODOS = ['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'QR'].map((m) => ({ valor: m, etiqueta: m }));
+const METODOS = ['EFECTIVO', 'TRANSFERENCIA', 'QR'].map((m) => ({ valor: m, etiqueta: m }));
 
 export default function IngresosReport() {
   const [rango, setRango] = useState<RangoFechas>(presetRango('mes'));

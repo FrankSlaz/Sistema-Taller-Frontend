@@ -1,18 +1,22 @@
 /**
  * Espejo de backend-nest/src/modules/entregas
- * Relación 1-1 con OrdenReparacion: solo GET y POST (sin PATCH/DELETE).
- * Al crearse, marca automáticamente la orden como ENTREGADO.
+ * Entrega con control: solo desde "Listo para entrega" (o devolución de
+ * cancelada / no reparable), saldo en cero, quién retira obligatorio y
+ * garantía automática. Se puede anular si fue un error.
  */
-
-export interface EntregaOrdenRef {
-  id: number;
-  codigoOrden: string;
-}
 
 export interface EntregaUsuarioRef {
   id: number;
   nombre: string;
   apellido?: string | null;
+}
+
+export interface EntregaOrdenRef {
+  id: number;
+  codigoOrden: string;
+  cliente?: { nombre: string; telefono?: string | null };
+  equipo?: { tipoEquipo: string; marca?: string | null; modelo?: string | null };
+  estado?: { nombre: string };
 }
 
 export interface Entrega {
@@ -30,12 +34,20 @@ export interface Entrega {
 export interface CreateEntregaPayload {
   ordenId: number;
   usuarioEntregaId?: number;
-  nombreRecibe?: string;
-  documentoRecibe?: string;
+  nombreRecibe: string;
+  documentoRecibe: string;
   observaciones?: string;
+}
+
+/** Respuesta de POST /entregas. */
+export interface EntregaCreada extends Entrega {
+  garantia: { id: number; dias: number; fechaFin: string } | null;
+  /** true si fue devolución sin reparar (cancelada / no reparable). */
+  devolucion: boolean;
 }
 
 export interface EntregasQuery {
   page?: number;
   limit?: number;
+  search?: string;
 }

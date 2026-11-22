@@ -1,21 +1,27 @@
-import { api } from './client';
+import { api, downloadFile } from './client';
 import type { PaginatedResult } from '../../types/api';
-import type { CreatePagoPayload, Pago, PagosQuery, PagosResumen } from '../../types/pago';
+import type {
+  CajaResumen,
+  CreateDevolucionPayload,
+  CreatePagoPayload,
+  Pago,
+  PagosQuery,
+  PagosResumen,
+} from '../../types/pago';
 
-/**
- * Cuando se filtra por ordenId, el backend agrega `resumen`
- * (totalOrden/totalPagado/saldoPendiente) además de items/meta.
- */
-export type PagosResult = PaginatedResult<Pago> & { resumen?: PagosResumen };
+/** items + meta, `caja` siempre y `resumen` cuando se filtra por orden. */
+export type PagosResult = PaginatedResult<Pago> & { caja: CajaResumen; resumen?: PagosResumen };
 
 function toQueryString(query: PagosQuery): string {
   const params = new URLSearchParams();
-  if (query.page) params.set('page', String(query.page));
-  if (query.limit) params.set('limit', String(query.limit));
-  if (query.ordenId) params.set('ordenId', String(query.ordenId));
+  Object.entries(query).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') params.set(k, String(v));
+  });
   const qs = params.toString();
   return qs ? `?${qs}` : '';
 }
+
+const numeroRecibo = (p: Pago) => `${p.tipo === 'DEVOLUCION' ? 'D' : 'R'}-${String(p.id).padStart(6, '0')}`;
 
 export const pagosApi = {
   findAll: (query: PagosQuery = {}) => api.get<PagosResult>(`/pagos${toQueryString(query)}`),
@@ -24,5 +30,13 @@ export const pagosApi = {
 
   create: (payload: CreatePagoPayload) => api.post<Pago>('/pagos', payload),
 
-  remove: (id: number) => api.delete<{ message: string }>(`/pagos/${id}`),
+  /** Devolver al cliente un saldo a favor. */
+  devolver: (payload: CreateDevolucionPayload) => api.post<Pago>('/pagos/devolucion', payload),
+
+  /** Anular con motivo (reemplaza al borrado). */
+  anular: (id: number, motivo: string) => api.patch<Pago>(`/pagos/${id}/anular`, { motivo }),
+
+  recibo: (pago: Pago) => downloadFile(`/pagos/${pago.id}/recibo`, `recibo-${numeroRecibo(pago)}.pdf`),
+
+  numeroRecibo,
 };

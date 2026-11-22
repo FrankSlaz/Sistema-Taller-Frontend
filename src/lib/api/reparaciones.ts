@@ -3,6 +3,7 @@ import type { PaginatedResult } from '../../types/api';
 import type {
   AssignTecnicoPayload,
   ChangeEstadoPayload,
+  DefinirGarantiaPayload,
   ConteoPorEstado,
   CreateOrdenPayload,
   OrdenReparacion,
@@ -41,6 +42,10 @@ export const reparacionesApi = {
 
   changeEstado: (id: number, payload: ChangeEstadoPayload) =>
     api.patch<OrdenReparacion>(`/reparaciones/${id}/estado`, payload),
+
+  /** Define o corrige la garantía de la reparación (antes de entregar). */
+  definirGarantia: (id: number, payload: DefinirGarantiaPayload) =>
+    api.patch<OrdenReparacion>(`/reparaciones/${id}/garantia`, payload),
 
   assignTecnico: (id: number, payload: AssignTecnicoPayload) =>
     api.post<OrdenTecnico>(`/reparaciones/${id}/tecnicos`, payload),

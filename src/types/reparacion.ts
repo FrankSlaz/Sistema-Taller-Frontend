@@ -19,6 +19,8 @@ export interface OrdenClienteRef {
   nombre: string;
   telefono?: string | null;
   email?: string | null;
+  tipoDocumento?: string | null;
+  numeroDocumento?: string | null;
 }
 
 export interface OrdenEquipoRef {
@@ -78,6 +80,16 @@ export interface OrdenReparacion {
   equipo: OrdenEquipoRef;
   estado: EstadoOrden;
   ordenTecnicos: OrdenTecnico[];
+  /** Si la orden es un reclamo de garantía: la orden original. */
+  garantiaOrigen?: { id: number; codigoOrden: string } | null;
+  /**
+   * Garantía definida al terminar la reparación (técnico/administrador).
+   * null = aún no se definió; 0 = sin garantía.
+   */
+  garantiaDias?: number | null;
+  garantiaCondiciones?: string | null;
+  garantiaDefinidaEn?: string | null;
+  garantiaDefinidaPor?: { id: number; nombre: string; apellido?: string | null } | null;
 
   // Presentes solo en el detalle (findOne)
   diagnosticos?: Diagnostico[];
@@ -89,6 +101,10 @@ export interface OrdenReparacion {
    * de saber si la orden ya tiene garantía sin listar todas.
    */
   garantia?: Garantia | null;
+  /** Entrega registrada (solo en el detalle). */
+  entrega?: { id: number; fechaEntrega: string } | null;
+  /** Reclamos de garantía abiertos a partir de esta orden (solo en el detalle). */
+  ordenesGarantia?: { id: number; codigoOrden: string; fechaIngreso: string | null; estado: { nombre: string } }[];
 }
 
 export interface CreateOrdenPayload {
@@ -114,6 +130,14 @@ export interface UpdateOrdenPayload {
 export interface ChangeEstadoPayload {
   estadoId: number;
   comentario?: string;
+  /** Obligatorio al pasar a "Listo para entrega" (0 = sin garantía). */
+  garantiaDias?: number;
+  garantiaCondiciones?: string;
+}
+
+export interface DefinirGarantiaPayload {
+  garantiaDias: number;
+  garantiaCondiciones?: string;
 }
 
 export interface AssignTecnicoPayload {

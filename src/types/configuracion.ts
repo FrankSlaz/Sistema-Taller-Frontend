@@ -14,6 +14,10 @@ export interface Configuracion {
   direccion?: string | null;
   moneda?: string | null;
   simbolo?: string | null;
+  /** Días de garantía que se dan al entregar (0 = sin garantía automática). */
+  garantiaDiasDefault?: number;
+  /** Condiciones de garantía por defecto (se imprimen en el acta de entrega). */
+  garantiaCondiciones?: string | null;
   updatedAt?: string | null;
 }
 

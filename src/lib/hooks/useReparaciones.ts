@@ -3,6 +3,7 @@ import { reparacionesApi } from '../api/reparaciones';
 import type {
   AssignTecnicoPayload,
   ChangeEstadoPayload,
+  DefinirGarantiaPayload,
   CreateOrdenPayload,
   OrdenesQuery,
   UpdateOrdenPayload,
@@ -78,6 +79,11 @@ export function useReparacionMutations(id?: number) {
     onSuccess: invalidateAll,
   });
 
+  const definirGarantia = useMutation({
+    mutationFn: (payload: DefinirGarantiaPayload) => reparacionesApi.definirGarantia(id!, payload),
+    onSuccess: invalidateDetail,
+  });
+
   const assignTecnico = useMutation({
     mutationFn: (payload: AssignTecnicoPayload) => reparacionesApi.assignTecnico(id!, payload),
     onSuccess: invalidateDetail,
@@ -93,5 +99,5 @@ export function useReparacionMutations(id?: number) {
     onSuccess: invalidateList,
   });
 
-  return { create, update, changeEstado, assignTecnico, removeTecnico, remove };
+  return { create, update, changeEstado, definirGarantia, assignTecnico, removeTecnico, remove };
 }

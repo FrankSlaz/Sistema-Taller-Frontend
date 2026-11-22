@@ -13,6 +13,8 @@ interface FormState {
   direccion: string;
   moneda: string;
   simbolo: string;
+  garantiaDiasDefault: number;
+  garantiaCondiciones: string;
 }
 
 const emptyForm: FormState = {
@@ -22,6 +24,8 @@ const emptyForm: FormState = {
   direccion: '',
   moneda: '',
   simbolo: '',
+  garantiaDiasDefault: 30,
+  garantiaCondiciones: '',
 };
 
 function ConfiguracionPanelContent() {
@@ -42,6 +46,8 @@ function ConfiguracionPanelContent() {
       direccion: config.direccion ?? '',
       moneda: config.moneda ?? '',
       simbolo: config.simbolo ?? '',
+      garantiaDiasDefault: config.garantiaDiasDefault ?? 30,
+      garantiaCondiciones: config.garantiaCondiciones ?? '',
     });
   }, [config]);
 
@@ -60,6 +66,8 @@ function ConfiguracionPanelContent() {
       direccion: form.direccion || undefined,
       moneda: form.moneda || undefined,
       simbolo: form.simbolo || undefined,
+      garantiaDiasDefault: form.garantiaDiasDefault,
+      garantiaCondiciones: form.garantiaCondiciones,
     };
 
     const cambioNombre = (config?.nombreTaller ?? '') !== form.nombreTaller;
@@ -156,6 +164,38 @@ function ConfiguracionPanelContent() {
               onChange={(e) => set('simbolo', e.target.value)}
               className="w-full rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800 disabled:bg-graphite-50"
             />
+          </div>
+        </div>
+
+        <div className="rounded-md border border-graphite-100 p-4">
+          <p className="text-sm font-medium text-graphite-900">Garantía por defecto</p>
+          <p className="mb-3 text-xs text-graphite-400">
+            Se aplica automáticamente al entregar un equipo reparado (se puede cambiar en cada entrega).
+          </p>
+          <div className="grid gap-4 sm:grid-cols-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-graphite-900">Días</label>
+              <input
+                type="number"
+                min={0}
+                max={730}
+                value={form.garantiaDiasDefault}
+                onChange={(e) => set('garantiaDiasDefault', Math.max(0, Math.trunc(Number(e.target.value))))}
+                className="w-full rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800 disabled:bg-graphite-50"
+              />
+              <p className="mt-1 text-xs text-graphite-400">0 = sin garantía</p>
+            </div>
+            <div className="sm:col-span-3">
+              <label className="mb-1 block text-sm font-medium text-graphite-900">Condiciones</label>
+              <textarea
+                rows={3}
+                value={form.garantiaCondiciones}
+                onChange={(e) => set('garantiaCondiciones', e.target.value)}
+                placeholder="Ej. Cubre la reparación realizada y los repuestos instalados. No cubre golpes, humedad ni manipulación por terceros."
+                className="w-full resize-none rounded-md border border-graphite-200 px-3 py-2 text-sm focus:border-graphite-800 focus:outline-none focus:ring-1 focus:ring-graphite-800 disabled:bg-graphite-50"
+              />
+              <p className="mt-1 text-xs text-graphite-400">Se imprimen en el acta de entrega.</p>
+            </div>
           </div>
         </div>
       </fieldset>

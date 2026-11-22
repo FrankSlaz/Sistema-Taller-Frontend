@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { pagosApi } from '../api/pagos';
-import type { CreatePagoPayload, PagosQuery } from '../../types/pago';
+import type { CreateDevolucionPayload, CreatePagoPayload, PagosQuery } from '../../types/pago';
 
 export function usePagos(query: PagosQuery) {
   return useQuery({
@@ -11,15 +11,15 @@ export function usePagos(query: PagosQuery) {
 }
 
 /**
- * Si se provee `ordenId`, además de invalidar el listado global de
- * pagos invalida el detalle de esa orden — el saldo pendiente que
- * muestra PagosPanel depende de los pagos registrados.
+ * Pagos, devoluciones y anulaciones cambian el saldo de la orden: se
+ * refresca el listado de pagos, el detalle de la orden y el seguimiento.
  */
 export function usePagoMutations(ordenId?: number) {
   const queryClient = useQueryClient();
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['pagos'], exact: false });
+    queryClient.invalidateQueries({ queryKey: ['reportes'], exact: false });
     if (ordenId) {
       queryClient.invalidateQueries({ queryKey: ['reparaciones', 'detalle', ordenId] });
     }
@@ -30,10 +30,15 @@ export function usePagoMutations(ordenId?: number) {
     onSuccess: invalidate,
   });
 
-  const remove = useMutation({
-    mutationFn: (id: number) => pagosApi.remove(id),
+  const devolver = useMutation({
+    mutationFn: (payload: CreateDevolucionPayload) => pagosApi.devolver(payload),
     onSuccess: invalidate,
   });
 
-  return { create, remove };
+  const anular = useMutation({
+    mutationFn: ({ id, motivo }: { id: number; motivo: string }) => pagosApi.anular(id, motivo),
+    onSuccess: invalidate,
+  });
+
+  return { create, devolver, anular };
 }

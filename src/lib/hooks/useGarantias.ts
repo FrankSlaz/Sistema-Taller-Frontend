@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { garantiasApi } from '../api/garantias';
-import type { ChangeEstadoGarantiaPayload, CreateGarantiaPayload, GarantiasQuery } from '../../types/garantia';
+import type {
+  ChangeEstadoGarantiaPayload,
+  CreateGarantiaPayload,
+  GarantiasQuery,
+  ReclamoGarantiaPayload,
+} from '../../types/garantia';
 
 export function useGarantias(query: GarantiasQuery) {
   return useQuery({
@@ -31,5 +36,14 @@ export function useGarantiaMutations(ordenId?: number) {
     onSuccess: invalidate,
   });
 
-  return { create, changeEstado };
+  /** Atender por garantía: crea una orden nueva enlazada. */
+  const reclamar = useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: ReclamoGarantiaPayload }) => garantiasApi.reclamar(id, payload),
+    onSuccess: () => {
+      invalidate();
+      queryClient.invalidateQueries({ queryKey: ['reparaciones'], exact: false });
+    },
+  });
+
+  return { create, changeEstado, reclamar };
 }
