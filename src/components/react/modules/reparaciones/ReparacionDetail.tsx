@@ -11,6 +11,7 @@ import GarantiaPanel from './GarantiaPanel';
 import DiagnosticosPanel from './DiagnosticosPanel';
 import PresupuestosPanel from './PresupuestosPanel';
 import RepuestosPanel from './RepuestosPanel';
+import SeguimientoClientePanel from './SeguimientoClientePanel';
 import HistorialTimeline from './HistorialTimeline';
 import QueryProvider from '../../providers/QueryProvider';
 import { useReparacion } from '../../../../lib/hooks/useReparaciones';
@@ -172,6 +173,11 @@ function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
         </div>
 
         <div className="space-y-6">
+          <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
+            <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Seguimiento del cliente</h2>
+            <SeguimientoClientePanel orden={orden} />
+          </section>
+
           <section className="rounded-lg border border-graphite-200 bg-white p-5 shadow-sm">
             <h2 className="mb-3 font-display text-base font-semibold text-graphite-900">Cambiar estado</h2>
             <EstadoChanger orden={orden} />

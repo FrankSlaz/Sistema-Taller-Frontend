@@ -5,9 +5,13 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description?: string;
+  /** Páginas privadas por enlace (seguimiento): que los buscadores no las indexen. */
+  noindex?: boolean;
+  /** Vista previa al compartir el enlace (WhatsApp, etc.). */
+  og?: { title: string; description: string };
 }
 
-const { title, description = 'Sistema de gestión para talleres de reparación' } = Astro.props;
+const { title, description = 'Sistema de gestión para talleres de reparación', noindex = false, og } = Astro.props;
 // Cargado por src/middleware.ts desde GET /configuracion/publica.
 const { nombreTaller, logoUrl } = Astro.locals.branding ?? BRANDING_POR_DEFECTO;
 ---
@@ -20,6 +24,18 @@ const { nombreTaller, logoUrl } = Astro.locals.branding ?? BRANDING_POR_DEFECTO;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    {
+      og && (
+        <>
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content={nombreTaller} />
+          <meta property="og:title" content={og.title} />
+          <meta property="og:description" content={og.description} />
+          {logoUrl && <meta property="og:image" content={new URL(logoUrl, Astro.url).toString()} />}
+        </>
+      )
+    }
     <title>{title} · {nombreTaller}</title>
   </head>
   <body class="min-h-screen bg-graphite-50 text-graphite-900 antialiased">

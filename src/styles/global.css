@@ -15,8 +15,14 @@
   --color-graphite-800: #1f232b;
   --color-graphite-700: #2b303a;
   --color-graphite-600: #3c4250;
+  --color-graphite-500: #545b68;
   --color-graphite-400: #6b7280;
+  --color-graphite-300: #a3a8b2;
   --color-graphite-200: #d1d5db;
+  /* 100/300/500 faltaban: las clases que los usaban (bordes, fondos de
+     "cargando", textos secundarios) quedaban sin color — p. ej. los
+     bordes border-graphite-100 se veían negros. */
+  --color-graphite-100: #eceef1;
   --color-graphite-50: #f7f7f8;
 
   --color-amber-500: #f59e0b;

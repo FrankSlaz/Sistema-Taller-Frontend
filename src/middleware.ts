@@ -6,6 +6,9 @@ import { obtenerBranding } from './lib/branding';
  * que BaseLayout, Sidebar, Navbar y Login la lean sin repetir la consulta.
  */
 export const onRequest = defineMiddleware(async (context, next) => {
-  context.locals.branding = await obtenerBranding();
+  // El proxy del logo no renderiza HTML: no necesita la marca.
+  if (!context.url.pathname.startsWith('/marca/')) {
+    context.locals.branding = await obtenerBranding();
+  }
   return next();
 });

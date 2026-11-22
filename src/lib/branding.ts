@@ -15,7 +15,9 @@ interface ConfiguracionPublica {
 export const BRANDING_POR_DEFECTO: Branding = { nombreTaller: PUBLIC_APP_NAME, logoUrl: null };
 
 export function logoUrlDe(logoVersion: string | null, tieneLogo: boolean): string | null {
-  return tieneLogo ? `${PUBLIC_API_URL}/configuracion/logo?v=${logoVersion ?? '1'}` : null;
+  // Ruta del propio frontend (src/pages/marca/logo.ts, proxy al backend):
+  // funciona desde cualquier dispositivo que pueda abrir la página.
+  return tieneLogo ? `/marca/logo?v=${logoVersion ?? '1'}` : null;
 }
 
 /**
