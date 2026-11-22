@@ -1,4 +1,4 @@
-import { ArrowLeft, Pencil } from 'lucide-react';
+import { ArrowLeft, History, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import Badge from '../../ui/Badge';
 import EditOrdenModal from '../../forms/EditOrdenModal';
@@ -16,7 +16,7 @@ import HistorialTimeline from './HistorialTimeline';
 import QueryProvider from '../../providers/QueryProvider';
 import { useReparacion } from '../../../../lib/hooks/useReparaciones';
 import { usePresupuestos } from '../../../../lib/hooks/usePresupuestos';
-import { usePermiso } from '../../../../lib/hooks/useAuth';
+import { useAuth, usePermiso } from '../../../../lib/hooks/useAuth';
 import { estadoOrdenClasses, estadoOrdenLabel, prioridadClasses } from '../../../../lib/utils/estado';
 
 function formatFecha(value?: string | null) {
@@ -40,6 +40,7 @@ function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
   const [editOpen, setEditOpen] = useState(false);
   const puedeEditar = usePermiso('reparaciones:editar');
   const puedeVerRepuestos = usePermiso('orden-repuestos:ver');
+  const esAdmin = useAuth().rolNombre === 'Administrador';
 
   if (isLoading) {
     return <div className="h-64 animate-pulse rounded-lg bg-graphite-100" />;
@@ -91,16 +92,28 @@ function ReparacionDetailContent({ ordenId }: ReparacionDetailProps) {
             )}
           </div>
 
-          {puedeEditar && (
-            <button
-              type="button"
-              onClick={() => setEditOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-graphite-200 px-3 py-1.5 text-sm font-medium text-graphite-700 hover:bg-graphite-50"
-            >
-              <Pencil size={14} />
-              Editar
-            </button>
-          )}
+          <div className="flex flex-wrap gap-2">
+            {esAdmin && (
+              <a
+                href={`/auditoria?ordenId=${orden.id}&orden=${encodeURIComponent(orden.codigoOrden)}`}
+                className="inline-flex items-center gap-1.5 rounded-md border border-graphite-200 px-3 py-1.5 text-sm font-medium text-graphite-700 hover:bg-graphite-50"
+                title="Quién hizo cada cambio en esta orden"
+              >
+                <History size={14} />
+                Auditoría
+              </a>
+            )}
+            {puedeEditar && (
+              <button
+                type="button"
+                onClick={() => setEditOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-md border border-graphite-200 px-3 py-1.5 text-sm font-medium text-graphite-700 hover:bg-graphite-50"
+              >
+                <Pencil size={14} />
+                Editar
+              </button>
+            )}
+          </div>
         </div>
 
         <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-graphite-100 pt-5 sm:grid-cols-4">
