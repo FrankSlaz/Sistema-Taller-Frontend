@@ -33,4 +33,8 @@ export const presupuestosApi = {
     api.patch<Presupuesto>(`/presupuestos/${id}/estado`, payload),
 
   remove: (id: number) => api.delete<{ message: string }>(`/presupuestos/${id}`),
+
+  /** Registra que se envió al cliente: la orden pasa a "Esperando aprobación". */
+  enviar: (id: number) =>
+    api.post<{ presupuesto: Presupuesto; ordenPasoAEsperandoAprobacion: boolean }>(`/presupuestos/${id}/enviar`),
 };

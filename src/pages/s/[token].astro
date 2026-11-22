@@ -107,6 +107,18 @@ const mensajeTaller = d
   : '';
 const linkWhatsapp = d?.taller.whatsapp ? `https://wa.me/${d.taller.whatsapp}?text=${mensajeTaller}` : null;
 const linkTelefono = d?.taller.telefono ? `tel:${d.taller.telefono.replace(/[^\d+]/g, '')}` : null;
+
+// Respuesta al presupuesto por WhatsApp (la página sigue siendo solo de
+// consulta: el personal registra la aprobación en el sistema).
+const respuesta = (texto: string) =>
+  d?.taller.whatsapp ? `https://wa.me/${d.taller.whatsapp}?text=${encodeURIComponent(texto)}` : null;
+const montoPendiente = d?.presupuestoPendiente ? bs(d.presupuestoPendiente.total) : '';
+const linkAprobar = d?.presupuestoPendiente
+  ? respuesta(`Hola, APRUEBO el presupuesto de ${montoPendiente} de la orden ${d.orden.codigo} (${equipoTexto}). Pueden continuar con la reparación.`)
+  : null;
+const linkRechazar = d?.presupuestoPendiente
+  ? respuesta(`Hola, NO apruebo el presupuesto de ${montoPendiente} de la orden ${d.orden.codigo} (${equipoTexto}).`)
+  : null;
 ---
 
 <BaseLayout
@@ -193,8 +205,34 @@ const linkTelefono = d?.taller.telefono ? `tel:${d.taller.telefono.replace(/[^\d
               <section class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
                 <p class="font-semibold">Tienes un presupuesto por aprobar</p>
                 <p class="mt-1 text-sm">
-                  Monto: <strong>{bs(d.presupuestoPendiente.total)}</strong>. Comunícate con el taller para aprobarlo y continuar con la reparación.
+                  Monto: <strong>{bs(d.presupuestoPendiente.total)}</strong>.
+                  {linkAprobar ? ' Responde al taller para continuar con la reparación:' : ' Comunícate con el taller para aprobarlo y continuar con la reparación.'}
                 </p>
+                {
+                  linkAprobar && linkRechazar && (
+                    <div class="mt-3 grid grid-cols-2 gap-2">
+                      <a
+                        href={linkAprobar}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="flex items-center justify-center rounded-xl bg-[#1fa855] px-3 py-2.5 text-sm font-semibold text-white hover:bg-[#1a9049]"
+                      >
+                        ✓ Aprobar
+                      </a>
+                      <a
+                        href={linkRechazar}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="flex items-center justify-center rounded-xl border border-amber-300 bg-white px-3 py-2.5 text-sm font-semibold text-amber-900 hover:bg-amber-100"
+                      >
+                        Rechazar
+                      </a>
+                    </div>
+                  )
+                }
+                {linkAprobar && (
+                  <p class="mt-2 text-xs text-amber-800/80">Se abrirá WhatsApp con tu respuesta lista para enviar al taller.</p>
+                )}
               </section>
             )
           }

@@ -57,7 +57,6 @@ export default function SeguimientoClientePanel({ orden }: { orden: OrdenReparac
   if (isLoading) return <div className="h-48 animate-pulse rounded-md bg-graphite-100" />;
   if (error || !enlace) return <p className="text-sm text-red-600">{msg(error) ?? 'No se pudo cargar el enlace.'}</p>;
 
-  const esLocal = /\/\/(localhost|127\.0\.0\.1)/.test(enlace.url);
   const errorAccion = msg(comprobante.error ?? regenerar.error);
 
   return (
@@ -98,13 +97,6 @@ export default function SeguimientoClientePanel({ orden }: { orden: OrdenReparac
           <ExternalLink size={14} />
         </a>
       </div>
-
-      {esLocal && (
-        <p className="rounded-md bg-amber-50 px-2.5 py-1.5 text-xs text-amber-800">
-          El enlace usa <code>localhost</code>: solo abre en esta computadora. Para que funcione en el celular del
-          cliente, configura <code>PUBLIC_APP_URL</code> con la dirección pública del sistema.
-        </p>
-      )}
 
       <a
         href={linkWhatsapp(enlace)}

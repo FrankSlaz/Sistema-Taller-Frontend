@@ -32,7 +32,29 @@ export function mensajeWhatsapp(e: EnlaceSeguimiento) {
 }
 
 /** wa.me con el mensaje; sin número válido, WhatsApp pide elegir el contacto. */
-export function linkWhatsapp(e: EnlaceSeguimiento) {
-  const texto = encodeURIComponent(mensajeWhatsapp(e));
+export function linkWhatsapp(e: EnlaceSeguimiento, mensaje: string = mensajeWhatsapp(e)) {
+  const texto = encodeURIComponent(mensaje);
   return e.cliente.whatsapp ? `https://wa.me/${e.cliente.whatsapp}?text=${texto}` : `https://wa.me/?text=${texto}`;
+}
+
+const bs = (n: number | string | null | undefined) => `Bs ${Number(n ?? 0).toFixed(2)}`;
+
+/** Mensaje con el presupuesto para que el cliente lo apruebe respondiendo. */
+export function mensajePresupuesto(
+  e: EnlaceSeguimiento,
+  p: { descripcion?: string | null; costoManoObra?: number | string | null; costoRepuestos?: number | string | null; totalEstimado?: number | string | null },
+) {
+  return [
+    `Estimado cliente, ${e.nombreTaller} le envía el presupuesto para la reparación de su equipo (orden ${e.codigoOrden}):`,
+    '',
+    ...(p.descripcion ? [`• ${p.descripcion}`] : []),
+    `Mano de obra: ${bs(p.costoManoObra)}`,
+    `Repuestos: ${bs(p.costoRepuestos)}`,
+    `*Total: ${bs(p.totalEstimado)}*`,
+    '',
+    'Para aprobarlo, responda a este mensaje con *APRUEBO*. Puede ver el avance de su reparación aquí:',
+    e.url,
+    '',
+    'Gracias por confiar en nuestros servicios.',
+  ].join('\n');
 }
